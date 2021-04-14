@@ -1,0 +1,13 @@
+data-centers:
+  - name: data-center-1
+    servers:
+      - name: server-type-1
+        ram: 32
+        clock-speed: 3.6
+        core-count: 16
+        count: 100
+      - name: server-type-2
+        ram: 16
+        clock-rate: 3.9
+        cores-count: 8
+        count: 200

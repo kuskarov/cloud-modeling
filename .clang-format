@@ -1,0 +1,22 @@
+---
+BasedOnStyle: Google
+AccessModifierOffset: -3
+AllowShortFunctionsOnASingleLine: InlineOnly
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: true
+  AfterNamespace: false
+  AfterFunction: true
+  AfterClass: true
+IndentWidth: 4
+PointerAlignment: Left
+TabWidth: 4
+FixNamespaceComments: true
+NamespaceIndentation: None
+SortIncludes: CaseSensitive
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 3
+ColumnLimit: 80
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+EmptyLineBeforeAccessModifier: Always
