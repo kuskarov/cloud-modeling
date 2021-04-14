@@ -6,7 +6,7 @@
 
 namespace sim::resources {
 
-class DataCenter : public sim::resources::Resource
+class DataCenter : public resources::Resource
 {
  public:
     void AddServer(const Server &server) { servers_.push_back(server); }
@@ -18,7 +18,7 @@ class DataCenter : public sim::resources::Resource
 
     // TODO: need more elegant solution
     void SetServerScheduleCallback(
-        const std::function<void(sim::types::TimeStamp, events::Event &&, bool)>
+        const std::function<void(types::TimeStamp, events::Event &&, bool)>
             &schedule_callback)
     {
         for (auto &server : servers_) {

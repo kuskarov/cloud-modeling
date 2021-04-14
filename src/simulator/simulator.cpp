@@ -18,4 +18,6 @@ main(int argc, char** argv)
         std::cerr << "Cloud Manager setup failed." << std::endl;
         return 1;
     }
+
+    cloud_manager->RunCloud();
 }

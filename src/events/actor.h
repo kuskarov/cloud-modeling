@@ -16,14 +16,14 @@ class Actor
  public:
     Actor() = default;
 
-    virtual void HandleEvent(const sim::events::Event &event)
+    virtual void HandleEvent(const events::Event &event)
     {
         throw std::logic_error(
             "abstract class method invocation! not implemented");
     }
 
     void SetScheduleCallback(
-        const std::function<void(sim::types::TimeStamp, Event &&, bool)>
+        const std::function<void(types::TimeStamp, Event &&, bool)>
             &schedule_callback)
     {
         schedule_callback_ = schedule_callback;
@@ -35,8 +35,7 @@ class Actor
     virtual ~Actor() = default;
 
  private:
-    std::function<void(sim::types::TimeStamp, Event &&, bool)>
-        schedule_callback_;
+    std::function<void(types::TimeStamp, Event &&, bool)> schedule_callback_;
 
     std::string name_{};
 };

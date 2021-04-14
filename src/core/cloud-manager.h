@@ -11,7 +11,7 @@
 
 namespace sim::core {
 
-class CloudManager : public sim::events::Actor
+class CloudManager : public events::Actor
 {
  public:
     explicit CloudManager(std::shared_ptr<SimulatorConfig> config)

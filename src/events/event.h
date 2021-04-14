@@ -16,8 +16,8 @@ class Actor;
 struct Event
 {
     // TODO: are they needed?
-    sim::types::UUID uuid;
-    sim::types::TimeStamp creation_ts, happen_ts;
+    types::UUID uuid;
+    types::TimeStamp creation_ts, happen_ts;
     virtual void do_nothing() {}
 
     /// a closure to get info about if the event cancelled before the time of
