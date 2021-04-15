@@ -11,6 +11,7 @@ BraceWrapping:
   AfterClass: true
 IndentWidth: 4
 PointerAlignment: Left
+DerivePointerAlignment: false
 TabWidth: 4
 FixNamespaceComments: true
 NamespaceIndentation: None

@@ -9,9 +9,9 @@ namespace sim::core {
 class SimulatorConfig
 {
  public:
-    void ParseArgs(int argc, char **argv);
+    void ParseArgs(int argc, char** argv);
     void ParseResources(
-        const std::function<void(resources::DataCenter)> &add_data_center);
+        const std::function<void(resources::DataCenter)>& add_data_center);
     bool ParseTasks();
 
  private:

@@ -20,7 +20,7 @@ class EventLoop
     /**
      * To be used in closure passed to each component able to generate events
      */
-    void Insert(types::TimeStamp ts, const Event &event,
+    void Insert(types::TimeStamp ts, const Event& event,
                 bool insert_to_head = false);
 
     void SimulateNextTimeStamp();

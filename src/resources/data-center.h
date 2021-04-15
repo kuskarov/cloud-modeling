@@ -9,19 +9,19 @@ namespace sim::resources {
 class DataCenter : public resources::Resource
 {
  public:
-    void AddServer(const Server &server) { servers_.push_back(server); }
+    void AddServer(const Server& server) { servers_.push_back(server); }
 
-    void AddServers(const Server &server, uint32_t count)
+    void AddServers(const Server& server, uint32_t count)
     {
         servers_.insert(servers_.end(), count, server);
     }
 
     // TODO: need more elegant solution
     void SetServerScheduleCallback(
-        const std::function<void(types::TimeStamp, events::Event &&, bool)>
-            &schedule_callback)
+        const std::function<void(types::TimeStamp, events::Event&&, bool)>&
+            schedule_callback)
     {
-        for (auto &server : servers_) {
+        for (auto& server : servers_) {
             server.SetScheduleCallback(schedule_callback);
         }
     }

@@ -5,19 +5,21 @@
 #include "event.h"
 
 void
-sim::resources::Server::HandleEvent(const sim::events::Event &event)
+sim::resources::Server::HandleEvent(const sim::events::Event& event)
 {
     try {
-        auto &server_event = dynamic_cast<const ServerEvent &>(event);
-    } catch (const std::bad_cast &bc) {
+        auto& server_event = dynamic_cast<const ServerEvent&>(event);
+    } catch (const std::bad_cast& bc) {
         // log error
     }
 }
+
 sim::types::RAMBytes
 sim::resources::Server::GetRam() const
 {
     return ram_;
 }
+
 void
 sim::resources::Server::SetRam(sim::types::RAMBytes ram)
 {
