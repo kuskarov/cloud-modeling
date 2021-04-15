@@ -19,7 +19,7 @@ class CloudManager : public events::Actor
     {
     }
 
-    bool Setup();
+    void Setup();
     void RunCloud();
 
  private:

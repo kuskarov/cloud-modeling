@@ -1,19 +1,10 @@
 #include "cloud-manager.h"
 
-bool
+void
 sim::core::CloudManager::Setup()
 {
-    if (!config_->ParseResources([this](resources::DataCenter &&dc) {
-            data_centers_.emplace_back(dc);
-        })) {
-        return false;
-    }
-
-    /*
-    if (!config_->ParseTasks()) {
-        return false;
-    }
-    */
+    config_->ParseResources(
+        [this](resources::DataCenter &&dc) { data_centers_.emplace_back(dc); });
 
     event_loop_ = std::make_shared<events::EventLoop>();
     auto schedule_callback = [this](types::TimeStamp ts,
@@ -26,8 +17,6 @@ sim::core::CloudManager::Setup()
         data_center.SetScheduleCallback(schedule_callback);
         data_center.SetServerScheduleCallback(schedule_callback);
     }
-
-    return true;
 }
 
 void
