@@ -20,4 +20,4 @@ jobs:
         exclude: './external'
         extensions: 'h,cpp'
         clangFormatVersion: 10
-        style: .clang-format
+        style: './.clang-format'
