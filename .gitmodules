@@ -4,3 +4,6 @@
 [submodule "external/argparse"]
 	path = external/argparse
 	url = https://github.com/p-ranav/argparse
+[submodule "external/loguru"]
+	path = external/loguru
+	url = https://github.com/emilk/loguru.git

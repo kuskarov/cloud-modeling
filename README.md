@@ -2,9 +2,12 @@
 
 ## Build
 
+From build directory do `cmake .. && make`.
+
 ## Dependencies
 
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
+* [argparse](https://github.com/p-ranav/argparse)
 
 ## Architecture
 

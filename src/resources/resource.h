@@ -12,12 +12,12 @@ namespace sim::resources {
  * Switch, etc.) Each Resource should be able to return SpentPower() in abstract
  * EnergyCount units. Each Resource is an Actor, too.
  */
-class Resource : public sim::events::Actor
+class Resource : public events::Actor
 {
  public:
     Resource() = default;
 
-    virtual sim::types::EnergyCount SpentPower()
+    virtual types::EnergyCount SpentPower()
     {
         throw std::logic_error(
             "abstract class method invocation! not implemented");
@@ -63,8 +63,7 @@ class Resource : public sim::events::Actor
     void Reboot() {}
 
  private:
-    sim::types::TimeInterval startup_delay_{}, reboot_delay_{},
-        shutdown_delay_{};
+    types::TimeInterval startup_delay_{}, reboot_delay_{}, shutdown_delay_{};
 };
 
 }   // namespace sim::resources
