@@ -26,6 +26,8 @@ class DataCenter : public resources::Resource
         }
     }
 
+    void PlaceVM() {}
+
  private:
     std::vector<Server> servers_{};
 };

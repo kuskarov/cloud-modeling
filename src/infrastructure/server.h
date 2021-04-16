@@ -4,12 +4,9 @@
 #include "event.h"
 #include "resource.h"
 #include "types.h"
+#include "vm.h"
 
 namespace sim::resources {
-
-class VirtualMachine
-{
-};
 
 enum class ServerEventType
 {
