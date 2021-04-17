@@ -32,9 +32,7 @@ sim::events::EventLoop::SimulateNextTimeStamp()
             const Event& event = *deq_it;
 
             if (!event.is_cancelled()) {
-                for (auto& addressee : event.addressees) {
-                    addressee->HandleEvent(event);
-                }
+                event.addressee->HandleEvent(event);
             }
 
             deq.pop_front();
@@ -54,8 +52,7 @@ void
 sim::events::EventLoop::RunSimulation()
 {
     while (!queue_.empty()) {
-        auto least_ts_it = queue_.begin();
-        current_ts_ = least_ts_it->first;
+        current_ts_ = queue_.begin()->first;
         SimulateNextTimeStamp();
     }
 }

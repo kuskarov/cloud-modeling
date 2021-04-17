@@ -62,7 +62,7 @@ class Resource : public events::Actor
 
     void Reboot() {}
 
- private:
+ protected:
     types::TimeInterval startup_delay_{}, reboot_delay_{}, shutdown_delay_{};
 };
 

@@ -33,7 +33,7 @@ class Actor
 
     virtual ~Actor() = default;
 
- private:
+ protected:
     std::function<void(types::TimeStamp, Event&&, bool)> schedule_callback_;
 
     std::string name_{};
