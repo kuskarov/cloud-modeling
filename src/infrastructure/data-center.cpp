@@ -11,8 +11,8 @@ sim::resources::DataCenter::HandleEvent(
         LOG_F(INFO, "Data center event!");
 
         for (const auto& server : servers_) {
-            auto startup_server = std::make_shared<ServerEvent>();
-            startup_server->type = ServerEventType::kBoot;
+            auto startup_server = std::make_shared<ResourceEvent>();
+            startup_server->resource_event_type = ResourceEventType::kBoot;
             startup_server->addressee = server.get();
 
             schedule_callback_(event->happen_ts, startup_server, false);

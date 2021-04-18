@@ -23,6 +23,8 @@ struct VirtualMachineEvent : events::Event
 class VirtualMachine : public events::Actor
 {
  public:
+    VirtualMachine() : events::Actor("VM") {}
+
     void HandleEvent(const std::shared_ptr<events::Event>& event) override;
 
  private:

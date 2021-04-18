@@ -13,6 +13,8 @@ struct DataCenterEvent : events::Event
 class DataCenter : public resources::Resource
 {
  public:
+    DataCenter() : resources::Resource("Data-Center") {}
+
     void AddServer(const std::shared_ptr<Server>& server)
     {
         servers_.push_back(server);

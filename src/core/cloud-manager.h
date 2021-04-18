@@ -15,7 +15,7 @@ class CloudManager : public events::Actor
 {
  public:
     explicit CloudManager(std::shared_ptr<SimulatorConfig> config)
-        : config_(std::move(config))
+        : events::Actor("Cloud-Manager"), config_(std::move(config))
     {
     }
 

@@ -62,6 +62,8 @@ sim::core::SimulatorConfig::ParseResources(
         for (const auto& server_config : dc_config["servers"]) {
             resources::Server server_template{};
 
+            server_template.SetOwner(data_center.get());
+
             CHECK_F(bool(server_config["name"]),
                     "No \"name\" field in server spec");
             server_template.SetName(server_config["name"].as<std::string>());
@@ -81,6 +83,11 @@ sim::core::SimulatorConfig::ParseResources(
                     "No \"cores-count\" field in server spec");
             server_template.SetCoresCount(
                 server_config["cores-count"].as<uint32_t>());
+
+            CHECK_F(bool(server_config["cost"]),
+                    "No \"cost\" field in server spec");
+            server_template.SetCost(
+                server_config["cost"].as<types::Currency>());
 
             CHECK_F(bool(server_config["count"]),
                     "No \"count\" field in server spec");

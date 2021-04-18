@@ -20,6 +20,7 @@ sim::core::CloudManager::Setup()
     schedule_callback_ = schedule_callback;
 
     for (auto& data_center : data_centers_) {
+        data_center->SetOwner(this);
         data_center->SetScheduleCallback(schedule_callback);
         data_center->SetServerScheduleCallback(schedule_callback);
     }

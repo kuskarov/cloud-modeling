@@ -1,5 +1,6 @@
 set(SOURCES
         resource.h
+        resource.cpp
         server.h
         server.cpp
         data-center.h
