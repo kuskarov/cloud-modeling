@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <loguru.hpp>
 #include <string>
 
 #include "event.h"
@@ -16,14 +17,16 @@ class Actor
  public:
     Actor() = default;
 
-    virtual void HandleEvent(const events::Event& event)
+    virtual void HandleEvent(const std::shared_ptr<Event>& event)
     {
         throw std::logic_error(
             "abstract class method invocation! not implemented");
     }
 
-    void SetScheduleCallback(const std::function<void(types::TimeStamp, Event&&,
-                                                      bool)>& schedule_callback)
+    void SetScheduleCallback(
+        const std::function<void(types::TimeStamp,
+                                 const std::shared_ptr<Event>&, bool)>&
+            schedule_callback)
     {
         schedule_callback_ = schedule_callback;
     }
@@ -31,10 +34,11 @@ class Actor
     [[nodiscard]] const std::string& GetName() const { return name_; }
     void SetName(const std::string& name) { name_ = name; }
 
-    virtual ~Actor() = default;
+    virtual ~Actor() { LOG_F(INFO, "Destroying actor %s", name_.c_str()); }
 
  protected:
-    std::function<void(types::TimeStamp, Event&&, bool)> schedule_callback_;
+    std::function<void(types::TimeStamp, const std::shared_ptr<Event>&, bool)>
+        schedule_callback_;
 
     std::string name_{};
 };

@@ -16,14 +16,16 @@ class Actor;
  */
 struct Event
 {
+    types::UUID id;
+
     types::TimeStamp creation_ts, happen_ts;
 
     /** a closure to get info about if the event cancelled before the time of
      * handling
      */
-    std::function<bool()> is_cancelled;
+    std::function<bool()> is_cancelled = [] { return false; };
 
-    std::shared_ptr<Actor> addressee;
+    Actor* addressee{};
 
     virtual ~Event() = default;
 };
