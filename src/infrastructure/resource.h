@@ -53,17 +53,8 @@ class Resource : public events::Actor
         shutdown_delay_ = shutdown_delay;
     }
 
-    void Startup()
-    {
-        // schedule event "startup_end"
-    }
-
-    void Shutdown() {}
-
-    void Reboot() {}
-
  protected:
-    types::TimeInterval startup_delay_{}, reboot_delay_{}, shutdown_delay_{};
+    types::TimeInterval startup_delay_{1}, reboot_delay_{1}, shutdown_delay_{1};
 };
 
 }   // namespace sim::resources

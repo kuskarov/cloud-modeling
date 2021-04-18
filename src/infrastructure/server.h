@@ -11,26 +11,25 @@ namespace sim::resources {
 enum class ServerEventType
 {
     kNone,
-    kStartup,        // called when the server is Off
-    kReboot,         // called when the server is Running
-    kBootFinished,   // scheduled by kStartup and kReboot handlers
-    kShutdown,       // called when the server is Running
+    kBoot,               // called when the server is Off
+    kReboot,             // called when the server is Running
+    kBootFinished,       // scheduled by kStartup and kReboot handlers
+    kShutdown,           // called when the server is Running
+    kShutdownFinished,   // scheduled by kShutdown
     kProvisionVM,
     kKillVM
 };
 
-struct ServerEvent : public events::Event
+struct ServerEvent : events::Event
 {
     ServerEventType type{ServerEventType::kNone};
-    std::optional<VirtualMachine> virtual_machine{};
+    std::shared_ptr<VirtualMachine> virtual_machine{};
 };
 
 class Server : public Resource
 {
  public:
-    void HandleEvent(const events::Event& event) override;
-
-    void ProvisionVM() {}
+    void HandleEvent(const std::shared_ptr<events::Event>& event) override;
 
     [[nodiscard]] types::RAMBytes GetRam() const;
     void SetRam(types::RAMBytes ram);
@@ -42,14 +41,16 @@ class Server : public Resource
  private:
     enum class ServerState
     {
-        kOff,
-        kTurningOn,
-        kTurningOff,
-        kRunning,
-        kFailure
+        kOff = 0,
+        kTurningOn = 1,
+        kTurningOff = 2,
+        kRunning = 3,
+        kFailure = 4
     };
 
     ServerState state_{ServerState::kOff};
+
+    std::vector<std::shared_ptr<VirtualMachine>> virtual_machines_{};
 
     types::RAMBytes ram_{};
     types::CPUHertz clock_rate_{};
