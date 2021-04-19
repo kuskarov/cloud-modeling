@@ -13,25 +13,25 @@ namespace sim::resources {
 enum class ResourceEventType
 {
     kNone,
-    kBoot,               // called when the server is Off
-    kReboot,             // called when the server is Running
-    kBootFinished,       // scheduled by kStartup and kReboot handlers
-    kShutdown,           // called when the server is Running
+    kBoot,           // external command, Resource should be in Off state
+    kReboot,         // external command, Resource should be in Running state
+    kBootFinished,   // scheduled in Boot and Reboot handlers
+    kShutdown,       // external command, Resource should be in Running state
     kShutdownFinished,   // scheduled by kShutdown
-};
-
-enum class ResourcePowerState
-{
-    kOff = 0,
-    kTurningOn,
-    kTurningOff,
-    kRunning,
-    kFailure,
 };
 
 struct ResourceEvent : events::Event
 {
     ResourceEventType resource_event_type{ResourceEventType::kNone};
+};
+
+enum class ResourcePowerState
+{
+    kOff,
+    kTurningOn,
+    kTurningOff,
+    kRunning,
+    kFailure,
 };
 
 /**
@@ -52,69 +52,27 @@ class Resource : public events::Actor
 
     void HandleEvent(const std::shared_ptr<events::Event>& event) override;
 
-    virtual types::EnergyCount SpentPower()
-    {
-        throw std::logic_error(
-            "abstract class method invocation! not implemented");
-    };
+    virtual types::EnergyCount SpentPower();
 
-    [[nodiscard]] types::TimeInterval GetStartupDelay() const
-    {
-        return startup_delay_;
-    }
-
-    void SetStartupDelay(types::TimeInterval startup_delay)
-    {
-        startup_delay_ = startup_delay;
-    }
-
-    [[nodiscard]] types::TimeInterval GetRebootDelay() const
-    {
-        return reboot_delay_;
-    }
-
-    void SetRebootDelay(types::TimeInterval reboot_delay)
-    {
-        reboot_delay_ = reboot_delay;
-    }
-
-    [[nodiscard]] types::TimeInterval GetShutdownDelay() const
-    {
-        return shutdown_delay_;
-    }
-
-    void SetShutdownDelay(types::TimeInterval shutdown_delay)
-    {
-        shutdown_delay_ = shutdown_delay;
-    }
+    [[nodiscard]] types::TimeInterval GetStartupDelay() const;
+    void SetStartupDelay(types::TimeInterval startup_delay);
+    [[nodiscard]] types::TimeInterval GetRebootDelay() const;
+    void SetRebootDelay(types::TimeInterval reboot_delay);
+    [[nodiscard]] types::TimeInterval GetShutdownDelay() const;
+    void SetShutdownDelay(types::TimeInterval shutdown_delay);
 
     ~Resource() override = default;
 
  protected:
+    inline bool PowerStateIs(ResourcePowerState expected,
+                             const std::string& caller_info);
+
+    static inline const char* PowerStateToString(ResourcePowerState state);
+
     ResourcePowerState power_state_{ResourcePowerState::kOff};
 
-    bool PowerStateIs(ResourcePowerState expected,
-                      const std::string& caller_info);
-
-    static inline std::string PowerStateToString(ResourcePowerState state)
-    {
-        switch (state) {
-            case ResourcePowerState::kOff:
-                return "OFF";
-            case ResourcePowerState::kRunning:
-                return "RUNNING";
-            case ResourcePowerState::kTurningOn:
-                return "TURNING_ON";
-            case ResourcePowerState::kTurningOff:
-                return "TURNING_OFF";
-            case ResourcePowerState::kFailure:
-                return "FAILURE";
-            default:
-                return "UNREACHABLE";
-        }
-    }
-
-    types::TimeInterval startup_delay_{1}, reboot_delay_{1}, shutdown_delay_{1};
+    /// TODO: remove magic numbers
+    types::TimeInterval startup_delay_{3}, reboot_delay_{4}, shutdown_delay_{1};
 };
 
 }   // namespace sim::resources

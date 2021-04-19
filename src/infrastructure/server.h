@@ -18,7 +18,7 @@ enum class ServerEventType
 struct ServerEvent : events::Event
 {
     ServerEventType type{ServerEventType::kNone};
-    std::shared_ptr<VirtualMachine> virtual_machine{};
+    std::shared_ptr<VM> virtual_machine{};
 };
 
 class Server : public Resource
@@ -38,7 +38,7 @@ class Server : public Resource
     void SetCost(types::Currency cost);
 
  private:
-    std::vector<std::shared_ptr<VirtualMachine>> virtual_machines_{};
+    std::vector<std::shared_ptr<VM>> virtual_machines_{};
 
     types::RAMBytes ram_{};
     types::CPUHertz clock_rate_{};

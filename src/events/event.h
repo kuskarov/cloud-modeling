@@ -20,12 +20,22 @@ struct Event
 
     types::TimeStamp creation_ts, happen_ts;
 
-    /** a closure to get info about if the event cancelled before the time of
+    /**
+     * A closure to get info about if the event cancelled before the time of
      * handling
      */
     std::function<bool()> is_cancelled = [] { return false; };
 
+    /**
+     * Actor which HandleEvent() method should be called
+     */
     Actor* addressee{};
+
+    /**
+     * Event which should be scheduled after the chain of events ended
+     *
+     */
+    std::shared_ptr<Event> notificator{};
 
     virtual ~Event() = default;
 };

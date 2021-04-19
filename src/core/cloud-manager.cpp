@@ -38,7 +38,6 @@ sim::core::CloudManager::RunCloud()
     std::string command{};
     while (true) {
         std::getline(std::cin, command);
-        LOG_F(INFO, "Received command \"%s\"", command.c_str());
 
         if (command == "q") {
             break;
@@ -53,4 +52,9 @@ sim::core::CloudManager::RunCloud()
         }
     }
     LOG_F(INFO, "Quit!");
+}
+
+void
+sim::core::CloudManager::ProvisionVM()
+{
 }

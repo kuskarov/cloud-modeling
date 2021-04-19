@@ -20,7 +20,7 @@ sim::resources::Resource::HandleEvent(
 
                 power_state_ = ResourcePowerState::kTurningOn;
                 LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_).c_str());
+                      PowerStateToString(power_state_));
 
                 auto boot_finished_event = std::make_shared<ResourceEvent>();
                 boot_finished_event->addressee = this;
@@ -47,7 +47,7 @@ sim::resources::Resource::HandleEvent(
 
                 power_state_ = ResourcePowerState::kRunning;
                 LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_).c_str());
+                      PowerStateToString(power_state_));
 
                 break;
             }
@@ -62,7 +62,7 @@ sim::resources::Resource::HandleEvent(
 
                 power_state_ = ResourcePowerState::kTurningOff;
                 LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_).c_str());
+                      PowerStateToString(power_state_));
 
                 auto shutdown_finished_event =
                     std::make_shared<ResourceEvent>();
@@ -87,7 +87,7 @@ sim::resources::Resource::HandleEvent(
 
                 power_state_ = ResourcePowerState::kOff;
                 LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_).c_str());
+                      PowerStateToString(power_state_));
 
                 break;
             }
@@ -104,18 +104,78 @@ sim::resources::Resource::HandleEvent(
     }
 }
 
+sim::types::EnergyCount
+sim::resources::Resource::SpentPower()
+{
+    throw std::logic_error("abstract class method invocation! not implemented");
+};
+
+sim::types::TimeInterval
+sim::resources::Resource::GetStartupDelay() const
+{
+    return startup_delay_;
+}
+
+void
+sim::resources::Resource::SetStartupDelay(types::TimeInterval startup_delay)
+{
+    startup_delay_ = startup_delay;
+}
+
+sim::types::TimeInterval
+sim::resources::Resource::GetRebootDelay() const
+{
+    return reboot_delay_;
+}
+
+void
+sim::resources::Resource::SetRebootDelay(types::TimeInterval reboot_delay)
+{
+    reboot_delay_ = reboot_delay;
+}
+
+sim::types::TimeInterval
+sim::resources::Resource::GetShutdownDelay() const
+{
+    return shutdown_delay_;
+}
+
+void
+sim::resources::Resource::SetShutdownDelay(types::TimeInterval shutdown_delay)
+{
+    shutdown_delay_ = shutdown_delay;
+}
+
 bool
 sim::resources::Resource::PowerStateIs(
     sim::resources::ResourcePowerState expected, const std::string& caller_info)
 {
     if (power_state_ != expected) {
         LOG_F(ERROR, "%s: given state %s, expected %s", caller_info.c_str(),
-              PowerStateToString(power_state_).c_str(),
-              PowerStateToString(expected).c_str());
+              PowerStateToString(power_state_), PowerStateToString(expected));
 
         power_state_ = ResourcePowerState::kFailure;
 
         return false;
     }
     return true;
+}
+
+const char*
+sim::resources::Resource::PowerStateToString(ResourcePowerState state)
+{
+    switch (state) {
+        case ResourcePowerState::kOff:
+            return "OFF";
+        case ResourcePowerState::kRunning:
+            return "RUNNING";
+        case ResourcePowerState::kTurningOn:
+            return "TURNING_ON";
+        case ResourcePowerState::kTurningOff:
+            return "TURNING_OFF";
+        case ResourcePowerState::kFailure:
+            return "FAILURE";
+        default:
+            return "UNREACHABLE";
+    }
 }

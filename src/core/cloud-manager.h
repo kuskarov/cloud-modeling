@@ -23,8 +23,12 @@ class CloudManager : public events::Actor
     void RunCloud();
 
  private:
+    void ProvisionVM();
+
     std::vector<std::shared_ptr<resources::DataCenter>> data_centers_{};
+
     std::shared_ptr<SimulatorConfig> config_;
+
     std::shared_ptr<events::EventLoop> event_loop_;
 };
 
