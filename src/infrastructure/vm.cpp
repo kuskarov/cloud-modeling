@@ -3,7 +3,7 @@
 #include <loguru.hpp>
 
 void
-sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
+sim::infra::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
 {
     try {
         auto vm_event = dynamic_cast<const VMEvent*>(event.get());
@@ -37,6 +37,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kStarting;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 auto next_event = std::make_shared<VMEvent>();
                 next_event->happen_ts = vm_event->happen_ts + start_delay_;
@@ -54,6 +55,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kRunning;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
@@ -65,6 +67,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kRestarting;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 auto next_event = std::make_shared<VMEvent>();
                 next_event->happen_ts = vm_event->happen_ts + restart_delay_;
@@ -81,6 +84,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kRunning;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
@@ -92,6 +96,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kStopping;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 auto next_event = std::make_shared<VMEvent>();
                 next_event->happen_ts = vm_event->happen_ts + stop_delay_;
@@ -109,6 +114,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kStopped;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
@@ -120,6 +126,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kDeleting;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 auto next_event = std::make_shared<VMEvent>();
                 next_event->happen_ts = vm_event->happen_ts + delete_delay_;
@@ -137,6 +144,7 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 }
 
                 state_ = VMState::kNone;
+                LOG_F(INFO, "State changed to %s", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
@@ -155,56 +163,56 @@ sim::resources::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
 }
 
 sim::types::TimeInterval
-sim::resources::VM::GetStartDelay() const
+sim::infra::VM::GetStartDelay() const
 {
     return start_delay_;
 }
 
 void
-sim::resources::VM::SetStartDelay(sim::types::TimeInterval start_delay)
+sim::infra::VM::SetStartDelay(sim::types::TimeInterval start_delay)
 {
     start_delay_ = start_delay;
 }
 
 sim::types::TimeInterval
-sim::resources::VM::GetRestartDelay() const
+sim::infra::VM::GetRestartDelay() const
 {
     return restart_delay_;
 }
 
 void
-sim::resources::VM::SetRestartDelay(sim::types::TimeInterval restart_delay)
+sim::infra::VM::SetRestartDelay(sim::types::TimeInterval restart_delay)
 {
     restart_delay_ = restart_delay;
 }
 
 sim::types::TimeInterval
-sim::resources::VM::GetStopDelay() const
+sim::infra::VM::GetStopDelay() const
 {
     return stop_delay_;
 }
 
 void
-sim::resources::VM::SetStopDelay(sim::types::TimeInterval stop_delay)
+sim::infra::VM::SetStopDelay(sim::types::TimeInterval stop_delay)
 {
     stop_delay_ = stop_delay;
 }
 
 sim::types::TimeInterval
-sim::resources::VM::GetDeleteDelay() const
+sim::infra::VM::GetDeleteDelay() const
 {
     return delete_delay_;
 }
 
 void
-sim::resources::VM::SetDeleteDelay(sim::types::TimeInterval delete_delay)
+sim::infra::VM::SetDeleteDelay(sim::types::TimeInterval delete_delay)
 {
     delete_delay_ = delete_delay;
 }
 
 bool
-sim::resources::VM::StateIs(sim::resources::VMState expected,
-                            const std::string& caller_info)
+sim::infra::VM::StateIs(sim::infra::VMState expected,
+                        const std::string& caller_info)
 {
     if (state_ != expected) {
         LOG_F(ERROR, "%s: given state %s, expected %s", caller_info.c_str(),
@@ -218,7 +226,7 @@ sim::resources::VM::StateIs(sim::resources::VMState expected,
 }
 
 const char*
-sim::resources::VM::StateToString(sim::resources::VMState state)
+sim::infra::VM::StateToString(sim::infra::VMState state)
 {
     switch (state) {
         case VMState::kProvisioning:

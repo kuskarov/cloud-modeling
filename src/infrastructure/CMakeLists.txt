@@ -6,7 +6,9 @@ set(SOURCES
         data-center.h
         data-center.cpp
         vm.h
-        vm.cpp)
+        vm.cpp
+        cloud.h
+        cloud.cpp)
 
 add_library(infrastructure STATIC ${SOURCES})
 

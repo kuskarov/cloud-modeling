@@ -19,10 +19,6 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
         .nargs(1)
         .required();
 
-    parser.add_argument("--tasks-file")
-        .help("Path to YAML config file with tasks description")
-        .nargs(1);
-
     try {
         parser.parse_args(argc, argv);
     } catch (const std::runtime_error& re) {
@@ -35,10 +31,13 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
 
 void
 sim::core::SimulatorConfig::ParseResources(
-    const std::function<void(std::shared_ptr<resources::DataCenter>)>&
-        add_data_center)
+    const std::function<void(std::shared_ptr<infra::DataCenter>)>&
+        add_data_center,
+    const std::function<void(types::TimeStamp,
+                             const std::shared_ptr<events::Event>&, bool)>&
+        schedule_callback)
 {
-    CHECK_F(file_exists(resources_config_path_), "File %s does not exist",
+    CHECK_F(FileExists(resources_config_path_), "File %s does not exist",
             resources_config_path_.c_str());
     YAML::Node file = YAML::LoadFile(resources_config_path_);
 
@@ -49,7 +48,9 @@ sim::core::SimulatorConfig::ParseResources(
     CHECK_F(dc_config_array.IsSequence(),
             "Value of a key \"data-centers\" is not a sequence");
     for (const auto& dc_config : dc_config_array) {
-        auto data_center = std::make_shared<resources::DataCenter>();
+        auto data_center = std::make_shared<infra::DataCenter>();
+
+        data_center->SetScheduleCallback(schedule_callback);
 
         CHECK_F(bool(dc_config["name"]),
                 "No \"name\" field in data-center spec");
@@ -60,9 +61,10 @@ sim::core::SimulatorConfig::ParseResources(
         CHECK_F(dc_config["servers"].IsSequence(),
                 "Value of a key \"servers\" is not a sequence");
         for (const auto& server_config : dc_config["servers"]) {
-            resources::Server server_template{};
+            infra::Server server_template{};
 
             server_template.SetOwner(data_center.get());
+            server_template.SetScheduleCallback(schedule_callback);
 
             CHECK_F(bool(server_config["name"]),
                     "No \"name\" field in server spec");
@@ -95,8 +97,7 @@ sim::core::SimulatorConfig::ParseResources(
 
             /// TODO: write class to create a colony of servers from template
             for (uint32_t i = 0; i < count; ++i) {
-                auto server =
-                    std::make_shared<resources::Server>(server_template);
+                auto server = std::make_shared<infra::Server>(server_template);
 
                 server->SetName(server_template.GetName() + "-" +
                                 std::to_string(data_center->ServersCount()));

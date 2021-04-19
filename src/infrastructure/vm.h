@@ -2,7 +2,7 @@
 
 #include "actor.h"
 
-namespace sim::resources {
+namespace sim::infra {
 
 enum class VMEventType
 {
@@ -72,4 +72,4 @@ class VM : public events::Actor
         delete_delay_{6};
 };
 
-}   // namespace sim::resources
+}   // namespace sim::infra

@@ -1,8 +1,12 @@
 set(SOURCES
-        cloud-manager.h
-        cloud-manager.cpp
+        manager.h
+        manager.cpp
         config.h
-        config.cpp)
+        config.cpp
+        vm-storage.h
+        vm-storage.cpp
+        scheduler.h
+        scheduler.cpp)
 
 add_library(core STATIC ${SOURCES})
 

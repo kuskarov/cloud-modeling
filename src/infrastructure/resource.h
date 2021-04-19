@@ -8,7 +8,7 @@
 #include "event.h"
 #include "types.h"
 
-namespace sim::resources {
+namespace sim::infra {
 
 enum class ResourceEventType
 {

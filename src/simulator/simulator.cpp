@@ -2,8 +2,8 @@
 #include <loguru.hpp>
 #include <memory>
 
-#include "cloud-manager.h"
 #include "config.h"
+#include "manager.h"
 
 int
 main(int argc, char** argv)
@@ -26,7 +26,7 @@ main(int argc, char** argv)
     LOG_F(INFO, "Parsing command-line arguments: Done");
 
     LOG_F(INFO, "Setting up cloud manager...");
-    auto cloud_manager = std::make_shared<sim::core::CloudManager>(config);
+    auto cloud_manager = std::make_shared<sim::core::Manager>(config);
     try {
         cloud_manager->Setup();
     } catch (const std::runtime_error& re) {
@@ -36,5 +36,5 @@ main(int argc, char** argv)
     LOG_F(INFO, "Setting up cloud manager: Done");
 
     LOG_F(INFO, "Running cloud manager...");
-    cloud_manager->RunCloud();
+    cloud_manager->Listen();
 }

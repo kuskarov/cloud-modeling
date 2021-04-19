@@ -4,31 +4,20 @@
 #include "resource.h"
 #include "server.h"
 
-namespace sim::resources {
+namespace sim::infra {
 
 struct DataCenterEvent : events::Event
 {
 };
 
-class DataCenter : public resources::Resource
+class DataCenter : public infra::Resource
 {
  public:
-    DataCenter() : resources::Resource("Data-Center") {}
+    DataCenter() : infra::Resource("Data-Center") {}
 
     void AddServer(const std::shared_ptr<Server>& server)
     {
         servers_.push_back(server);
-    }
-
-    // TODO: need more elegant solution
-    void SetServerScheduleCallback(
-        const std::function<void(types::TimeStamp,
-                                 const std::shared_ptr<events::Event>&, bool)>&
-            schedule_callback)
-    {
-        for (auto& server : servers_) {
-            server->SetScheduleCallback(schedule_callback);
-        }
     }
 
     void HandleEvent(const std::shared_ptr<events::Event>& event) override;
@@ -39,4 +28,4 @@ class DataCenter : public resources::Resource
     std::vector<std::shared_ptr<Server>> servers_{};
 };
 
-}   // namespace sim::resources
+}   // namespace sim::infra

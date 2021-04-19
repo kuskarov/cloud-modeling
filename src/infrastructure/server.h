@@ -6,7 +6,7 @@
 #include "types.h"
 #include "vm.h"
 
-namespace sim::resources {
+namespace sim::infra {
 
 enum class ServerEventType
 {

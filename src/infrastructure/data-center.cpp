@@ -3,8 +3,7 @@
 #include <loguru.hpp>
 
 void
-sim::resources::DataCenter::HandleEvent(
-    const std::shared_ptr<events::Event>& event)
+sim::infra::DataCenter::HandleEvent(const std::shared_ptr<events::Event>& event)
 {
     try {
         auto dc_event = dynamic_cast<const DataCenterEvent*>(event.get());

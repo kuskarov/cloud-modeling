@@ -3,8 +3,7 @@
 #include <loguru.hpp>
 
 void
-sim::resources::Resource::HandleEvent(
-    const std::shared_ptr<events::Event>& event)
+sim::infra::Resource::HandleEvent(const std::shared_ptr<events::Event>& event)
 {
     try {
         auto resource_event = dynamic_cast<const ResourceEvent*>(event.get());
@@ -105,50 +104,50 @@ sim::resources::Resource::HandleEvent(
 }
 
 sim::types::EnergyCount
-sim::resources::Resource::SpentPower()
+sim::infra::Resource::SpentPower()
 {
     throw std::logic_error("abstract class method invocation! not implemented");
 };
 
 sim::types::TimeInterval
-sim::resources::Resource::GetStartupDelay() const
+sim::infra::Resource::GetStartupDelay() const
 {
     return startup_delay_;
 }
 
 void
-sim::resources::Resource::SetStartupDelay(types::TimeInterval startup_delay)
+sim::infra::Resource::SetStartupDelay(types::TimeInterval startup_delay)
 {
     startup_delay_ = startup_delay;
 }
 
 sim::types::TimeInterval
-sim::resources::Resource::GetRebootDelay() const
+sim::infra::Resource::GetRebootDelay() const
 {
     return reboot_delay_;
 }
 
 void
-sim::resources::Resource::SetRebootDelay(types::TimeInterval reboot_delay)
+sim::infra::Resource::SetRebootDelay(types::TimeInterval reboot_delay)
 {
     reboot_delay_ = reboot_delay;
 }
 
 sim::types::TimeInterval
-sim::resources::Resource::GetShutdownDelay() const
+sim::infra::Resource::GetShutdownDelay() const
 {
     return shutdown_delay_;
 }
 
 void
-sim::resources::Resource::SetShutdownDelay(types::TimeInterval shutdown_delay)
+sim::infra::Resource::SetShutdownDelay(types::TimeInterval shutdown_delay)
 {
     shutdown_delay_ = shutdown_delay;
 }
 
 bool
-sim::resources::Resource::PowerStateIs(
-    sim::resources::ResourcePowerState expected, const std::string& caller_info)
+sim::infra::Resource::PowerStateIs(sim::infra::ResourcePowerState expected,
+                                   const std::string& caller_info)
 {
     if (power_state_ != expected) {
         LOG_F(ERROR, "%s: given state %s, expected %s", caller_info.c_str(),
@@ -162,7 +161,7 @@ sim::resources::Resource::PowerStateIs(
 }
 
 const char*
-sim::resources::Resource::PowerStateToString(ResourcePowerState state)
+sim::infra::Resource::PowerStateToString(ResourcePowerState state)
 {
     switch (state) {
         case ResourcePowerState::kOff:

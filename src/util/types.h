@@ -19,4 +19,11 @@ typedef uint64_t CPUHertz;
 
 typedef uint64_t Currency;
 
+static UUID
+UniqueUUID()
+{
+    static UUID serial{1};
+    return serial++;
+}
+
 }   // namespace sim::types

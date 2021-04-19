@@ -6,7 +6,7 @@
 #include "event.h"
 
 void
-sim::resources::Server::HandleEvent(const std::shared_ptr<events::Event>& event)
+sim::infra::Server::HandleEvent(const std::shared_ptr<events::Event>& event)
 {
     try {
         auto server_event = dynamic_cast<const ServerEvent*>(event.get());
@@ -22,15 +22,15 @@ sim::resources::Server::HandleEvent(const std::shared_ptr<events::Event>& event)
                     if (power_state_ != ResourcePowerState::kRunning) {
                         LOG_F(
                             ERROR,
-                            "ProvisionVM event received, but server is not in "
-                            "Running state");
+                              "CreateVM event received, but server is not in "
+                              "Running state");
                         power_state_ = ResourcePowerState::kFailure;
                         break;
                     }
 
                     if (!server_event->virtual_machine) {
                         LOG_F(ERROR,
-                              "ProvisionVM event without virtual_machine "
+                              "CreateVM event without virtual_machine "
                               "attached");
                         break;
                     }
@@ -56,49 +56,49 @@ sim::resources::Server::HandleEvent(const std::shared_ptr<events::Event>& event)
 }
 
 sim::types::RAMBytes
-sim::resources::Server::GetRam() const
+sim::infra::Server::GetRam() const
 {
     return ram_;
 }
 
 void
-sim::resources::Server::SetRam(sim::types::RAMBytes ram)
+sim::infra::Server::SetRam(sim::types::RAMBytes ram)
 {
     ram_ = ram;
 }
 
 sim::types::CPUHertz
-sim::resources::Server::GetClockRate() const
+sim::infra::Server::GetClockRate() const
 {
     return clock_rate_;
 }
 
 void
-sim::resources::Server::SetClockRate(sim::types::CPUHertz clock_rate)
+sim::infra::Server::SetClockRate(sim::types::CPUHertz clock_rate)
 {
     clock_rate_ = clock_rate;
 }
 
 uint32_t
-sim::resources::Server::GetCoreCount() const
+sim::infra::Server::GetCoreCount() const
 {
     return cores_count_;
 }
 
 void
-sim::resources::Server::SetCoresCount(uint32_t cores_count)
+sim::infra::Server::SetCoresCount(uint32_t cores_count)
 {
     cores_count_ = cores_count;
 }
 
 sim::types::Currency
-sim::resources::Server::GetCost() const
+sim::infra::Server::GetCost() const
 {
     return cost_;
 }
 
 void
-sim::resources::Server::SetCost(sim::types::Currency cost)
+sim::infra::Server::SetCost(sim::types::Currency cost)
 {
     cost_ = cost;
 }
