@@ -52,7 +52,7 @@ class Resource : public events::Actor
  public:
     explicit Resource(std::string type) : events::Actor(std::move(type)) {}
 
-    void HandleEvent(const std::shared_ptr<events::Event>& event) override;
+    void HandleEvent(const events::Event* event) override;
 
     virtual types::EnergyCount SpentPower();
 

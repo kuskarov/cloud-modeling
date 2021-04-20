@@ -35,7 +35,7 @@ class VMStorage : public events::Actor
  public:
     VMStorage() : events::Actor("VM-Storage") {}
 
-    void HandleEvent(const std::shared_ptr<events::Event>& event) override;
+    void HandleEvent(const events::Event* event) override;
 
     // TODO: remove from here
     void InsertVM(types::UUID uuid, const std::shared_ptr<infra::VM>& vm)

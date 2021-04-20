@@ -21,7 +21,7 @@ class Manager : public events::Actor
     {
     }
 
-    void HandleEvent(const std::shared_ptr<events::Event>& event) override {}
+    void HandleEvent(const events::Event* event) override {}
 
     void Setup();
     void Listen();

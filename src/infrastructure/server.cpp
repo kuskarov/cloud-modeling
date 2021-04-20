@@ -7,10 +7,10 @@
 #include "vm.h"
 
 void
-sim::infra::Server::HandleEvent(const std::shared_ptr<events::Event>& event)
+sim::infra::Server::HandleEvent(const sim::events::Event* event)
 {
     try {
-        auto server_event = dynamic_cast<const ServerEvent*>(event.get());
+        auto server_event = dynamic_cast<const ServerEvent*>(event);
 
         if (!server_event) {
             Resource::HandleEvent(event);
@@ -108,11 +108,11 @@ sim::infra::Server::ProvisionVM(const sim::infra::ServerEvent* server_event)
 
     virtual_machines_.push_back(server_event->virtual_machine);
 
-    auto vm_startup_event = std::make_shared<VMEvent>();
+    auto vm_startup_event = new VMEvent();
     vm_startup_event->type = VMEventType::kProvisionCompleted;
     vm_startup_event->addressee = server_event->virtual_machine.get();
-    vm_startup_event->happen_ts = server_event->happen_ts;
-    schedule_callback_(server_event->happen_ts, vm_startup_event, true);
+    vm_startup_event->happen_time = server_event->happen_time;
+    schedule_event(vm_startup_event, true);
 }
 
 void

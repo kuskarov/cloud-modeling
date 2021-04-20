@@ -13,9 +13,7 @@ class SimulatorConfig
     void ParseResources(
         const std::function<void(std::shared_ptr<infra::DataCenter>)>&
             add_data_center,
-        const std::function<void(types::TimeStamp,
-                                 const std::shared_ptr<events::Event>&, bool)>&
-            schedule_callback);
+        const events::ScheduleFunction& schedule_function);
 
  private:
     std::string resources_config_path_{};

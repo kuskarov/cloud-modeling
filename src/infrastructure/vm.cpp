@@ -3,10 +3,10 @@
 #include <loguru.hpp>
 
 void
-sim::infra::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
+sim::infra::VM::HandleEvent(const sim::events::Event* event)
 {
     try {
-        auto vm_event = dynamic_cast<const VMEvent*>(event.get());
+        auto vm_event = dynamic_cast<const VMEvent*>(event);
 
         if (!vm_event) {
             LOG_F(ERROR, "Ptr is null, why?");
@@ -21,13 +21,12 @@ sim::infra::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                     break;
                 }
 
-                auto next_event = std::make_shared<VMEvent>();
-                next_event->happen_ts = vm_event->happen_ts;
+                auto next_event = new VMEvent();
+                next_event->happen_time = vm_event->happen_time;
                 next_event->type = VMEventType::kStart;
                 next_event->addressee = this;
 
-                // do immediately
-                schedule_callback_(next_event->happen_ts, next_event, true);
+                schedule_event(next_event, true);
 
                 break;
             }
@@ -39,12 +38,12 @@ sim::infra::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 state_ = VMState::kStarting;
                 LOG_F(INFO, "State changed to %s", StateToString(state_));
 
-                auto next_event = std::make_shared<VMEvent>();
-                next_event->happen_ts = vm_event->happen_ts + start_delay_;
+                auto next_event = new VMEvent();
+                next_event->happen_time = vm_event->happen_time + start_delay_;
                 next_event->type = VMEventType::kStartCompleted;
                 next_event->addressee = this;
 
-                schedule_callback_(next_event->happen_ts, next_event, false);
+                schedule_event(next_event, false);
 
                 break;
             }
@@ -69,12 +68,13 @@ sim::infra::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 state_ = VMState::kRestarting;
                 LOG_F(INFO, "State changed to %s", StateToString(state_));
 
-                auto next_event = std::make_shared<VMEvent>();
-                next_event->happen_ts = vm_event->happen_ts + restart_delay_;
+                auto next_event = new VMEvent();
+                next_event->happen_time =
+                    vm_event->happen_time + restart_delay_;
                 next_event->type = VMEventType::kRestartCompleted;
                 next_event->addressee = this;
 
-                schedule_callback_(next_event->happen_ts, next_event, false);
+                schedule_event(next_event, false);
 
                 break;
             }
@@ -98,12 +98,12 @@ sim::infra::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 state_ = VMState::kStopping;
                 LOG_F(INFO, "State changed to %s", StateToString(state_));
 
-                auto next_event = std::make_shared<VMEvent>();
-                next_event->happen_ts = vm_event->happen_ts + stop_delay_;
+                auto next_event = new VMEvent();
+                next_event->happen_time = vm_event->happen_time + stop_delay_;
                 next_event->type = VMEventType::kStopCompleted;
                 next_event->addressee = this;
 
-                schedule_callback_(next_event->happen_ts, next_event, false);
+                schedule_event(next_event, false);
 
                 break;
             }
@@ -128,12 +128,12 @@ sim::infra::VM::HandleEvent(const std::shared_ptr<events::Event>& event)
                 state_ = VMState::kDeleting;
                 LOG_F(INFO, "State changed to %s", StateToString(state_));
 
-                auto next_event = std::make_shared<VMEvent>();
-                next_event->happen_ts = vm_event->happen_ts + delete_delay_;
+                auto next_event = new VMEvent();
+                next_event->happen_time = vm_event->happen_time + delete_delay_;
                 next_event->type = VMEventType::kDeleteCompleted;
                 next_event->addressee = this;
 
-                schedule_callback_(next_event->happen_ts, next_event, false);
+                schedule_event(next_event, false);
 
                 break;
             }

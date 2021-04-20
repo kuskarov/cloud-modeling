@@ -26,7 +26,7 @@ class Server : public Resource
  public:
     Server() : Resource("Server") {}
 
-    void HandleEvent(const std::shared_ptr<events::Event>& event) override;
+    void HandleEvent(const events::Event* event) override;
 
     // for scheduler
     [[nodiscard]] const auto& VMs() const { return virtual_machines_; }

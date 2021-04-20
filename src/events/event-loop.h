@@ -20,8 +20,7 @@ class EventLoop
      *
      * To be used in closure passed to each component able to generate events
      */
-    void Insert(types::TimeStamp ts, const std::shared_ptr<Event>& event,
-                bool insert_to_head = false);
+    void Insert(Event* event, bool immediate = false);
 
     /**
      *

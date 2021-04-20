@@ -33,9 +33,7 @@ void
 sim::core::SimulatorConfig::ParseResources(
     const std::function<void(std::shared_ptr<infra::DataCenter>)>&
         add_data_center,
-    const std::function<void(types::TimeStamp,
-                             const std::shared_ptr<events::Event>&, bool)>&
-        schedule_callback)
+    const events::ScheduleFunction& schedule_function)
 {
     CHECK_F(FileExists(resources_config_path_), "File %s does not exist",
             resources_config_path_.c_str());
@@ -50,7 +48,7 @@ sim::core::SimulatorConfig::ParseResources(
     for (const auto& dc_config : dc_config_array) {
         auto data_center = std::make_shared<infra::DataCenter>();
 
-        data_center->SetScheduleCallback(schedule_callback);
+        data_center->SetScheduleFunction(schedule_function);
 
         CHECK_F(bool(dc_config["name"]),
                 "No \"name\" field in data-center spec");
@@ -64,7 +62,7 @@ sim::core::SimulatorConfig::ParseResources(
             infra::Server server_template{};
 
             server_template.SetOwner(data_center.get());
-            server_template.SetScheduleCallback(schedule_callback);
+            server_template.SetScheduleFunction(schedule_function);
 
             CHECK_F(bool(server_config["name"]),
                     "No \"name\" field in server spec");

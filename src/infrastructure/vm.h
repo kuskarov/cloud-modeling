@@ -51,7 +51,7 @@ class VM : public events::Actor
  public:
     VM() : events::Actor("VM") {}
 
-    void HandleEvent(const std::shared_ptr<events::Event>& event) override;
+    void HandleEvent(const events::Event* event) override;
 
     [[nodiscard]] types::TimeInterval GetStartDelay() const;
     void SetStartDelay(sim::types::TimeInterval start_delay);

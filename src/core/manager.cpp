@@ -12,32 +12,31 @@ void
 sim::core::Manager::Setup()
 {
     event_loop_ = std::make_shared<events::EventLoop>();
-    auto schedule_callback = [this](types::TimeStamp ts,
-                                    const std::shared_ptr<events::Event>& event,
-                                    bool insert_to_head) {
-        event_loop_->Insert(ts, event, insert_to_head);
-    };
+    events::ScheduleFunction schedule_callback =
+        [this](events::Event* event, bool immediate = false) {
+            event_loop_->Insert(event, immediate);
+        };
 
-    schedule_callback_ = schedule_callback;
+    schedule_event = schedule_callback;
 
     cloud_ = std::make_shared<infra::Cloud>();
     cloud_->SetOwner(this);
-    cloud_->SetScheduleCallback(schedule_callback_);
+    cloud_->SetScheduleFunction(schedule_event);
 
     vm_storage_ = std::make_shared<VMStorage>();
     vm_storage_->SetOwner(this);
-    vm_storage_->SetScheduleCallback(schedule_callback_);
+    vm_storage_->SetScheduleFunction(schedule_event);
 
     scheduler_ = std::make_shared<Scheduler>(cloud_, vm_storage_);
     scheduler_->SetOwner(this);
-    scheduler_->SetScheduleCallback(schedule_callback_);
+    scheduler_->SetScheduleFunction(schedule_event);
 
     config_->ParseResources(
         [this](std::shared_ptr<infra::DataCenter> dc) {
             dc->SetOwner(cloud_.get());
             cloud_->AddDataCenter(std::move(dc));
         },
-        schedule_callback_);
+        schedule_event);
 }
 
 /** First version: simple CLI loop, which can
@@ -56,12 +55,12 @@ sim::core::Manager::Listen()
         if (command == "q") {
             break;
         } else if (command == "run all") {
-            auto startup = std::make_shared<infra::ResourceEvent>();
+            auto startup = new infra::ResourceEvent();
             startup->addressee = cloud_.get();
             startup->resource_event_type = infra::ResourceEventType::kBoot;
-            startup->happen_ts = types::TimeStamp{1};
+            startup->happen_time = types::TimeStamp{1};
 
-            schedule_callback_(types::TimeStamp{1}, startup, false);
+            schedule_event(startup, false);
         } else if (command == "create") {
             CreateVM(command);
         } else if (command == "provision") {
@@ -76,20 +75,20 @@ void
 sim::core::Manager::CreateVM(const std::string& command)
 {
     auto vm = std::make_shared<infra::VM>();
-    vm->SetScheduleCallback(schedule_callback_);
+    vm->SetScheduleFunction(schedule_event);
 
     // TODO: parse input and setup VM
 
     types::UUID uuid = types::GenerateUUID();
     vm_storage_->InsertVM(uuid, vm);
 
-    auto vm_storage_event = std::make_shared<VMStorageEvent>();
+    auto vm_storage_event = new VMStorageEvent();
     vm_storage_event->type = VMStorageEventType::kVMCreated;
     vm_storage_event->addressee = vm_storage_.get();
-    vm_storage_event->happen_ts = event_loop_->Now();
+    vm_storage_event->happen_time = event_loop_->Now();
     vm_storage_event->vm_uuid = uuid;
 
-    schedule_callback_(event_loop_->Now(), vm_storage_event, true);
+    schedule_event(vm_storage_event, true);
 }
 
 void
@@ -100,9 +99,9 @@ sim::core::Manager::Provision(const std::string& command)
     vm_storage_notification->type = VMStorageEventType::kVMProvisioned;
     vm_storage_notification->addressee = vm_storage_.get();
 
-    auto scheduler_event = std::make_shared<SchedulerEvent>();
+    auto scheduler_event = new SchedulerEvent();
     scheduler_event->type = SchedulerEventType::kProvisionVM;
     scheduler_event->addressee = scheduler_.get();
-    scheduler_event->happen_ts = event_loop_->Now();
-    schedule_callback_(event_loop_->Now(), scheduler_event, true);
+    scheduler_event->happen_time = event_loop_->Now();
+    schedule_event(scheduler_event, true);
 }

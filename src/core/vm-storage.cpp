@@ -1,7 +1,7 @@
 #include "vm-storage.h"
 
 void
-sim::core::VMStorage::HandleEvent(const std::shared_ptr<events::Event>& event)
+sim::core::VMStorage::HandleEvent(const sim::events::Event* event)
 {
     if (state_ != VMStorageState::kOk) {
         LOG_F(ERROR, "VM-Storage failed");
@@ -9,7 +9,7 @@ sim::core::VMStorage::HandleEvent(const std::shared_ptr<events::Event>& event)
     }
 
     try {
-        auto vm_event = dynamic_cast<const VMStorageEvent*>(event.get());
+        auto vm_event = dynamic_cast<const VMStorageEvent*>(event);
         if (!vm_event) {
             LOG_F(ERROR, "VM-Storage received invalid event");
             state_ = VMStorageState::kFailure;

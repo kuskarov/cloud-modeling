@@ -18,11 +18,10 @@ struct Event
 {
     types::UUID id;
 
-    types::TimeStamp creation_ts, happen_ts;
+    types::TimeStamp happen_time;
 
     /**
-     * A closure to get info about if the event cancelled before the time of
-     * handling
+     * A closure to get info about if the event was cancelled
      */
     std::function<bool()> is_cancelled = [] { return false; };
 

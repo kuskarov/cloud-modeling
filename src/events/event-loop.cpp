@@ -1,28 +1,31 @@
 #include "event-loop.h"
 
 #include <loguru.hpp>
+#include <memory>
 
 #include "actor.h"
 
 void
-sim::events::EventLoop::Insert(sim::types::TimeStamp ts,
-                               const std::shared_ptr<Event>& event,
-                               bool insert_to_head)
+sim::events::EventLoop::Insert(Event* event, bool immediate)
 {
-    if (ts < current_ts_) {
+    if (!event) {
+        throw std::runtime_error("Tried to schedule null event");
+    }
+
+    if (event->happen_time < current_ts_) {
         LOG_F(ERROR, "Timestamp in the past!");
         return;
     }
 
-    if (auto it = queue_.find(ts); it != queue_.end()) {
+    if (auto it = queue_.find(event->happen_time); it != queue_.end()) {
         auto& deq = it->second;
-        if (insert_to_head) {
-            deq.push_front(event);
+        if (immediate) {
+            deq.emplace_front(event);
         } else {
-            deq.push_back(event);
+            deq.emplace_back(event);
         }
     } else {
-        queue_.insert({ts, {event}});
+        queue_[event->happen_time].emplace_back(event);
     }
 }
 
@@ -68,17 +71,17 @@ sim::events::EventLoop::SimulateNextStep()
         current_ts_ = ts;
 
         // ts_queue cannot be empty
-        auto event = *ts_queue.begin();
+        auto event = (*ts_queue.begin());
         ts_queue.pop_front();
 
         if (!event->is_cancelled()) {
-            event->addressee->HandleEvent(event);
+            event->addressee->HandleEvent(event.get());
         } else {
             LOG_F(INFO, "Event %lu was not called because it was cancelled",
                   event->id);
         }
 
-        LOG_F(INFO, "Event: ts = %lu", event->happen_ts);
+        LOG_F(INFO, "Event: ts = %lu", event->happen_time);
 
         if (ts_queue.empty()) {
             queue_.erase(ts);

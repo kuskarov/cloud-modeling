@@ -3,10 +3,10 @@
 #include <loguru.hpp>
 
 void
-sim::infra::Resource::HandleEvent(const std::shared_ptr<events::Event>& event)
+sim::infra::Resource::HandleEvent(const sim::events::Event* event)
 {
     try {
-        auto resource_event = dynamic_cast<const ResourceEvent*>(event.get());
+        auto resource_event = dynamic_cast<const ResourceEvent*>(event);
 
         if (!resource_event) {
             LOG_F(ERROR, "Resource Event is null in %s %s", type_.c_str(),
@@ -137,13 +137,13 @@ sim::infra::Resource::StartBoot(const ResourceEvent* resource_event)
     power_state_ = ResourcePowerState::kTurningOn;
     LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
 
-    auto boot_finished_event = std::make_shared<ResourceEvent>();
+    auto boot_finished_event = new ResourceEvent();
     boot_finished_event->addressee = this;
     boot_finished_event->resource_event_type = ResourceEventType::kBootFinished;
-    boot_finished_event->happen_ts = resource_event->happen_ts + startup_delay_;
+    boot_finished_event->happen_time =
+        resource_event->happen_time + startup_delay_;
 
-    schedule_callback_(boot_finished_event->happen_ts, boot_finished_event,
-                       false);
+    schedule_event(boot_finished_event, false);
 }
 
 void
@@ -157,15 +157,14 @@ sim::infra::Resource::StartShutdown(const ResourceEvent* resource_event)
     power_state_ = ResourcePowerState::kTurningOff;
     LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
 
-    auto shutdown_finished_event = std::make_shared<ResourceEvent>();
+    auto shutdown_finished_event = new ResourceEvent();
     shutdown_finished_event->addressee = this;
     shutdown_finished_event->resource_event_type =
         ResourceEventType::kShutdownFinished;
-    shutdown_finished_event->happen_ts =
-        resource_event->happen_ts + shutdown_delay_;
+    shutdown_finished_event->happen_time =
+        resource_event->happen_time + shutdown_delay_;
 
-    schedule_callback_(shutdown_finished_event->happen_ts,
-                       shutdown_finished_event, false);
+    schedule_event(shutdown_finished_event, false);
 }
 
 void

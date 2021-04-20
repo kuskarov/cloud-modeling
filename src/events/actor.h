@@ -9,6 +9,9 @@
 #include "types.h"
 
 namespace sim::events {
+
+typedef std::function<void(Event*, bool)> ScheduleFunction;
+
 /**
  * Abstract class for Actor. Each Actor should be able to HandleEvent (may
  * handle own overridden event) and has a callback for scheduling events
@@ -18,14 +21,11 @@ class Actor
  public:
     explicit Actor(std::string&& type) : type_(type) {}
 
-    virtual void HandleEvent(const std::shared_ptr<Event>& event) = 0;
+    virtual void HandleEvent(const Event* event) = 0;
 
-    void SetScheduleCallback(
-        const std::function<void(types::TimeStamp,
-                                 const std::shared_ptr<Event>&, bool)>&
-            schedule_callback)
+    void SetScheduleFunction(const ScheduleFunction& schedule_function)
     {
-        schedule_callback_ = schedule_callback;
+        schedule_event = schedule_function;
     }
 
     void SetOwner(Actor* owner) { owner_ = owner; }
@@ -39,8 +39,7 @@ class Actor
     virtual ~Actor() = default;
 
  protected:
-    std::function<void(types::TimeStamp, const std::shared_ptr<Event>&, bool)>
-        schedule_callback_;
+    ScheduleFunction schedule_event;
 
     std::string type_{"Actor"}, name_{"Unnamed"};
 
