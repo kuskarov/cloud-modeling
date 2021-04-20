@@ -38,6 +38,8 @@ enum class VMState
     kFailure,
 };
 
+static inline const char* StateToString(VMState state);
+
 /**
  * Representation of Virtual Machine.
  *
@@ -62,8 +64,6 @@ class VM : public events::Actor
 
  private:
     inline bool StateIs(VMState expected, const std::string& caller_info);
-
-    static inline const char* StateToString(VMState state);
 
     VMState state_{VMState::kProvisioning};
 

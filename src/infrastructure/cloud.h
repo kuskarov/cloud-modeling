@@ -10,9 +10,8 @@ class Cloud : public Resource
  public:
     Cloud() : Resource("Cloud") {}
 
-    void HandleEvent(const std::shared_ptr<events::Event>& event) override;
-
-    const auto& DataCenters() { return data_centers_; }
+    // for scheduler
+    [[nodiscard]] const auto& DataCenters() const { return data_centers_; }
 
     void AddDataCenter(std::shared_ptr<infra::DataCenter> data_center)
     {
@@ -21,6 +20,8 @@ class Cloud : public Resource
 
  private:
     std::vector<std::shared_ptr<infra::DataCenter>> data_centers_{};
+
+    void StartBoot(const ResourceEvent* resource_event) override;
 };
 
 }   // namespace sim::infra

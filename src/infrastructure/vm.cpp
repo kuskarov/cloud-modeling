@@ -226,7 +226,7 @@ sim::infra::VM::StateIs(sim::infra::VMState expected,
 }
 
 const char*
-sim::infra::VM::StateToString(sim::infra::VMState state)
+sim::infra::StateToString(sim::infra::VMState state)
 {
     switch (state) {
         case VMState::kProvisioning:

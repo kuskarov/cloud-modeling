@@ -20,7 +20,7 @@ typedef uint64_t CPUHertz;
 typedef uint64_t Currency;
 
 static UUID
-UniqueUUID()
+GenerateUUID()
 {
     static UUID serial{1};
     return serial++;

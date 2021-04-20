@@ -22,10 +22,15 @@ sim::core::Manager::Setup()
 
     cloud_ = std::make_shared<infra::Cloud>();
     cloud_->SetOwner(this);
+    cloud_->SetScheduleCallback(schedule_callback_);
 
     vm_storage_ = std::make_shared<VMStorage>();
+    vm_storage_->SetOwner(this);
+    vm_storage_->SetScheduleCallback(schedule_callback_);
 
-    scheduler_ = std::make_shared<Scheduler>();
+    scheduler_ = std::make_shared<Scheduler>(cloud_, vm_storage_);
+    scheduler_->SetOwner(this);
+    scheduler_->SetScheduleCallback(schedule_callback_);
 
     config_->ParseResources(
         [this](std::shared_ptr<infra::DataCenter> dc) {
@@ -51,39 +56,53 @@ sim::core::Manager::Listen()
         if (command == "q") {
             break;
         } else if (command == "run all") {
-            auto startup = std::make_shared<events::Event>();
+            auto startup = std::make_shared<infra::ResourceEvent>();
             startup->addressee = cloud_.get();
-            startup->is_cancelled = [] { return false; };
+            startup->resource_event_type = infra::ResourceEventType::kBoot;
+            startup->happen_ts = types::TimeStamp{1};
 
             schedule_callback_(types::TimeStamp{1}, startup, false);
-
-            event_loop_->SimulateAll();
+        } else if (command == "create") {
+            CreateVM(command);
+        } else if (command == "provision") {
+            Provision(command);
         }
+        event_loop_->SimulateAll();
     }
     LOG_F(INFO, "Quit!");
 }
 
-/**
- *
- * Handle user command to create VM. Algorithm:
- *
- * 1) Parse input -> infra::VM object
- * 2) Register VM object in VMStorage
- * 3) Call scheduler
- *
- */
 void
 sim::core::Manager::CreateVM(const std::string& command)
 {
     auto vm = std::make_shared<infra::VM>();
+    vm->SetScheduleCallback(schedule_callback_);
 
     // TODO: parse input and setup VM
 
-    vm_storage_->InsertVM(types::UniqueUUID(), vm);
+    types::UUID uuid = types::GenerateUUID();
+    vm_storage_->InsertVM(uuid, vm);
 
-    // schedule VMStorageEvent
+    auto vm_storage_event = std::make_shared<VMStorageEvent>();
+    vm_storage_event->type = VMStorageEventType::kVMCreated;
+    vm_storage_event->addressee = vm_storage_.get();
+    vm_storage_event->happen_ts = event_loop_->Now();
+    vm_storage_event->vm_uuid = uuid;
 
-    // schedule ScheduleEvent (call Scheduler)
+    schedule_callback_(event_loop_->Now(), vm_storage_event, true);
+}
 
-    // notificate myself
+void
+sim::core::Manager::Provision(const std::string& command)
+{
+    // event that should happen after the chain of events ends
+    auto vm_storage_notification = std::make_shared<VMStorageEvent>();
+    vm_storage_notification->type = VMStorageEventType::kVMProvisioned;
+    vm_storage_notification->addressee = vm_storage_.get();
+
+    auto scheduler_event = std::make_shared<SchedulerEvent>();
+    scheduler_event->type = SchedulerEventType::kProvisionVM;
+    scheduler_event->addressee = scheduler_.get();
+    scheduler_event->happen_ts = event_loop_->Now();
+    schedule_callback_(event_loop_->Now(), scheduler_event, true);
 }

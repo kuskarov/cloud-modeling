@@ -28,6 +28,9 @@ class Server : public Resource
 
     void HandleEvent(const std::shared_ptr<events::Event>& event) override;
 
+    // for scheduler
+    [[nodiscard]] const auto& VMs() const { return virtual_machines_; }
+
     [[nodiscard]] types::RAMBytes GetRam() const;
     void SetRam(types::RAMBytes ram);
     [[nodiscard]] types::CPUHertz GetClockRate() const;
@@ -44,6 +47,10 @@ class Server : public Resource
     types::CPUHertz clock_rate_{};
     uint32_t cores_count_{};
     types::Currency cost_{};
+
+    // event handlers
+    void ProvisionVM(const ServerEvent* server_event);
+    void KillVM(const ServerEvent* server_event);
 };
 
-}   // namespace sim::resources
+}   // namespace sim::infra

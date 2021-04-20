@@ -36,6 +36,13 @@ class EventLoop
      */
     void SimulateAll();
 
+    /**
+     * Available only inside the CloudManager
+     *
+     * @return real time at the moment of call
+     */
+    [[nodiscard]] types::TimeStamp Now() const { return current_ts_; }
+
  private:
     void SimulateNextStep();
 

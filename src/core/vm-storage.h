@@ -30,7 +30,7 @@ struct VMStorageEvent : events::Event
  * A class for VMStorage --- some component of the Cloud, which is responsible
  * for holding VM images (esp. when VM is stopped)
  */
-class VMStorage : events::Actor
+class VMStorage : public events::Actor
 {
  public:
     VMStorage() : events::Actor("VM-Storage") {}
@@ -47,6 +47,10 @@ class VMStorage : events::Actor
             vms_[uuid] = vm;
         }
     }
+
+    const auto& PendingVMs() { return pending_vms_; }
+
+    const auto& GetVM(types::UUID uuid) { return vms_.at(uuid); }
 
  private:
     // TODO: this should not be inside VMStorage

@@ -18,11 +18,7 @@ class Actor
  public:
     explicit Actor(std::string&& type) : type_(type) {}
 
-    virtual void HandleEvent(const std::shared_ptr<Event>& event)
-    {
-        throw std::logic_error(
-            "abstract class method invocation! not implemented");
-    }
+    virtual void HandleEvent(const std::shared_ptr<Event>& event) = 0;
 
     void SetScheduleCallback(
         const std::function<void(types::TimeStamp,

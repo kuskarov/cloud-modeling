@@ -3,23 +3,18 @@
 #include <loguru.hpp>
 
 void
-sim::infra::DataCenter::HandleEvent(const std::shared_ptr<events::Event>& event)
+sim::infra::DataCenter::StartBoot(const ResourceEvent* resource_event)
 {
-    try {
-        auto dc_event = dynamic_cast<const DataCenterEvent*>(event.get());
-        LOG_F(INFO, "Data center event!");
+    LOG_F(INFO, "DataCenter::StartBoot");
 
-        for (const auto& server : servers_) {
-            auto startup_server = std::make_shared<ResourceEvent>();
-            startup_server->resource_event_type = ResourceEventType::kBoot;
-            startup_server->addressee = server.get();
+    for (const auto& server : servers_) {
+        auto server_boot_event = std::make_shared<ResourceEvent>();
+        server_boot_event->resource_event_type = ResourceEventType::kBoot;
+        server_boot_event->addressee = server.get();
+        server_boot_event->happen_ts = resource_event->happen_ts;
 
-            schedule_callback_(event->happen_ts, startup_server, false);
-        }
-
-        LOG_F(INFO, "Scheduled servers' startup!");
-    } catch (const std::bad_cast& bc) {
-        LOG_F(ERROR, "Data-center %s received non-server event!",
-              name_.c_str());
+        schedule_callback_(resource_event->happen_ts, server_boot_event, false);
     }
+
+    Resource::StartBoot(resource_event);
 }

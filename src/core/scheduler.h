@@ -1,8 +1,11 @@
 #pragma once
 
+#include <utility>
+
 #include "actor.h"
 #include "cloud.h"
 #include "event.h"
+#include "vm-storage.h"
 
 namespace sim::core {
 
@@ -27,17 +30,33 @@ struct SchedulerEvent : events::Event
  * Scheduler is an Actor
  *
  */
-class Scheduler : events::Actor
+class Scheduler : public events::Actor
 {
  public:
-    Scheduler() : events::Actor("Scheduler") {}
+    Scheduler(std::shared_ptr<infra::Cloud> cloud,
+              std::shared_ptr<VMStorage> vm_storage)
+        : events::Actor("Scheduler"),
+          cloud_(std::move(cloud)),
+          vm_storage_(std::move(vm_storage))
+    {
+    }
 
     void HandleEvent(const std::shared_ptr<events::Event>& event) override;
 
     ~Scheduler() override = default;
 
- private:
-    const std::shared_ptr<infra::Cloud> cloud_{};
+ protected:
+    /**
+     * Main schedule method which should be overridden
+     *
+     * Input --- state of cloud_ and vm_storage_
+     * Output --- scheduled events for cloud_ and vm_storage_
+     */
+    virtual void UpdateSchedule(const SchedulerEvent* scheduler_event);
+
+    // scheduler has read access to Cloud and VMStorage states
+    std::shared_ptr<infra::Cloud> cloud_{};
+    std::shared_ptr<VMStorage> vm_storage_{};
 };
 
 }   // namespace sim::core

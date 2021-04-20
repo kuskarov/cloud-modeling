@@ -34,6 +34,8 @@ enum class ResourcePowerState
     kFailure,
 };
 
+static inline const char* PowerStateToString(ResourcePowerState state);
+
 /**
  * Abstract class for Resource (something physical, e.g. Server, DataCenter,
  * Switch, etc.) Each Resource:
@@ -67,12 +69,17 @@ class Resource : public events::Actor
     inline bool PowerStateIs(ResourcePowerState expected,
                              const std::string& caller_info);
 
-    static inline const char* PowerStateToString(ResourcePowerState state);
-
     ResourcePowerState power_state_{ResourcePowerState::kOff};
 
     /// TODO: remove magic numbers
     types::TimeInterval startup_delay_{3}, reboot_delay_{4}, shutdown_delay_{1};
+
+    // event handlers
+    virtual void StartBoot(const ResourceEvent* resource_event);
+    virtual void StartShutdown(const ResourceEvent* resource_event);
+    virtual void StartReboot(const ResourceEvent* resource_event);
+    virtual void CompleteBoot(const ResourceEvent* resource_event);
+    virtual void CompleteShutdown(const ResourceEvent* resource_event);
 };
 
-}   // namespace sim::resources
+}   // namespace sim::infra

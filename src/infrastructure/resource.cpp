@@ -8,86 +8,31 @@ sim::infra::Resource::HandleEvent(const std::shared_ptr<events::Event>& event)
     try {
         auto resource_event = dynamic_cast<const ResourceEvent*>(event.get());
 
+        if (!resource_event) {
+            LOG_F(ERROR, "Resource Event is null in %s %s", type_.c_str(),
+                  name_.c_str());
+            return;
+        }
+
         switch (resource_event->resource_event_type) {
             case ResourceEventType::kBoot: {
-                // switch state to kTurningOn and schedule kBootFinished event
-
-                if (!PowerStateIs(ResourcePowerState::kOff,
-                                  "Boot Event Handler")) {
-                    break;
-                }
-
-                power_state_ = ResourcePowerState::kTurningOn;
-                LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_));
-
-                auto boot_finished_event = std::make_shared<ResourceEvent>();
-                boot_finished_event->addressee = this;
-                boot_finished_event->resource_event_type =
-                    ResourceEventType::kBootFinished;
-                boot_finished_event->happen_ts =
-                    resource_event->happen_ts + startup_delay_;
-
-                schedule_callback_(boot_finished_event->happen_ts,
-                                   boot_finished_event, false);
-
+                StartBoot(resource_event);
                 break;
             }
             case ResourceEventType::kReboot: {
+                StartReboot(resource_event);
                 break;
             }
             case ResourceEventType::kBootFinished: {
-                // switch state to kRunning
-
-                if (!PowerStateIs(ResourcePowerState::kTurningOn,
-                                  "BootFinished Event Handler")) {
-                    break;
-                }
-
-                power_state_ = ResourcePowerState::kRunning;
-                LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_));
-
+                CompleteBoot(resource_event);
                 break;
             }
             case ResourceEventType::kShutdown: {
-                // switch state to kTurningOff and schedule kShutdownFinished
-                // event
-
-                if (!PowerStateIs(ResourcePowerState::kRunning,
-                                  "Shutdown Event Handler")) {
-                    break;
-                }
-
-                power_state_ = ResourcePowerState::kTurningOff;
-                LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_));
-
-                auto shutdown_finished_event =
-                    std::make_shared<ResourceEvent>();
-                shutdown_finished_event->addressee = this;
-                shutdown_finished_event->resource_event_type =
-                    ResourceEventType::kShutdownFinished;
-                shutdown_finished_event->happen_ts =
-                    resource_event->happen_ts + shutdown_delay_;
-
-                schedule_callback_(shutdown_finished_event->happen_ts,
-                                   shutdown_finished_event, false);
-
+                StartShutdown(resource_event);
                 break;
             }
             case ResourceEventType::kShutdownFinished: {
-                // switch state to kOff
-
-                if (!PowerStateIs(ResourcePowerState::kTurningOff,
-                                  "ShutdownFinished Event Handler")) {
-                    break;
-                }
-
-                power_state_ = ResourcePowerState::kOff;
-                LOG_F(INFO, "State changed to %s",
-                      PowerStateToString(power_state_));
-
+                CompleteShutdown(resource_event);
                 break;
             }
             default: {
@@ -161,7 +106,7 @@ sim::infra::Resource::PowerStateIs(sim::infra::ResourcePowerState expected,
 }
 
 const char*
-sim::infra::Resource::PowerStateToString(ResourcePowerState state)
+sim::infra::PowerStateToString(ResourcePowerState state)
 {
     switch (state) {
         case ResourcePowerState::kOff:
@@ -177,4 +122,81 @@ sim::infra::Resource::PowerStateToString(ResourcePowerState state)
         default:
             return "UNREACHABLE";
     }
+}
+
+void
+sim::infra::Resource::StartBoot(const ResourceEvent* resource_event)
+{
+    // switch state to kTurningOn and schedule kBootFinished event
+    LOG_F(INFO, "Resource::StartBoot");
+
+    if (!PowerStateIs(ResourcePowerState::kOff, "Boot Event Handler")) {
+        return;
+    }
+
+    power_state_ = ResourcePowerState::kTurningOn;
+    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
+
+    auto boot_finished_event = std::make_shared<ResourceEvent>();
+    boot_finished_event->addressee = this;
+    boot_finished_event->resource_event_type = ResourceEventType::kBootFinished;
+    boot_finished_event->happen_ts = resource_event->happen_ts + startup_delay_;
+
+    schedule_callback_(boot_finished_event->happen_ts, boot_finished_event,
+                       false);
+}
+
+void
+sim::infra::Resource::StartShutdown(const ResourceEvent* resource_event)
+{
+    // switch state to kTurningOff and schedule kShutdownFinished event
+    if (!PowerStateIs(ResourcePowerState::kRunning, "Shutdown Event Handler")) {
+        return;
+    }
+
+    power_state_ = ResourcePowerState::kTurningOff;
+    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
+
+    auto shutdown_finished_event = std::make_shared<ResourceEvent>();
+    shutdown_finished_event->addressee = this;
+    shutdown_finished_event->resource_event_type =
+        ResourceEventType::kShutdownFinished;
+    shutdown_finished_event->happen_ts =
+        resource_event->happen_ts + shutdown_delay_;
+
+    schedule_callback_(shutdown_finished_event->happen_ts,
+                       shutdown_finished_event, false);
+}
+
+void
+sim::infra::Resource::StartReboot(const ResourceEvent* resource_event)
+{
+}
+
+void
+sim::infra::Resource::CompleteBoot(const ResourceEvent* resource_event)
+{
+    // switch state to kRunning
+
+    if (!PowerStateIs(ResourcePowerState::kTurningOn,
+                      "BootFinished Event Handler")) {
+        return;
+    }
+
+    power_state_ = ResourcePowerState::kRunning;
+    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
+}
+
+void
+sim::infra::Resource::CompleteShutdown(const ResourceEvent* resource_event)
+{
+    // switch state to kOff
+
+    if (!PowerStateIs(ResourcePowerState::kTurningOff,
+                      "ShutdownFinished Event Handler")) {
+        return;
+    }
+
+    power_state_ = ResourcePowerState::kOff;
+    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
 }

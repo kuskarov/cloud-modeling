@@ -9,6 +9,11 @@ sim::events::EventLoop::Insert(sim::types::TimeStamp ts,
                                const std::shared_ptr<Event>& event,
                                bool insert_to_head)
 {
+    if (ts < current_ts_) {
+        LOG_F(ERROR, "Timestamp in the past!");
+        return;
+    }
+
     if (auto it = queue_.find(ts); it != queue_.end()) {
         auto& deq = it->second;
         if (insert_to_head) {
@@ -64,6 +69,8 @@ sim::events::EventLoop::SimulateNextStep()
 
         // ts_queue cannot be empty
         auto event = *ts_queue.begin();
+        ts_queue.pop_front();
+
         if (!event->is_cancelled()) {
             event->addressee->HandleEvent(event);
         } else {
@@ -73,7 +80,6 @@ sim::events::EventLoop::SimulateNextStep()
 
         LOG_F(INFO, "Event: ts = %lu", event->happen_ts);
 
-        ts_queue.pop_front();
         if (ts_queue.empty()) {
             queue_.erase(ts);
         }

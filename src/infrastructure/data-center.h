@@ -20,12 +20,15 @@ class DataCenter : public infra::Resource
         servers_.push_back(server);
     }
 
-    void HandleEvent(const std::shared_ptr<events::Event>& event) override;
-
     [[nodiscard]] uint32_t ServersCount() const { return servers_.size(); }
+
+    // for scheduler
+    [[nodiscard]] const auto& Servers() const { return servers_; }
 
  private:
     std::vector<std::shared_ptr<Server>> servers_{};
+
+    void StartBoot(const ResourceEvent* resource_event) override;
 };
 
 }   // namespace sim::infra
