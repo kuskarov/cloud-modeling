@@ -5,9 +5,11 @@ data-centers:
         ram: 32
         clock-rate: 3.6
         cores-count: 16
-        count: 100
+        cost: 123
+        count: 1
       - name: server-type-2
         ram: 16
         clock-rate: 3.9
         cores-count: 8
-        count: 200
+        cost: 456
+        count: 1

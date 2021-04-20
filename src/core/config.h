@@ -9,14 +9,16 @@ namespace sim::core {
 class SimulatorConfig
 {
  public:
-    void ParseArgs(int argc, char **argv);
+    void ParseArgs(int argc, char** argv);
     void ParseResources(
-        const std::function<void(resources::DataCenter)> &add_data_center);
-    bool ParseTasks();
+        const std::function<void(std::shared_ptr<infra::DataCenter>)>&
+            add_data_center,
+        const std::function<void(types::TimeStamp,
+                                 const std::shared_ptr<events::Event>&, bool)>&
+            schedule_callback);
 
  private:
-    bool verbose_{};
-    std::string resources_config_path_{}, tasks_config_path_{};
+    std::string resources_config_path_{};
 };
 
 }   // namespace sim::core

@@ -4,7 +4,7 @@
 #include <string>
 
 inline bool
-file_exists(const std::string& name)
+FileExists(const std::string& name)
 {
     struct stat buffer
     {

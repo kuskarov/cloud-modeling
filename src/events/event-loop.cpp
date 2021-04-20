@@ -1,11 +1,19 @@
 #include "event-loop.h"
 
+#include <loguru.hpp>
+
 #include "actor.h"
 
 void
-sim::events::EventLoop::Insert(sim::types::TimeStamp ts, const Event& event,
+sim::events::EventLoop::Insert(sim::types::TimeStamp ts,
+                               const std::shared_ptr<Event>& event,
                                bool insert_to_head)
 {
+    if (ts < current_ts_) {
+        LOG_F(ERROR, "Timestamp in the past!");
+        return;
+    }
+
     if (auto it = queue_.find(ts); it != queue_.end()) {
         auto& deq = it->second;
         if (insert_to_head) {
@@ -19,43 +27,61 @@ sim::events::EventLoop::Insert(sim::types::TimeStamp ts, const Event& event,
 }
 
 void
-sim::events::EventLoop::SimulateNextTimeStamp()
+sim::events::EventLoop::SimulateAll()
 {
-    if (auto it = queue_.find(current_ts_); it != queue_.end()) {
-        auto& deq = it->second;
-
-        /* using such complicated way for iteration because new events may occur
-         * while simulating this timestamp, even in the front of the queue
-         */
-        auto deq_it = deq.begin();
-        while (deq_it != deq.end()) {
-            const Event& event = *deq_it;
-
-            if (!event.is_cancelled()) {
-                for (auto& addressee : event.addressees) {
-                    addressee->HandleEvent(event);
-                }
-            }
-
-            deq.pop_front();
-            deq_it = deq.begin();
+    while (true) {
+        if (queue_.empty()) {
+            break;
         }
-    } else {
-        abort();   // unreachable? check by abort()
+        SimulateNextStep();
     }
 }
 
-/**
- * Synchronous version, no suspends are supported
- *
- * TODO: add breaks (run it another thread + atomic finish_req flag?)
- */
 void
-sim::events::EventLoop::RunSimulation()
+sim::events::EventLoop::SimulateUntil(uint32_t until_ts)
 {
-    while (!queue_.empty()) {
-        auto least_ts_it = queue_.begin();
-        current_ts_ = least_ts_it->first;
-        SimulateNextTimeStamp();
+    while (true) {
+        if (current_ts_ > until_ts) {
+            break;
+        }
+        SimulateNextStep();
+    }
+}
+
+void
+sim::events::EventLoop::SimulateSteps(uint32_t steps_count)
+{
+    for (uint32_t i = 0; i < steps_count; ++i) {
+        SimulateNextStep();
+    }
+}
+
+void
+sim::events::EventLoop::SimulateNextStep()
+{
+    LOG_F(INFO, "Simulating step!");
+    if (queue_.empty()) {
+        LOG_F(INFO, "Queue is empty!");
+    } else {
+        auto& [ts, ts_queue] = *queue_.begin();
+
+        current_ts_ = ts;
+
+        // ts_queue cannot be empty
+        auto event = *ts_queue.begin();
+        ts_queue.pop_front();
+
+        if (!event->is_cancelled()) {
+            event->addressee->HandleEvent(event);
+        } else {
+            LOG_F(INFO, "Event %lu was not called because it was cancelled",
+                  event->id);
+        }
+
+        LOG_F(INFO, "Event: ts = %lu", event->happen_ts);
+
+        if (ts_queue.empty()) {
+            queue_.erase(ts);
+        }
     }
 }

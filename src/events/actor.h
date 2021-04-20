@@ -1,7 +1,9 @@
 #pragma once
 
 #include <functional>
+#include <loguru.hpp>
 #include <string>
+#include <utility>
 
 #include "event.h"
 #include "types.h"
@@ -14,30 +16,35 @@ namespace sim::events {
 class Actor
 {
  public:
-    Actor() = default;
+    explicit Actor(std::string&& type) : type_(type) {}
 
-    virtual void HandleEvent(const events::Event &event)
-    {
-        throw std::logic_error(
-            "abstract class method invocation! not implemented");
-    }
+    virtual void HandleEvent(const std::shared_ptr<Event>& event) = 0;
 
     void SetScheduleCallback(
-        const std::function<void(types::TimeStamp, Event &&, bool)>
-            &schedule_callback)
+        const std::function<void(types::TimeStamp,
+                                 const std::shared_ptr<Event>&, bool)>&
+            schedule_callback)
     {
         schedule_callback_ = schedule_callback;
     }
 
-    [[nodiscard]] const std::string &GetName() const { return name_; }
-    void SetName(const std::string &name) { name_ = name; }
+    void SetOwner(Actor* owner) { owner_ = owner; }
+
+    [[nodiscard]] const std::string& GetName() const { return name_; }
+    void SetName(const std::string& name) { name_ = name; }
+
+    [[nodiscard]] const std::string& GetType() const { return type_; }
+    void SetType(const std::string& type) { type_ = type; }
 
     virtual ~Actor() = default;
 
- private:
-    std::function<void(types::TimeStamp, Event &&, bool)> schedule_callback_;
+ protected:
+    std::function<void(types::TimeStamp, const std::shared_ptr<Event>&, bool)>
+        schedule_callback_;
 
-    std::string name_{};
+    std::string type_{"Actor"}, name_{"Unnamed"};
+
+    Actor* owner_{};
 };
 
 }   // namespace sim::events

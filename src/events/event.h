@@ -7,25 +7,37 @@
 #include "types.h"
 
 namespace sim::events {
+
 class Actor;
 
 /**
- * Abstract struct for an event, may contain some context in derived
+ * Abstract class for an event, may contain some context in derived
  * implementations
  */
 struct Event
 {
-    // TODO: are they needed?
-    types::UUID uuid;
+    types::UUID id;
+
     types::TimeStamp creation_ts, happen_ts;
-    virtual void do_nothing() {}
 
-    /// a closure to get info about if the event cancelled before the time of
-    /// handling
-    std::function<bool()> is_cancelled;
+    /**
+     * A closure to get info about if the event cancelled before the time of
+     * handling
+     */
+    std::function<bool()> is_cancelled = [] { return false; };
 
-    // TODO: generate unique event for each addressee?
-    std::vector<std::shared_ptr<Actor>> addressees;
+    /**
+     * Actor which HandleEvent() method should be called
+     */
+    Actor* addressee{};
+
+    /**
+     * Event which should be scheduled after the chain of events ended
+     *
+     */
+    std::shared_ptr<Event> notificator{};
+
+    virtual ~Event() = default;
 };
 
 }   // namespace sim::events

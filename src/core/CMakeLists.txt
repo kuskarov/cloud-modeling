@@ -1,8 +1,12 @@
 set(SOURCES
-        cloud-manager.h
-        cloud-manager.cpp
+        manager.h
+        manager.cpp
         config.h
-        config.cpp)
+        config.cpp
+        vm-storage.h
+        vm-storage.cpp
+        scheduler.h
+        scheduler.cpp)
 
 add_library(core STATIC ${SOURCES})
 
@@ -12,7 +16,7 @@ target_compile_features(core PUBLIC cxx_std_17)
 target_link_libraries(core PUBLIC
         util
         events
-        resources)
+        infrastructure)
 
 target_link_libraries(core PUBLIC
         yaml-cpp::yaml-cpp
