@@ -5,8 +5,6 @@
 void
 sim::infra::DataCenter::StartBoot(const ResourceEvent* resource_event)
 {
-    ACTOR_LOG_INFO("StartBoot");
-
     for (const auto& server : servers_) {
         auto server_boot_event = new ResourceEvent();
         server_boot_event->type = ResourceEventType::kBoot;

@@ -3,8 +3,6 @@
 void
 sim::infra::Cloud::StartBoot(const ResourceEvent* resource_event)
 {
-    ACTOR_LOG_INFO("StartBoot");
-
     for (const auto& data_center_ptr : data_centers_) {
         auto dc_boot_event = new ResourceEvent();
         dc_boot_event->type = ResourceEventType::kBoot;

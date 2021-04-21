@@ -11,6 +11,8 @@
 
 namespace sim {
 
+// TODO: to be reworked once more (but with no changes to external interface)
+
 static constexpr char delimiter_ = '|';
 static constexpr char spaces[] = "                              ";
 
@@ -176,6 +178,7 @@ class SimulatorLogger
             logger_ = std::make_unique<spdlog::logger>(
                 "SimLogger",
                 spdlog::sinks_init_list{GetConsoleSink(), GetFileSink()});
+            logger_->flush_on(spdlog::level::level_enum::trace);
         }
     }
 
