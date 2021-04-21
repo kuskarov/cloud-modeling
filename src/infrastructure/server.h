@@ -21,12 +21,14 @@ struct ServerEvent : events::Event
     std::shared_ptr<VM> virtual_machine{};
 };
 
-class Server : public Resource
+class Server : public IResource
 {
  public:
-    Server() : Resource("Server") {}
+    Server() : IResource("Server") {}
 
     void HandleEvent(const events::Event* event) override;
+
+    types::EnergyCount SpentPower() override { return 0; }
 
     // for scheduler
     [[nodiscard]] const auto& VMs() const { return virtual_machines_; }

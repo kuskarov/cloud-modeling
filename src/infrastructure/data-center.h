@@ -10,15 +10,17 @@ struct DataCenterEvent : events::Event
 {
 };
 
-class DataCenter : public Resource
+class DataCenter : public IResource
 {
  public:
-    DataCenter() : Resource("Data-Center") {}
+    DataCenter() : IResource("Data-Center") {}
 
     void AddServer(const std::shared_ptr<Server>& server)
     {
         servers_.push_back(server);
     }
+
+    types::EnergyCount SpentPower() override { return 0; }
 
     [[nodiscard]] uint32_t ServersCount() const { return servers_.size(); }
 

@@ -47,15 +47,14 @@ static inline const char* PowerStateToString(ResourcePowerState state);
  * 5) has startup, reboot and shutdown delays
  *
  */
-class Resource : public events::Actor
+class IResource : public events::IActor
 {
  public:
-    explicit Resource(std::string type) : events::Actor(std::move(type)) {}
+    explicit IResource(std::string type) : events::IActor(std::move(type)) {}
 
     void HandleEvent(const events::Event* event) override;
 
-    // TODO: set =0 and implement in derived
-    virtual types::EnergyCount SpentPower() { return 0; }
+    virtual types::EnergyCount SpentPower() = 0;
 
     [[nodiscard]] types::TimeInterval GetStartupDelay() const;
     void SetStartupDelay(types::TimeInterval startup_delay);
@@ -64,7 +63,7 @@ class Resource : public events::Actor
     [[nodiscard]] types::TimeInterval GetShutdownDelay() const;
     void SetShutdownDelay(types::TimeInterval shutdown_delay);
 
-    ~Resource() override = default;
+    ~IResource() override = default;
 
  protected:
     inline bool PowerStateIs(ResourcePowerState expected,

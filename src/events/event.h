@@ -8,7 +8,7 @@
 
 namespace sim::events {
 
-class Actor;
+class IActor;
 
 /**
  * Abstract class for an event, may contain some context in derived
@@ -28,7 +28,7 @@ struct Event
     /**
      * Actor which HandleEvent() method should be called
      */
-    Actor* addressee{};
+    IActor* addressee{};
 
     /**
      * Event which should be scheduled after the chain of events ended

@@ -13,7 +13,7 @@ sim::infra::Server::HandleEvent(const events::Event* event)
         auto server_event = dynamic_cast<const ServerEvent*>(event);
 
         if (!server_event) {
-            Resource::HandleEvent(event);
+            IResource::HandleEvent(event);
         } else {
             switch (server_event->type) {
                 case ServerEventType::kProvisionVM: {
@@ -32,7 +32,7 @@ sim::infra::Server::HandleEvent(const events::Event* event)
         }
     } catch (const std::bad_cast& bc) {
         // may be an event of underlying class
-        Resource::HandleEvent(event);
+        IResource::HandleEvent(event);
     }
 }
 

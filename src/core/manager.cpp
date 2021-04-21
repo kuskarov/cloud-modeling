@@ -31,7 +31,7 @@ sim::core::Manager::Setup()
     vm_storage_->SetOwner(this);
     vm_storage_->SetScheduleFunction(schedule_event);
 
-    scheduler_ = std::make_shared<Scheduler>(cloud_, vm_storage_);
+    scheduler_ = std::make_shared<FirstAvailableScheduler>(cloud_, vm_storage_);
     scheduler_->SetOwner(this);
     scheduler_->SetScheduleFunction(schedule_event);
 

@@ -4,7 +4,7 @@
 #include "server.h"
 
 void
-sim::core::Scheduler::HandleEvent(const sim::events::Event* event)
+sim::core::IScheduler::HandleEvent(const sim::events::Event* event)
 {
     try {
         auto sch_event = dynamic_cast<const SchedulerEvent*>(event);
@@ -24,7 +24,8 @@ sim::core::Scheduler::HandleEvent(const sim::events::Event* event)
 }
 
 void
-sim::core::Scheduler::UpdateSchedule(const SchedulerEvent* scheduler_event)
+sim::core::FirstAvailableScheduler::UpdateSchedule(
+    const sim::core::SchedulerEvent* scheduler_event)
 {
     for (const types::UUID uuid : vm_storage_->PendingVMs()) {
         const auto& vm_ptr = vm_storage_->GetVM(uuid);

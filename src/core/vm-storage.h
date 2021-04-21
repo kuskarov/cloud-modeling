@@ -29,10 +29,10 @@ struct VMStorageEvent : events::Event
  * A class for VMStorage --- some component of the Cloud, which is responsible
  * for holding VM images (esp. when VM is stopped)
  */
-class VMStorage : public events::Actor
+class VMStorage : public events::IActor
 {
  public:
-    VMStorage() : events::Actor("VM-Storage") {}
+    VMStorage() : events::IActor("VM-Storage") {}
 
     void HandleEvent(const events::Event* event) override;
 

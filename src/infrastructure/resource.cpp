@@ -3,7 +3,7 @@
 #include "logger.h"
 
 void
-sim::infra::Resource::HandleEvent(const events::Event* event)
+sim::infra::IResource::HandleEvent(const events::Event* event)
 {
     try {
         auto resource_event = dynamic_cast<const ResourceEvent*>(event);
@@ -46,44 +46,44 @@ sim::infra::Resource::HandleEvent(const events::Event* event)
 }
 
 sim::types::TimeInterval
-sim::infra::Resource::GetStartupDelay() const
+sim::infra::IResource::GetStartupDelay() const
 {
     return startup_delay_;
 }
 
 void
-sim::infra::Resource::SetStartupDelay(types::TimeInterval startup_delay)
+sim::infra::IResource::SetStartupDelay(types::TimeInterval startup_delay)
 {
     startup_delay_ = startup_delay;
 }
 
 sim::types::TimeInterval
-sim::infra::Resource::GetRebootDelay() const
+sim::infra::IResource::GetRebootDelay() const
 {
     return reboot_delay_;
 }
 
 void
-sim::infra::Resource::SetRebootDelay(types::TimeInterval reboot_delay)
+sim::infra::IResource::SetRebootDelay(types::TimeInterval reboot_delay)
 {
     reboot_delay_ = reboot_delay;
 }
 
 sim::types::TimeInterval
-sim::infra::Resource::GetShutdownDelay() const
+sim::infra::IResource::GetShutdownDelay() const
 {
     return shutdown_delay_;
 }
 
 void
-sim::infra::Resource::SetShutdownDelay(types::TimeInterval shutdown_delay)
+sim::infra::IResource::SetShutdownDelay(types::TimeInterval shutdown_delay)
 {
     shutdown_delay_ = shutdown_delay;
 }
 
 bool
-sim::infra::Resource::PowerStateIs(ResourcePowerState expected,
-                                   const std::string& caller_info)
+sim::infra::IResource::PowerStateIs(ResourcePowerState expected,
+                                    const std::string& caller_info)
 {
     if (power_state_ != expected) {
         ACTOR_LOG_ERROR("{}: given state {}, expected {}", caller_info.c_str(),
@@ -117,7 +117,7 @@ sim::infra::PowerStateToString(ResourcePowerState state)
 }
 
 void
-sim::infra::Resource::StartBoot(const ResourceEvent* resource_event)
+sim::infra::IResource::StartBoot(const ResourceEvent* resource_event)
 {
     // switch state to kTurningOn and schedule kBootFinished event
     ACTOR_LOG_INFO("StartBoot");
@@ -139,7 +139,7 @@ sim::infra::Resource::StartBoot(const ResourceEvent* resource_event)
 }
 
 void
-sim::infra::Resource::StartShutdown(const ResourceEvent* resource_event)
+sim::infra::IResource::StartShutdown(const ResourceEvent* resource_event)
 {
     // switch state to kTurningOff and schedule kShutdownFinished event
     if (!PowerStateIs(ResourcePowerState::kRunning, "Shutdown Event Handler")) {
@@ -159,12 +159,12 @@ sim::infra::Resource::StartShutdown(const ResourceEvent* resource_event)
 }
 
 void
-sim::infra::Resource::StartReboot(const ResourceEvent* resource_event)
+sim::infra::IResource::StartReboot(const ResourceEvent* resource_event)
 {
 }
 
 void
-sim::infra::Resource::CompleteBoot(const ResourceEvent* resource_event)
+sim::infra::IResource::CompleteBoot(const ResourceEvent* resource_event)
 {
     // switch state to kRunning
 
@@ -178,7 +178,7 @@ sim::infra::Resource::CompleteBoot(const ResourceEvent* resource_event)
 }
 
 void
-sim::infra::Resource::CompleteShutdown(const ResourceEvent* resource_event)
+sim::infra::IResource::CompleteShutdown(const ResourceEvent* resource_event)
 {
     // switch state to kOff
 

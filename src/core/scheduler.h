@@ -30,12 +30,12 @@ struct SchedulerEvent : events::Event
  * Scheduler is an Actor
  *
  */
-class Scheduler : public events::Actor
+class IScheduler : public events::IActor
 {
  public:
-    Scheduler(std::shared_ptr<infra::Cloud> cloud,
-              std::shared_ptr<VMStorage> vm_storage)
-        : events::Actor("Scheduler"),
+    IScheduler(std::shared_ptr<infra::Cloud> cloud,
+               std::shared_ptr<VMStorage> vm_storage)
+        : events::IActor("Scheduler"),
           cloud_(std::move(cloud)),
           vm_storage_(std::move(vm_storage))
     {
@@ -43,7 +43,7 @@ class Scheduler : public events::Actor
 
     void HandleEvent(const events::Event* event) override;
 
-    ~Scheduler() override = default;
+    ~IScheduler() override = default;
 
  protected:
     /**
@@ -52,11 +52,24 @@ class Scheduler : public events::Actor
      * Input --- state of cloud_ and vm_storage_
      * Output --- scheduled events for cloud_ and vm_storage_
      */
-    virtual void UpdateSchedule(const SchedulerEvent* scheduler_event);
+    virtual void UpdateSchedule(const SchedulerEvent* scheduler_event) = 0;
 
     // scheduler has read access to Cloud and VMStorage states
     std::shared_ptr<infra::Cloud> cloud_{};
     std::shared_ptr<VMStorage> vm_storage_{};
+};
+
+class FirstAvailableScheduler : public IScheduler
+{
+ public:
+    FirstAvailableScheduler(std::shared_ptr<infra::Cloud> cloud,
+                            std::shared_ptr<VMStorage> vm_storage)
+        : IScheduler(std::move(cloud), std::move(vm_storage))
+    {
+    }
+
+ protected:
+    void UpdateSchedule(const SchedulerEvent* scheduler_event) override;
 };
 
 }   // namespace sim::core

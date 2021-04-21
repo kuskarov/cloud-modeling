@@ -46,10 +46,10 @@ static inline const char* StateToString(VMState state);
  * VM is an Actor, but it is not a Resource, as VM's life cycle is different
  * from physical entities
  */
-class VM : public events::Actor
+class VM : public events::IActor
 {
  public:
-    VM() : events::Actor("VM") {}
+    VM() : events::IActor("VM") {}
 
     void HandleEvent(const events::Event* event) override;
 

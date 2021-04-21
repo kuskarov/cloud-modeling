@@ -14,5 +14,5 @@ sim::infra::DataCenter::StartBoot(const ResourceEvent* resource_event)
         schedule_event(server_boot_event, false);
     }
 
-    Resource::StartBoot(resource_event);
+    IResource::StartBoot(resource_event);
 }

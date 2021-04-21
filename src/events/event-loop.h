@@ -14,10 +14,10 @@ Using deque to have ability of adding event to the head or to the end of queue
 typedef std::map<types::TimeStamp, std::deque<std::shared_ptr<Event>>>
     EventQueue;
 
-class EventLoop : public Actor
+class EventLoop : public IActor
 {
  public:
-    EventLoop() : Actor("Event-Loop") { SetName("Event-Loop"); }
+    EventLoop() : IActor("Event-Loop") { SetName("Event-Loop"); }
 
     /**
      *

@@ -12,5 +12,5 @@ sim::infra::Cloud::StartBoot(const ResourceEvent* resource_event)
         schedule_event(dc_boot_event, true);
     }
 
-    Resource::StartBoot(resource_event);
+    IResource::StartBoot(resource_event);
 }

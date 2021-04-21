@@ -13,11 +13,11 @@
 
 namespace sim::core {
 
-class Manager : public events::Actor
+class Manager : public events::IActor
 {
  public:
     explicit Manager(std::shared_ptr<SimulatorConfig> config)
-        : events::Actor("Simulator"), config_(std::move(config))
+        : events::IActor("Simulator"), config_(std::move(config))
     {
     }
 
@@ -31,7 +31,7 @@ class Manager : public events::Actor
 
     std::shared_ptr<VMStorage> vm_storage_{};
 
-    std::shared_ptr<Scheduler> scheduler_{};
+    std::shared_ptr<IScheduler> scheduler_{};
 
     std::shared_ptr<SimulatorConfig> config_;
 

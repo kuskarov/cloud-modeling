@@ -5,13 +5,15 @@
 
 namespace sim::infra {
 
-class Cloud : public Resource
+class Cloud : public IResource
 {
  public:
-    Cloud() : Resource("Cloud") { name_ = "Cloud"; }
+    Cloud() : IResource("Cloud") { name_ = "Cloud"; }
 
     // for scheduler
     [[nodiscard]] const auto& DataCenters() const { return data_centers_; }
+
+    types::EnergyCount SpentPower() override { return 0; }
 
     void AddDataCenter(std::shared_ptr<infra::DataCenter> data_center)
     {
