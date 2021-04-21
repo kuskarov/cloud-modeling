@@ -22,7 +22,7 @@ enum class ResourceEventType
 
 struct ResourceEvent : events::Event
 {
-    ResourceEventType resource_event_type{ResourceEventType::kNone};
+    ResourceEventType type{ResourceEventType::kNone};
 };
 
 enum class ResourcePowerState
@@ -54,7 +54,8 @@ class Resource : public events::Actor
 
     void HandleEvent(const events::Event* event) override;
 
-    virtual types::EnergyCount SpentPower();
+    // TODO: set =0 and implement in derived
+    virtual types::EnergyCount SpentPower() { return 0; }
 
     [[nodiscard]] types::TimeInterval GetStartupDelay() const;
     void SetStartupDelay(types::TimeInterval startup_delay);

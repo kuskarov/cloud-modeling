@@ -3,6 +3,7 @@
 #include <deque>
 #include <map>
 
+#include "actor.h"
 #include "event.h"
 
 namespace sim::events {
@@ -13,9 +14,11 @@ Using deque to have ability of adding event to the head or to the end of queue
 typedef std::map<types::TimeStamp, std::deque<std::shared_ptr<Event>>>
     EventQueue;
 
-class EventLoop
+class EventLoop : public Actor
 {
  public:
+    EventLoop() : Actor("Event-Loop") { SetName("Event-Loop"); }
+
     /**
      *
      * To be used in closure passed to each component able to generate events
@@ -41,6 +44,8 @@ class EventLoop
      * @return real time at the moment of call
      */
     [[nodiscard]] types::TimeStamp Now() const { return current_ts_; }
+
+    void HandleEvent(const events::Event* event) override {}
 
  private:
     void SimulateNextStep();

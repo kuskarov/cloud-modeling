@@ -1,11 +1,11 @@
 #pragma once
 
 #include <functional>
-#include <loguru.hpp>
 #include <string>
 #include <utility>
 
 #include "event.h"
+#include "logger.h"
 #include "types.h"
 
 namespace sim::events {
@@ -45,5 +45,11 @@ class Actor
 
     Actor* owner_{};
 };
+
+#define ACTOR_LOG_INFO(...) SimulatorLogger().LogInfo(type_, name_, __VA_ARGS__)
+#define ACTOR_LOG_ERROR(...) \
+    SimulatorLogger().LogError(type_, name_, __VA_ARGS__)
+#define ACTOR_LOG_DEBUG(...) \
+    SimulatorLogger().LogDebug(type_, name_, __VA_ARGS__)
 
 }   // namespace sim::events

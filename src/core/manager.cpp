@@ -1,8 +1,8 @@
 #include "manager.h"
 
 #include <iostream>
-#include <loguru.hpp>
 
+#include "logger.h"
 #include "scheduler.h"
 #include "types.h"
 #include "vm-storage.h"
@@ -11,6 +11,10 @@
 void
 sim::core::Manager::Setup()
 {
+    SimulatorLogger::EnableCSVLogging("log.csv");
+    SimulatorLogger::SetTimeCallback([this] { return event_loop_->Now(); });
+    SimulatorLogger::Setup();
+
     event_loop_ = std::make_shared<events::EventLoop>();
     events::ScheduleFunction schedule_callback =
         [this](events::Event* event, bool immediate = false) {
@@ -57,7 +61,7 @@ sim::core::Manager::Listen()
         } else if (command == "run all") {
             auto startup = new infra::ResourceEvent();
             startup->addressee = cloud_.get();
-            startup->resource_event_type = infra::ResourceEventType::kBoot;
+            startup->type = infra::ResourceEventType::kBoot;
             startup->happen_time = types::TimeStamp{1};
 
             schedule_event(startup, false);
@@ -68,7 +72,7 @@ sim::core::Manager::Listen()
         }
         event_loop_->SimulateAll();
     }
-    LOG_F(INFO, "Quit!");
+    ACTOR_LOG_INFO("Quit!");
 }
 
 void

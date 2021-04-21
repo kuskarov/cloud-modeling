@@ -1,13 +1,13 @@
 #include "server.h"
 
-#include <loguru.hpp>
 #include <typeinfo>
 
 #include "event.h"
+#include "logger.h"
 #include "vm.h"
 
 void
-sim::infra::Server::HandleEvent(const sim::events::Event* event)
+sim::infra::Server::HandleEvent(const events::Event* event)
 {
     try {
         auto server_event = dynamic_cast<const ServerEvent*>(event);
@@ -25,9 +25,7 @@ sim::infra::Server::HandleEvent(const sim::events::Event* event)
                     break;
                 }
                 default: {
-                    LOG_F(ERROR,
-                          "Server %s received server event with invalid type",
-                          name_.c_str());
+                    ACTOR_LOG_ERROR("Received server event with invalid type");
                     break;
                 }
             }
@@ -45,7 +43,7 @@ sim::infra::Server::GetRam() const
 }
 
 void
-sim::infra::Server::SetRam(sim::types::RAMBytes ram)
+sim::infra::Server::SetRam(types::RAMBytes ram)
 {
     ram_ = ram;
 }
@@ -57,7 +55,7 @@ sim::infra::Server::GetClockRate() const
 }
 
 void
-sim::infra::Server::SetClockRate(sim::types::CPUHertz clock_rate)
+sim::infra::Server::SetClockRate(types::CPUHertz clock_rate)
 {
     clock_rate_ = clock_rate;
 }
@@ -81,28 +79,25 @@ sim::infra::Server::GetCost() const
 }
 
 void
-sim::infra::Server::SetCost(sim::types::Currency cost)
+sim::infra::Server::SetCost(types::Currency cost)
 {
     cost_ = cost;
 }
 
 void
-sim::infra::Server::ProvisionVM(const sim::infra::ServerEvent* server_event)
+sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
 {
     // add VM to list of hosted VMs and schedule event for VM startup
 
     if (power_state_ != ResourcePowerState::kRunning) {
-        LOG_F(ERROR,
-              "CreateVM event received, but server is not in "
-              "Running state");
+        ACTOR_LOG_ERROR(
+            "CreateVM event received, but server is not in Running state");
         power_state_ = ResourcePowerState::kFailure;
         return;
     }
 
     if (!server_event->virtual_machine) {
-        LOG_F(ERROR,
-              "CreateVM event without virtual_machine "
-              "attached");
+        ACTOR_LOG_ERROR("CreateVM event without virtual_machine attached");
         return;
     }
 
@@ -116,6 +111,6 @@ sim::infra::Server::ProvisionVM(const sim::infra::ServerEvent* server_event)
 }
 
 void
-sim::infra::Server::KillVM(const sim::infra::ServerEvent* server_event)
+sim::infra::Server::KillVM(const ServerEvent* server_event)
 {
 }

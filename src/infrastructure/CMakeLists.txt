@@ -18,5 +18,3 @@ target_compile_features(infrastructure PUBLIC cxx_std_17)
 target_link_libraries(infrastructure PUBLIC
         util
         events)
-
-target_link_libraries(infrastructure PUBLIC loguru)

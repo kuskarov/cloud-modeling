@@ -10,10 +10,10 @@ struct DataCenterEvent : events::Event
 {
 };
 
-class DataCenter : public infra::Resource
+class DataCenter : public Resource
 {
  public:
-    DataCenter() : infra::Resource("Data-Center") {}
+    DataCenter() : Resource("Data-Center") {}
 
     void AddServer(const std::shared_ptr<Server>& server)
     {

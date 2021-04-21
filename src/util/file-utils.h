@@ -3,7 +3,7 @@
 
 #include <string>
 
-inline bool
+static inline bool
 FileExists(const std::string& name)
 {
     struct stat buffer

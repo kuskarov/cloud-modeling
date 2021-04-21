@@ -8,7 +8,7 @@ namespace sim::infra {
 class Cloud : public Resource
 {
  public:
-    Cloud() : Resource("Cloud") {}
+    Cloud() : Resource("Cloud") { name_ = "Cloud"; }
 
     // for scheduler
     [[nodiscard]] const auto& DataCenters() const { return data_centers_; }

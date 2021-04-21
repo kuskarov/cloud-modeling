@@ -1,9 +1,9 @@
 #include "event-loop.h"
 
-#include <loguru.hpp>
 #include <memory>
 
 #include "actor.h"
+#include "logger.h"
 
 void
 sim::events::EventLoop::Insert(Event* event, bool immediate)
@@ -13,7 +13,7 @@ sim::events::EventLoop::Insert(Event* event, bool immediate)
     }
 
     if (event->happen_time < current_ts_) {
-        LOG_F(ERROR, "Timestamp in the past!");
+        ACTOR_LOG_ERROR("Timestamp in the past!");
         return;
     }
 
@@ -62,9 +62,8 @@ sim::events::EventLoop::SimulateSteps(uint32_t steps_count)
 void
 sim::events::EventLoop::SimulateNextStep()
 {
-    LOG_F(INFO, "Simulating step!");
     if (queue_.empty()) {
-        LOG_F(INFO, "Queue is empty!");
+        ACTOR_LOG_INFO("Queue is empty!");
     } else {
         auto& [ts, ts_queue] = *queue_.begin();
 
@@ -77,11 +76,9 @@ sim::events::EventLoop::SimulateNextStep()
         if (!event->is_cancelled()) {
             event->addressee->HandleEvent(event.get());
         } else {
-            LOG_F(INFO, "Event %lu was not called because it was cancelled",
-                  event->id);
+            ACTOR_LOG_INFO("Event {} was not called because it was cancelled",
+                           event->id);
         }
-
-        LOG_F(INFO, "Event: ts = %lu", event->happen_time);
 
         if (ts_queue.empty()) {
             queue_.erase(ts);

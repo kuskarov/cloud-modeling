@@ -1,20 +1,19 @@
 #include "resource.h"
 
-#include <loguru.hpp>
+#include "logger.h"
 
 void
-sim::infra::Resource::HandleEvent(const sim::events::Event* event)
+sim::infra::Resource::HandleEvent(const events::Event* event)
 {
     try {
         auto resource_event = dynamic_cast<const ResourceEvent*>(event);
 
         if (!resource_event) {
-            LOG_F(ERROR, "Resource Event is null in %s %s", type_.c_str(),
-                  name_.c_str());
+            ACTOR_LOG_ERROR("Resource Event is null");
             return;
         }
 
-        switch (resource_event->resource_event_type) {
+        switch (resource_event->type) {
             case ResourceEventType::kBoot: {
                 StartBoot(resource_event);
                 break;
@@ -36,23 +35,15 @@ sim::infra::Resource::HandleEvent(const sim::events::Event* event)
                 break;
             }
             default: {
-                LOG_F(ERROR,
-                      "resource %s received resource event with invalid type",
-                      name_.c_str());
+                ACTOR_LOG_ERROR("Received resource event with invalid type");
                 break;
             }
         }
 
     } catch (const std::bad_cast& bc) {
-        LOG_F(ERROR, "Resource %s unknown event!", name_.c_str());
+        ACTOR_LOG_ERROR("Received unknown event!");
     }
 }
-
-sim::types::EnergyCount
-sim::infra::Resource::SpentPower()
-{
-    throw std::logic_error("abstract class method invocation! not implemented");
-};
 
 sim::types::TimeInterval
 sim::infra::Resource::GetStartupDelay() const
@@ -91,12 +82,13 @@ sim::infra::Resource::SetShutdownDelay(types::TimeInterval shutdown_delay)
 }
 
 bool
-sim::infra::Resource::PowerStateIs(sim::infra::ResourcePowerState expected,
+sim::infra::Resource::PowerStateIs(ResourcePowerState expected,
                                    const std::string& caller_info)
 {
     if (power_state_ != expected) {
-        LOG_F(ERROR, "%s: given state %s, expected %s", caller_info.c_str(),
-              PowerStateToString(power_state_), PowerStateToString(expected));
+        ACTOR_LOG_ERROR("{}: given state {}, expected {}", caller_info.c_str(),
+                        PowerStateToString(power_state_),
+                        PowerStateToString(expected));
 
         power_state_ = ResourcePowerState::kFailure;
 
@@ -128,18 +120,18 @@ void
 sim::infra::Resource::StartBoot(const ResourceEvent* resource_event)
 {
     // switch state to kTurningOn and schedule kBootFinished event
-    LOG_F(INFO, "Resource::StartBoot");
+    ACTOR_LOG_INFO("StartBoot");
 
     if (!PowerStateIs(ResourcePowerState::kOff, "Boot Event Handler")) {
         return;
     }
 
     power_state_ = ResourcePowerState::kTurningOn;
-    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
+    ACTOR_LOG_INFO("State changed to {}", PowerStateToString(power_state_));
 
     auto boot_finished_event = new ResourceEvent();
     boot_finished_event->addressee = this;
-    boot_finished_event->resource_event_type = ResourceEventType::kBootFinished;
+    boot_finished_event->type = ResourceEventType::kBootFinished;
     boot_finished_event->happen_time =
         resource_event->happen_time + startup_delay_;
 
@@ -155,12 +147,11 @@ sim::infra::Resource::StartShutdown(const ResourceEvent* resource_event)
     }
 
     power_state_ = ResourcePowerState::kTurningOff;
-    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
+    ACTOR_LOG_INFO("State changed to {}", PowerStateToString(power_state_));
 
     auto shutdown_finished_event = new ResourceEvent();
     shutdown_finished_event->addressee = this;
-    shutdown_finished_event->resource_event_type =
-        ResourceEventType::kShutdownFinished;
+    shutdown_finished_event->type = ResourceEventType::kShutdownFinished;
     shutdown_finished_event->happen_time =
         resource_event->happen_time + shutdown_delay_;
 
@@ -183,7 +174,7 @@ sim::infra::Resource::CompleteBoot(const ResourceEvent* resource_event)
     }
 
     power_state_ = ResourcePowerState::kRunning;
-    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
+    ACTOR_LOG_INFO("State changed to {}", PowerStateToString(power_state_));
 }
 
 void
@@ -197,5 +188,5 @@ sim::infra::Resource::CompleteShutdown(const ResourceEvent* resource_event)
     }
 
     power_state_ = ResourcePowerState::kOff;
-    LOG_F(INFO, "State changed to %s", PowerStateToString(power_state_));
+    ACTOR_LOG_INFO("State changed to {}", PowerStateToString(power_state_));
 }

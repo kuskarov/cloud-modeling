@@ -8,4 +8,3 @@ target_link_libraries(simulator PUBLIC
         infrastructure
         core)
 
-target_link_libraries(simulator PUBLIC loguru)

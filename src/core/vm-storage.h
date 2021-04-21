@@ -1,6 +1,5 @@
 #pragma once
 
-#include <loguru.hpp>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -41,7 +40,7 @@ class VMStorage : public events::Actor
     void InsertVM(types::UUID uuid, const std::shared_ptr<infra::VM>& vm)
     {
         if (vms_.count(uuid)) {
-            LOG_F(ERROR, "UUID is not unique");
+            ACTOR_LOG_ERROR("UUID is not unique");
             state_ = VMStorageState::kFailure;
         } else {
             vms_[uuid] = vm;

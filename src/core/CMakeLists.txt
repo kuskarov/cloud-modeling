@@ -20,5 +20,4 @@ target_link_libraries(core PUBLIC
 
 target_link_libraries(core PUBLIC
         yaml-cpp::yaml-cpp
-        argparse::argparse
-        loguru)
+        argparse::argparse)

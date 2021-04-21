@@ -1,15 +1,15 @@
 #include "vm.h"
 
-#include <loguru.hpp>
+#include "logger.h"
 
 void
-sim::infra::VM::HandleEvent(const sim::events::Event* event)
+sim::infra::VM::HandleEvent(const events::Event* event)
 {
     try {
         auto vm_event = dynamic_cast<const VMEvent*>(event);
 
         if (!vm_event) {
-            LOG_F(ERROR, "Ptr is null, why?");
+            ACTOR_LOG_ERROR("Ptr is null, why?");
             state_ = VMState::kFailure;
             return;
         }
@@ -36,7 +36,7 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kStarting;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 auto next_event = new VMEvent();
                 next_event->happen_time = vm_event->happen_time + start_delay_;
@@ -54,7 +54,7 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kRunning;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
@@ -66,7 +66,7 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kRestarting;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 auto next_event = new VMEvent();
                 next_event->happen_time =
@@ -84,7 +84,7 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kRunning;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
@@ -96,7 +96,7 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kStopping;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 auto next_event = new VMEvent();
                 next_event->happen_time = vm_event->happen_time + stop_delay_;
@@ -114,7 +114,7 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kStopped;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
@@ -126,7 +126,7 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kDeleting;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 auto next_event = new VMEvent();
                 next_event->happen_time = vm_event->happen_time + delete_delay_;
@@ -144,21 +144,21 @@ sim::infra::VM::HandleEvent(const sim::events::Event* event)
                 }
 
                 state_ = VMState::kNone;
-                LOG_F(INFO, "State changed to %s", StateToString(state_));
+                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
 
                 // TODO: schedule notification to the caller
 
                 break;
             }
             default: {
-                LOG_F(ERROR, "VM %s received VM event with invalid type",
-                      name_.c_str());
+                ACTOR_LOG_ERROR("Received VM event with invalid type",
+                                name_.c_str());
                 break;
             }
         }
 
     } catch (const std::bad_cast& bc) {
-        LOG_F(ERROR, "VM %s received non-VM event!", name_.c_str());
+        ACTOR_LOG_ERROR("Received non-VM event!", name_.c_str());
     }
 }
 
@@ -169,7 +169,7 @@ sim::infra::VM::GetStartDelay() const
 }
 
 void
-sim::infra::VM::SetStartDelay(sim::types::TimeInterval start_delay)
+sim::infra::VM::SetStartDelay(types::TimeInterval start_delay)
 {
     start_delay_ = start_delay;
 }
@@ -181,7 +181,7 @@ sim::infra::VM::GetRestartDelay() const
 }
 
 void
-sim::infra::VM::SetRestartDelay(sim::types::TimeInterval restart_delay)
+sim::infra::VM::SetRestartDelay(types::TimeInterval restart_delay)
 {
     restart_delay_ = restart_delay;
 }
@@ -193,7 +193,7 @@ sim::infra::VM::GetStopDelay() const
 }
 
 void
-sim::infra::VM::SetStopDelay(sim::types::TimeInterval stop_delay)
+sim::infra::VM::SetStopDelay(types::TimeInterval stop_delay)
 {
     stop_delay_ = stop_delay;
 }
@@ -205,18 +205,17 @@ sim::infra::VM::GetDeleteDelay() const
 }
 
 void
-sim::infra::VM::SetDeleteDelay(sim::types::TimeInterval delete_delay)
+sim::infra::VM::SetDeleteDelay(types::TimeInterval delete_delay)
 {
     delete_delay_ = delete_delay;
 }
 
 bool
-sim::infra::VM::StateIs(sim::infra::VMState expected,
-                        const std::string& caller_info)
+sim::infra::VM::StateIs(VMState expected, const std::string& caller_info)
 {
     if (state_ != expected) {
-        LOG_F(ERROR, "%s: given state %s, expected %s", caller_info.c_str(),
-              StateToString(state_), StateToString(expected));
+        ACTOR_LOG_ERROR("{}: given state {}, expected {}", caller_info.c_str(),
+                        StateToString(state_), StateToString(expected));
 
         state_ = VMState::kFailure;
 
@@ -226,7 +225,7 @@ sim::infra::VM::StateIs(sim::infra::VMState expected,
 }
 
 const char*
-sim::infra::StateToString(sim::infra::VMState state)
+sim::infra::StateToString(VMState state)
 {
     switch (state) {
         case VMState::kProvisioning:

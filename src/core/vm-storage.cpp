@@ -1,23 +1,25 @@
 #include "vm-storage.h"
 
+#include "logger.h"
+
 void
 sim::core::VMStorage::HandleEvent(const sim::events::Event* event)
 {
     if (state_ != VMStorageState::kOk) {
-        LOG_F(ERROR, "VM-Storage failed");
+        ACTOR_LOG_ERROR("In failed state");
         return;
     }
 
     try {
         auto vm_event = dynamic_cast<const VMStorageEvent*>(event);
         if (!vm_event) {
-            LOG_F(ERROR, "VM-Storage received invalid event");
+            ACTOR_LOG_ERROR("Received invalid event");
             state_ = VMStorageState::kFailure;
             return;
         }
 
         if (auto it = vms_.find(vm_event->vm_uuid); it == vms_.end()) {
-            LOG_F(ERROR, "Unknown UUID: %lu", vm_event->vm_uuid);
+            ACTOR_LOG_ERROR("Unknown UUID: {}", vm_event->vm_uuid);
             state_ = VMStorageState::kFailure;
             return;
         }
@@ -40,13 +42,13 @@ sim::core::VMStorage::HandleEvent(const sim::events::Event* event)
                 break;
             }
             default: {
-                LOG_F(ERROR, "VM-Storage received unknown event");
+                ACTOR_LOG_ERROR("Received unknown event");
                 state_ = VMStorageState::kFailure;
             }
         }
 
     } catch (std::bad_cast& bc) {
-        LOG_F(ERROR, "VM-Storage received invalid event");
+        ACTOR_LOG_ERROR("Received invalid event");
         state_ = VMStorageState::kFailure;
     }
 }
@@ -63,7 +65,7 @@ sim::core::VMStorage::MoveToStopped(types::UUID uuid)
     if (auto it = hosted_vms_.find(uuid); it != hosted_vms_.end()) {
         stopped_vms_.insert(uuid);
     } else {
-        LOG_F(ERROR, "VM-Storage: VM %lu not found in hosted VM-s list", uuid);
+        ACTOR_LOG_ERROR("VM {} not found in hosted VM-s list", uuid);
         state_ = VMStorageState::kFailure;
     }
 }
@@ -74,7 +76,7 @@ sim::core::VMStorage::MoveToHosted(types::UUID uuid)
     if (auto it = pending_vms_.find(uuid); it != pending_vms_.end()) {
         hosted_vms_.insert(uuid);
     } else {
-        LOG_F(ERROR, "VM-Storage: VM %lu not found in pending VM-s list", uuid);
+        ACTOR_LOG_ERROR("VM {} not found in pending VM-s list", uuid);
         state_ = VMStorageState::kFailure;
     }
 }
@@ -89,7 +91,7 @@ sim::core::VMStorage::DeleteVM(types::UUID uuid)
     } else if (auto it3 = pending_vms_.find(uuid); it3 != pending_vms_.end()) {
         pending_vms_.erase(it3);
     } else {
-        LOG_F(ERROR, "VM-Storage: VM %lu not found in VM-s list", uuid);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", uuid);
         state_ = VMStorageState::kFailure;
     }
 }
