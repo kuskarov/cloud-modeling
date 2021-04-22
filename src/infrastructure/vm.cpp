@@ -1,6 +1,12 @@
 #include "vm.h"
 
-#include "logger.h"
+#define CHECK_STATE(expected, extra_text)                                      \
+    if (state_ != (expected)) {                                                \
+        ACTOR_LOG_ERROR("{}: current state is {} but expected {}", extra_text, \
+                        StateToString(state_), StateToString(expected));       \
+        SetState(VMState::kFailure);                                           \
+        return;                                                                \
+    }
 
 void
 sim::infra::VM::HandleEvent(const events::Event* event)
@@ -10,144 +16,45 @@ sim::infra::VM::HandleEvent(const events::Event* event)
 
         if (!vm_event) {
             ACTOR_LOG_ERROR("Ptr is null, why?");
-            state_ = VMState::kFailure;
+            SetState(VMState::kFailure);
             return;
         }
 
         switch (vm_event->type) {
             case VMEventType::kProvisionCompleted: {
-                if (!StateIs(VMState::kProvisioning,
-                             "Provision Completed Event handler")) {
-                    break;
-                }
-
-                auto next_event = new VMEvent();
-                next_event->happen_time = vm_event->happen_time;
-                next_event->type = VMEventType::kStart;
-                next_event->addressee = this;
-
-                schedule_event(next_event, true);
-
+                CompleteProvision(vm_event);
                 break;
             }
             case VMEventType::kStart: {
-                if (!StateIs(VMState::kProvisioning, "Start Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kStarting;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                auto next_event = new VMEvent();
-                next_event->happen_time = vm_event->happen_time + start_delay_;
-                next_event->type = VMEventType::kStartCompleted;
-                next_event->addressee = this;
-
-                schedule_event(next_event, false);
-
+                Start(vm_event);
                 break;
             }
             case VMEventType::kStartCompleted: {
-                if (!StateIs(VMState::kStarting,
-                             "Start Completed Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kRunning;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                // TODO: schedule notification to the caller
-
+                CompleteStart(vm_event);
                 break;
             }
             case VMEventType::kRestart: {
-                if (!StateIs(VMState::kRunning, "Restart Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kRestarting;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                auto next_event = new VMEvent();
-                next_event->happen_time =
-                    vm_event->happen_time + restart_delay_;
-                next_event->type = VMEventType::kRestartCompleted;
-                next_event->addressee = this;
-
-                schedule_event(next_event, false);
-
+                Restart(vm_event);
                 break;
             }
             case VMEventType::kRestartCompleted: {
-                if (!StateIs(VMState::kRestarting, "Stop Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kRunning;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                // TODO: schedule notification to the caller
-
+                CompleteRestart(vm_event);
                 break;
             }
             case VMEventType::kStop: {
-                if (!StateIs(VMState::kRunning, "Stop Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kStopping;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                auto next_event = new VMEvent();
-                next_event->happen_time = vm_event->happen_time + stop_delay_;
-                next_event->type = VMEventType::kStopCompleted;
-                next_event->addressee = this;
-
-                schedule_event(next_event, false);
-
+                Stop(vm_event);
                 break;
             }
             case VMEventType::kStopCompleted: {
-                if (!StateIs(VMState::kStopping,
-                             "Stop Completed Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kStopped;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                // TODO: schedule notification to the caller
-
+                CompleteStop(vm_event);
                 break;
             }
             case VMEventType::kDelete: {
-                if (!StateIs(VMState::kRunning, "Delete Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kDeleting;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                auto next_event = new VMEvent();
-                next_event->happen_time = vm_event->happen_time + delete_delay_;
-                next_event->type = VMEventType::kDeleteCompleted;
-                next_event->addressee = this;
-
-                schedule_event(next_event, false);
-
+                Delete(vm_event);
                 break;
             }
             case VMEventType::kDeleteCompleted: {
-                if (!StateIs(VMState::kDeleting,
-                             "Delete Completed Event handler")) {
-                    break;
-                }
-
-                state_ = VMState::kNone;
-                ACTOR_LOG_INFO("State changed to {}", StateToString(state_));
-
-                // TODO: schedule notification to the caller
-
+                CompleteDelete(vm_event);
                 break;
             }
             default: {
@@ -159,6 +66,119 @@ sim::infra::VM::HandleEvent(const events::Event* event)
     } catch (const std::bad_cast& bc) {
         ACTOR_LOG_ERROR("Received non-VM event!", name_);
     }
+}
+
+void
+sim::infra::VM::CompleteProvision(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kProvisioning, "Provision Completed Event handler");
+
+    auto next_event = new VMEvent();
+    next_event->happen_time = vm_event->happen_time;
+    next_event->type = VMEventType::kStart;
+    next_event->addressee = this;
+
+    schedule_event(next_event, true);
+}
+
+void
+sim::infra::VM::Start(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kProvisioning, "Start Event handler");
+
+    SetState(VMState::kStarting);
+
+    auto next_event = new VMEvent();
+    next_event->happen_time = vm_event->happen_time + start_delay_;
+    next_event->type = VMEventType::kStartCompleted;
+    next_event->addressee = this;
+
+    schedule_event(next_event, false);
+}
+
+void
+sim::infra::VM::CompleteStart(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kStarting, "Start Completed Event handler");
+
+    SetState(VMState::kRunning);
+
+    // TODO: schedule notification to the caller
+}
+
+void
+sim::infra::VM::Restart(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kRunning, "Restart Event handler");
+
+    SetState(VMState::kRestarting);
+
+    auto next_event = new VMEvent();
+    next_event->happen_time = vm_event->happen_time + restart_delay_;
+    next_event->type = VMEventType::kRestartCompleted;
+    next_event->addressee = this;
+
+    schedule_event(next_event, false);
+}
+
+void
+sim::infra::VM::CompleteRestart(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kRestarting, "Stop Event handler");
+
+    SetState(VMState::kRunning);
+
+    // TODO: schedule notification to the caller
+}
+
+void
+sim::infra::VM::Stop(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kRunning, "Stop Event handler");
+
+    SetState(VMState::kStopping);
+
+    auto next_event = new VMEvent();
+    next_event->happen_time = vm_event->happen_time + stop_delay_;
+    next_event->type = VMEventType::kStopCompleted;
+    next_event->addressee = this;
+
+    schedule_event(next_event, false);
+}
+
+void
+sim::infra::VM::CompleteStop(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kStopping, "Stop Completed Event handler");
+
+    SetState(VMState::kStopped);
+
+    // TODO: schedule notification to the caller
+}
+
+void
+sim::infra::VM::Delete(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kRunning, "Delete Event handler");
+
+    SetState(VMState::kDeleting);
+
+    auto next_event = new VMEvent();
+    next_event->happen_time = vm_event->happen_time + delete_delay_;
+    next_event->type = VMEventType::kDeleteCompleted;
+    next_event->addressee = this;
+
+    schedule_event(next_event, false);
+}
+
+void
+sim::infra::VM::CompleteDelete(const sim::infra::VMEvent* vm_event)
+{
+    CHECK_STATE(VMState::kDeleting, "Delete Completed Event handler");
+
+    SetState(VMState::kNone);
+
+    // TODO: schedule notification to the caller
 }
 
 sim::types::TimeInterval
@@ -209,18 +229,11 @@ sim::infra::VM::SetDeleteDelay(types::TimeInterval delete_delay)
     delete_delay_ = delete_delay;
 }
 
-bool
-sim::infra::VM::StateIs(VMState expected, const std::string& caller_info)
+void
+sim::infra::VM::SetState(sim::infra::VMState new_state)
 {
-    if (state_ != expected) {
-        ACTOR_LOG_ERROR("{}: given state {}, expected {}", caller_info,
-                        StateToString(state_), StateToString(expected));
-
-        state_ = VMState::kFailure;
-
-        return false;
-    }
-    return true;
+    state_ = new_state;
+    ACTOR_LOG_INFO("State changed to {}", StateToString(new_state));
 }
 
 const char*

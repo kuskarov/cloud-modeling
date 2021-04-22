@@ -63,13 +63,24 @@ class VM : public events::IActor
     void SetDeleteDelay(sim::types::TimeInterval delete_delay);
 
  private:
-    inline bool StateIs(VMState expected, const std::string& caller_info);
-
     VMState state_{VMState::kProvisioning};
 
-    /// TODO: remove magic numbers
+    inline void SetState(VMState new_state);
+
+    // TODO: remove magic numbers
     types::TimeInterval start_delay_{4}, restart_delay_{3}, stop_delay_{8},
         delete_delay_{6};
+
+    // event handlers
+    void CompleteProvision(const VMEvent* vm_event);
+    void Start(const VMEvent* vm_event);
+    void CompleteStart(const VMEvent* vm_event);
+    void Restart(const VMEvent* vm_event);
+    void CompleteRestart(const VMEvent* vm_event);
+    void Stop(const VMEvent* vm_event);
+    void CompleteStop(const VMEvent* vm_event);
+    void Delete(const VMEvent* vm_event);
+    void CompleteDelete(const VMEvent* vm_event);
 };
 
 }   // namespace sim::infra
