@@ -151,14 +151,13 @@ sim::infra::VM::HandleEvent(const events::Event* event)
                 break;
             }
             default: {
-                ACTOR_LOG_ERROR("Received VM event with invalid type",
-                                name_.c_str());
+                ACTOR_LOG_ERROR("Received VM event with invalid type", name_);
                 break;
             }
         }
 
     } catch (const std::bad_cast& bc) {
-        ACTOR_LOG_ERROR("Received non-VM event!", name_.c_str());
+        ACTOR_LOG_ERROR("Received non-VM event!", name_);
     }
 }
 
@@ -214,7 +213,7 @@ bool
 sim::infra::VM::StateIs(VMState expected, const std::string& caller_info)
 {
     if (state_ != expected) {
-        ACTOR_LOG_ERROR("{}: given state {}, expected {}", caller_info.c_str(),
+        ACTOR_LOG_ERROR("{}: given state {}, expected {}", caller_info,
                         StateToString(state_), StateToString(expected));
 
         state_ = VMState::kFailure;

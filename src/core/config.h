@@ -1,8 +1,10 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
-#include "data-center.h"
+#include "cloud.h"
+#include "server.h"
 
 namespace sim::core {
 
@@ -10,13 +12,17 @@ class SimulatorConfig
 {
  public:
     void ParseArgs(int argc, char** argv);
-    void ParseResources(
-        const std::function<void(std::shared_ptr<infra::DataCenter>)>&
-            add_data_center,
-        const events::ScheduleFunction& schedule_function);
+    void ParseResources(const std::shared_ptr<infra::Cloud>& cloud);
 
  private:
-    std::string resources_config_path_{};
+    void ParseSpecs(const std::string& specs_file_name);
+    void ParseCloud(const std::string& cloud_file_name,
+                    const std::shared_ptr<infra::Cloud>& cloud);
+
+    std::string config_path_{};
+
+    std::unordered_map<std::string, infra::ResourceGenerator<infra::Server>>
+        server_specs_{};
 };
 
 }   // namespace sim::core

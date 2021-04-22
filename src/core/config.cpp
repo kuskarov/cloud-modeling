@@ -2,6 +2,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <algorithm>
 #include <argparse/argparse.hpp>
 
 #include "data-center.h"
@@ -14,95 +15,136 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
 {
     argparse::ArgumentParser parser("simulator");
 
-    parser.add_argument("--resources-file")
-        .help("Path to YAML config file with resources description")
+    parser.add_argument("--config")
+        .help("Path to directory with configuration files")
         .nargs(1)
         .required();
 
-    try {
-        parser.parse_args(argc, argv);
-    } catch (const std::runtime_error& re) {
-        SimulatorLogger().LogRawError("Parse error: {}", re.what());
-        throw;
-    }
+    // throws std::runtime_error on fail, it is handled in the upper scope
+    parser.parse_args(argc, argv);
 
-    resources_config_path_ = parser.get<std::string>("--resources-file");
+    config_path_ = parser.get<std::string>("--config");
 }
 
-#define CHECK(condition, ...)                                       \
-    {                                                               \
-        if (!condition) SimulatorLogger().LogRawError(__VA_ARGS__); \
+#define CHECK(condition, ...)                           \
+    {                                                   \
+        if (!(condition)) {                             \
+            SimulatorLogger().LogRawError(__VA_ARGS__); \
+            throw std::runtime_error("Parse error");    \
+        }                                               \
     }
 
 void
 sim::core::SimulatorConfig::ParseResources(
-    const std::function<void(std::shared_ptr<infra::DataCenter>)>&
-        add_data_center,
-    const events::ScheduleFunction& schedule_function)
+    const std::shared_ptr<infra::Cloud>& cloud)
 {
-    CHECK(FileExists(resources_config_path_), "File {} does not exist",
-          resources_config_path_.c_str());
-    YAML::Node file = YAML::LoadFile(resources_config_path_);
+    ParseSpecs(config_path_ + "/specs.yaml");
+    ParseCloud(config_path_ + "/cloud.yaml", cloud);
+}
 
-    CHECK(file["data-centers"],
-          "No \"data-centers\" field in data-center spec");
-    YAML::Node dc_config_array = file["data-centers"];
+void
+sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
+{
+    CHECK(FileExists(specs_file_name), "File {} does not exist",
+          specs_file_name);
 
-    CHECK(dc_config_array.IsSequence(),
-          "Value of a key \"data-centers\" is not a sequence");
-    for (const auto& dc_config : dc_config_array) {
+    YAML::Node specs = YAML::LoadFile(specs_file_name);
+
+    CHECK(specs.IsSequence(), "File {} is not a sequence", specs_file_name);
+
+    for (const auto& spec : specs) {
+        infra::Server server_template{};
+
+        auto spec_name = spec["name"];
+        auto spec_ram = spec["ram"];
+        auto spec_clock_rate = spec["clock-rate"];
+        auto spec_cores_count = spec["cores-count"];
+        auto spec_cost = spec["cost"];
+
+        CHECK(spec_name, "Field \"name\" not found");
+        CHECK(spec_name.IsScalar(), "Field \"name\" is not a single value");
+
+        CHECK(spec_ram, "Field \"ram\" not found");
+        CHECK(spec_ram.IsScalar(), "Field \"ram\" is not a single value");
+
+        CHECK(spec_clock_rate, "Field \"clock-rate\" not found");
+        CHECK(spec_clock_rate.IsScalar(),
+              "Field \"clock-rate\" is not a single value");
+
+        CHECK(spec_cores_count, "Field \"cores-count\" not found");
+        CHECK(spec_cores_count.IsScalar(),
+              "Field \"cores-count\" is not a single value");
+
+        CHECK(spec_cost, "Field \"cost\" not found");
+        CHECK(spec_cost.IsScalar(), "Field \"cost\" is not a single value");
+
+        server_template.SetName(spec_name.as<std::string>());
+        server_template.SetRam(spec_ram.as<types::RAMBytes>());
+        // TODO: write in a normal way
+        server_template.SetClockRate(static_cast<types::CPUHertz>(
+            spec_clock_rate.as<float>() * 1'000'000));
+        server_template.SetCoresCount(spec_cores_count.as<uint32_t>());
+        server_template.SetCost(spec_cost.as<types::Currency>());
+
+        auto it = server_specs_.find(server_template.GetName());
+        CHECK(it == server_specs_.end(), "Name {} is already in use",
+              server_template.GetName());
+
+        server_specs_.emplace(server_template.GetName(),
+                              std::move(server_template));
+    }
+}
+
+void
+sim::core::SimulatorConfig::ParseCloud(
+    const std::string& cloud_file_name,
+    const std::shared_ptr<infra::Cloud>& cloud)
+{
+    auto cloud_config = YAML::LoadFile(cloud_file_name);
+
+    auto dc_configs = cloud_config["data-centers"];
+
+    CHECK(dc_configs, "Field \"data-centers\" not found");
+    CHECK(dc_configs.IsSequence(), "\"data-centers\" is not a sequence");
+
+    for (const auto& dc_config : dc_configs) {
         auto data_center = std::make_shared<infra::DataCenter>();
 
-        data_center->SetScheduleFunction(schedule_function);
+        cloud->AddDataCenter(data_center);
 
-        CHECK(dc_config["name"], "No \"name\" field in data-center spec");
-        data_center->SetName(dc_config["name"].as<std::string>());
+        auto name_config = dc_config["name"];
+        auto servers_config = dc_config["servers"];
 
-        CHECK(dc_config["servers"], "No \"servers\" field in data-center spec");
-        CHECK(dc_config["servers"].IsSequence(),
-              "Value of a key \"servers\" is not a sequence");
-        for (const auto& server_config : dc_config["servers"]) {
-            infra::Server server_template{};
+        CHECK(name_config, "Field \"name\" not found");
+        CHECK(name_config.IsScalar(), "Field \"name\" is not a single value");
 
-            server_template.SetOwner(data_center.get());
-            server_template.SetScheduleFunction(schedule_function);
+        CHECK(servers_config, "Field \"servers\" not found");
+        CHECK(servers_config.IsSequence(), "\"servers\" is not a sequence");
 
-            CHECK(server_config["name"], "No \"name\" field in server spec");
-            server_template.SetName(server_config["name"].as<std::string>());
+        data_center->SetName(name_config.as<std::string>());
 
-            CHECK(server_config["ram"], "No \"ram\" field in server spec");
-            server_template.SetRam(server_config["ram"].as<types::RAMBytes>());
+        for (const auto& server_config : servers_config) {
+            auto server_name_config = server_config["name"];
+            auto server_count_config = server_config["count"];
 
-            CHECK(server_config["clock-rate"],
-                  "No \"clock-rate\" field in server spec");
+            CHECK(server_name_config, "Field \"name\" not found");
+            CHECK(server_name_config.IsScalar(),
+                  "Field \"name\" is not a single value");
 
-            // TODO: write in a normal way
-            server_template.SetClockRate(static_cast<types::CPUHertz>(
-                server_config["clock-rate"].as<float>() * 1'000'000));
+            CHECK(server_count_config, "Field \"count\" not found");
+            CHECK(server_count_config.IsScalar(),
+                  "Field \"count\" is not a single value");
 
-            CHECK(server_config["cores-count"],
-                  "No \"cores-count\" field in server spec");
-            server_template.SetCoresCount(
-                server_config["cores-count"].as<uint32_t>());
+            auto server_name = server_name_config.as<std::string>();
+            auto servers_count = server_count_config.as<uint32_t>();
+            auto it = server_specs_.find(server_name);
 
-            CHECK(server_config["cost"], "No \"cost\" field in server spec");
-            server_template.SetCost(
-                server_config["cost"].as<types::Currency>());
+            CHECK(it != server_specs_.end(),
+                  "Server name {} is not found in specs", server_name);
 
-            CHECK(server_config["count"], "No \"count\" field in server spec");
-            auto count = server_config["count"].as<uint32_t>();
+            auto& generator = it->second;
 
-            /// TODO: write class to create a colony of servers from template
-            for (uint32_t i = 0; i < count; ++i) {
-                auto server = std::make_shared<infra::Server>(server_template);
-
-                server->SetName(server_template.GetName() + "-" +
-                                std::to_string(data_center->ServersCount()));
-
-                data_center->AddServer(server);
-            }
+            data_center->AddServers(generator, servers_count);
         }
-
-        add_data_center(data_center);
     }
 }

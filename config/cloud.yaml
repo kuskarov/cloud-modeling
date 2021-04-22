@@ -1,0 +1,15 @@
+# Configuration of the cloud, uses specs.yaml
+
+data-centers:
+    -   name: data-center-1
+        servers:
+            -   name: server-type-1
+                count: 100
+            -   name: server-type-2
+                count: 200
+    -   name: data-center-2
+        servers:
+            -   name: server-type-1
+                count: 300
+            -   name: server-type-2
+                count: 50

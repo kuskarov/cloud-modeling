@@ -16,12 +16,9 @@ sim::core::Manager::Setup()
     SimulatorLogger::Setup();
 
     event_loop_ = std::make_shared<events::EventLoop>();
-    events::ScheduleFunction schedule_callback =
-        [this](events::Event* event, bool immediate = false) {
-            event_loop_->Insert(event, immediate);
-        };
-
-    schedule_event = schedule_callback;
+    schedule_event = [this](events::Event* event, bool immediate) {
+        event_loop_->Insert(event, immediate);
+    };
 
     cloud_ = std::make_shared<infra::Cloud>();
     cloud_->SetOwner(this);
@@ -35,12 +32,7 @@ sim::core::Manager::Setup()
     scheduler_->SetOwner(this);
     scheduler_->SetScheduleFunction(schedule_event);
 
-    config_->ParseResources(
-        [this](std::shared_ptr<infra::DataCenter> dc) {
-            dc->SetOwner(cloud_.get());
-            cloud_->AddDataCenter(std::move(dc));
-        },
-        schedule_event);
+    config_->ParseResources(cloud_);
 }
 
 /** First version: simple CLI loop, which can
