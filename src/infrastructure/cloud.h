@@ -17,6 +17,9 @@ class Cloud : public IResource
 
     void AddDataCenter(std::shared_ptr<infra::DataCenter> data_center)
     {
+        data_center->SetOwner(this);
+        data_center->SetScheduleFunction(schedule_event);
+
         data_centers_.push_back(std::move(data_center));
     }
 

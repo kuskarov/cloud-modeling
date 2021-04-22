@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "actor.h"
 #include "resource.h"
 #include "server.h"
@@ -15,9 +17,13 @@ class DataCenter : public IResource
  public:
     DataCenter() : IResource("Data-Center") {}
 
-    void AddServer(const std::shared_ptr<Server>& server)
+    void AddServers(ResourceGenerator<Server>& generator, uint32_t count)
     {
-        servers_.push_back(server);
+        generator.SetOwner(this);
+        generator.SetScheduleFunction(schedule_event);
+
+        std::generate_n(std::back_inserter(servers_), count,
+                        ResourceGeneratorWrapper{generator});
     }
 
     types::EnergyCount SpentPower() override { return 0; }

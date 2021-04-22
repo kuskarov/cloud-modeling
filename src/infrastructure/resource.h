@@ -71,7 +71,7 @@ class IResource : public events::IActor
 
     ResourcePowerState power_state_{ResourcePowerState::kOff};
 
-    /// TODO: remove magic numbers
+    // TODO: remove magic numbers
     types::TimeInterval startup_delay_{3}, reboot_delay_{4}, shutdown_delay_{1};
 
     // event handlers
@@ -80,6 +80,61 @@ class IResource : public events::IActor
     virtual void StartReboot(const ResourceEvent* resource_event);
     virtual void CompleteBoot(const ResourceEvent* resource_event);
     virtual void CompleteShutdown(const ResourceEvent* resource_event);
+};
+
+/**
+ * Class for convenient way to create a colony of identical IResource instances
+ * from the template
+ *
+ */
+template <class Resource>
+class ResourceGenerator
+{
+ public:
+    explicit ResourceGenerator(Resource&& resource_template)
+        : resource_template_(resource_template)
+    {
+        static_assert(std::is_base_of<IResource, Resource>::value);
+    }
+
+    void SetOwner(events::IActor* owner) { resource_template_.SetOwner(owner); }
+
+    void SetScheduleFunction(const events::ScheduleFunction& function)
+    {
+        resource_template_.SetScheduleFunction(function);
+    }
+
+    std::shared_ptr<Resource> operator()()
+    {
+        auto resource = std::make_shared<Resource>(resource_template_);
+        resource->SetName(resource_template_.GetName() + "-" +
+                          std::to_string(++serial));
+
+        return resource;
+    }
+
+ private:
+    Resource resource_template_;
+    uint32_t serial{};
+};
+
+/**
+ * Only to avoid passing generator by value to std::generate_n
+ *
+ */
+template <class Resource>
+class ResourceGeneratorWrapper
+{
+ public:
+    explicit ResourceGeneratorWrapper(ResourceGenerator<Resource>& generator)
+        : generator_(&generator)
+    {
+    }
+
+    std::shared_ptr<Resource> operator()() { return (*generator_)(); }
+
+ private:
+    ResourceGenerator<Resource>* generator_{};
 };
 
 }   // namespace sim::infra
