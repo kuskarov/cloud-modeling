@@ -5,6 +5,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <iostream>
 #include <memory>
 
 #include "types.h"
@@ -210,9 +211,9 @@ class SimulatorLogger
     }
 
     template <typename FormatString, typename... Args>
-    inline void LogRawError(const FormatString& fmt, Args&&... args)
+    inline void PrintErrorToConsole(const FormatString& fmt, Args&&... args)
     {
-        logger_->error(fmt, std::forward<Args>(args)...);
+        std::cerr << fmt::format(fmt, std::forward<Args>(args)...) << std::endl;
     }
 };
 
