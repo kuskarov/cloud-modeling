@@ -7,7 +7,7 @@
 #include "types.h"
 #include "vm.h"
 
-namespace sim::core {
+namespace sim::infra {
 
 enum class VMStorageEventType
 {
@@ -22,7 +22,7 @@ struct VMStorageEvent : events::Event
 {
     VMStorageEventType type{VMStorageEventType::kNone};
 
-    types::UUID vm_uuid{};
+    std::string vm_name{};
 };
 
 /**
@@ -37,25 +37,26 @@ class VMStorage : public events::IActor
     void HandleEvent(const events::Event* event) override;
 
     // TODO: remove from here
-    void InsertVM(types::UUID uuid, const std::shared_ptr<infra::VM>& vm)
+    void InsertVM(const std::shared_ptr<infra::VM>& vm)
     {
-        if (vms_.count(uuid)) {
-            ACTOR_LOG_ERROR("UUID is not unique");
+        if (vms_.count(vm->GetName())) {
+            ACTOR_LOG_ERROR("vm_name {} is not unique", vm->GetName());
             state_ = VMStorageState::kFailure;
         } else {
-            vms_[uuid] = vm;
+            vms_[vm->GetName()] = vm;
+            ACTOR_LOG_INFO("Created VM with name {}", vm->GetName());
         }
     }
 
     const auto& PendingVMs() { return pending_vms_; }
 
-    const auto& GetVM(types::UUID uuid) { return vms_.at(uuid); }
+    const auto& GetVM(const std::string& vm_name) { return vms_.at(vm_name); }
 
  private:
     // TODO: this should not be inside VMStorage
-    std::unordered_map<types::UUID, std::shared_ptr<infra::VM>> vms_;
+    std::unordered_map<std::string, std::shared_ptr<infra::VM>> vms_;
 
-    std::unordered_set<types::UUID>
+    std::unordered_set<std::string>
         hosted_vms_{},    // VMs that are currently hosted on some server
         stopped_vms_{},   // VMs that were stopped but not deleted
         pending_vms_{};   // VMs that were created but not provisioned yet
@@ -69,10 +70,10 @@ class VMStorage : public events::IActor
     VMStorageState state_{VMStorageState::kOk};
 
     // event handlers
-    void MoveToProvisioning(types::UUID uuid);
-    void MoveToStopped(types::UUID uuid);
-    void MoveToHosted(types::UUID uuid);
-    void DeleteVM(types::UUID uuid);
+    void MoveToProvisioning(const std::string& name);
+    void MoveToStopped(const std::string& name);
+    void MoveToHosted(const std::string& name);
+    void DeleteVM(const std::string& name);
 };
 
 }   // namespace sim::core

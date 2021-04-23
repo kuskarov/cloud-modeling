@@ -34,7 +34,7 @@ class IScheduler : public events::IActor
 {
  public:
     IScheduler(std::shared_ptr<infra::Cloud> cloud,
-               std::shared_ptr<VMStorage> vm_storage)
+               std::shared_ptr<infra::VMStorage> vm_storage)
         : events::IActor("Scheduler"),
           cloud_(std::move(cloud)),
           vm_storage_(std::move(vm_storage))
@@ -56,14 +56,14 @@ class IScheduler : public events::IActor
 
     // scheduler has read access to Cloud and VMStorage states
     std::shared_ptr<infra::Cloud> cloud_{};
-    std::shared_ptr<VMStorage> vm_storage_{};
+    std::shared_ptr<infra::VMStorage> vm_storage_{};
 };
 
 class FirstAvailableScheduler : public IScheduler
 {
  public:
     FirstAvailableScheduler(std::shared_ptr<infra::Cloud> cloud,
-                            std::shared_ptr<VMStorage> vm_storage)
+                            std::shared_ptr<infra::VMStorage> vm_storage)
         : IScheduler(std::move(cloud), std::move(vm_storage))
     {
     }

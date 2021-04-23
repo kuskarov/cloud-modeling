@@ -37,6 +37,7 @@ class DataCenter : public IResource
     std::vector<std::shared_ptr<Server>> servers_{};
 
     void StartBoot(const ResourceEvent* resource_event) override;
+    void StartShutdown(const ResourceEvent* resource_event) override;
 };
 
 }   // namespace sim::infra

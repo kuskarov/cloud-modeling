@@ -8,6 +8,7 @@
 #include "cloud.h"
 #include "config.h"
 #include "event-loop.h"
+#include "resource-register.h"
 #include "scheduler.h"
 #include "vm-storage.h"
 
@@ -29,7 +30,7 @@ class Manager : public events::IActor
  private:
     std::shared_ptr<infra::Cloud> cloud_{};
 
-    std::shared_ptr<VMStorage> vm_storage_{};
+    std::shared_ptr<infra::VMStorage> vm_storage_{};
 
     std::shared_ptr<IScheduler> scheduler_{};
 
@@ -37,9 +38,15 @@ class Manager : public events::IActor
 
     std::shared_ptr<events::EventLoop> event_loop_;
 
+    std::shared_ptr<infra::ResourceRegister> register_{};
+
     // event handlers
+    void Boot(const std::string& command);
     void CreateVM(const std::string& command);
-    void Provision(const std::string& command);
+    void ProvisionVM(const std::string& command);
+    void StopVM(const std::string& command);
+    void Shutdown(const std::string& command);
+    void DeleteVM(const std::string& command);
 };
 
 }   // namespace sim::core

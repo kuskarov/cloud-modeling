@@ -50,7 +50,7 @@ class EventLoop : public IActor
  private:
     void SimulateNextStep();
 
-    types::TimeStamp current_ts_{};
+    types::TimeStamp current_ts_{1};
     EventQueue queue_{};
 };
 

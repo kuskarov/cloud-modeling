@@ -20,8 +20,8 @@ sim::infra::Server::HandleEvent(const events::Event* event)
                     ProvisionVM(server_event);
                     break;
                 }
-                case ServerEventType::kKillVM: {
-                    KillVM(server_event);
+                case ServerEventType::kUnprovisionVM: {
+                    UnprovisionVM(server_event);
                     break;
                 }
                 default: {
@@ -34,6 +34,63 @@ sim::infra::Server::HandleEvent(const events::Event* event)
         // may be an event of underlying class
         IResource::HandleEvent(event);
     }
+}
+
+void
+sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
+{
+    // add VM to list of hosted VMs and schedule event for VM startup
+
+    if (power_state_ != ResourcePowerState::kRunning) {
+        ACTOR_LOG_ERROR(
+            "ProvisionVM event received, but server is not in Running state");
+        power_state_ = ResourcePowerState::kFailure;
+        return;
+    }
+
+    if (server_event->vm_name.empty()) {
+        ACTOR_LOG_ERROR("ProvisionVM event without virtual_machine attached");
+        return;
+    }
+
+    auto virtual_machine = vm_storage_->GetVM(server_event->vm_name);
+    virtual_machine->SetOwner(this);
+
+    virtual_machines_.insert(server_event->vm_name);
+    ACTOR_LOG_INFO("VM {} is hosted here", server_event->vm_name);
+
+    auto vm_provisioned_event = new VMEvent();
+    vm_provisioned_event->type = VMEventType::kProvisionCompleted;
+    vm_provisioned_event->addressee = virtual_machine.get();
+    vm_provisioned_event->happen_time = server_event->happen_time;
+    vm_provisioned_event->notificator = server_event->notificator;
+    schedule_event(vm_provisioned_event, false);
+}
+
+void
+sim::infra::Server::UnprovisionVM(const ServerEvent* server_event)
+{
+    // remove VM from list of hosted VMs
+
+    if (power_state_ != ResourcePowerState::kRunning) {
+        ACTOR_LOG_ERROR(
+            "UnprovisionVM event received, but server is not in Running state");
+        power_state_ = ResourcePowerState::kFailure;
+        return;
+    }
+
+    if (!virtual_machines_.count(server_event->vm_name)) {
+        ACTOR_LOG_ERROR("VM {} is ot hosted on this server",
+                        server_event->vm_name);
+        return;
+    }
+
+    virtual_machines_.erase(server_event->vm_name);
+    ACTOR_LOG_INFO("VM {} removed from this server", server_event->vm_name);
+
+    auto event = server_event->notificator;
+    event->happen_time = server_event->happen_time;
+    schedule_event(event, false);
 }
 
 sim::types::RAMBytes
@@ -82,35 +139,4 @@ void
 sim::infra::Server::SetCost(types::Currency cost)
 {
     cost_ = cost;
-}
-
-void
-sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
-{
-    // add VM to list of hosted VMs and schedule event for VM startup
-
-    if (power_state_ != ResourcePowerState::kRunning) {
-        ACTOR_LOG_ERROR(
-            "CreateVM event received, but server is not in Running state");
-        power_state_ = ResourcePowerState::kFailure;
-        return;
-    }
-
-    if (!server_event->virtual_machine) {
-        ACTOR_LOG_ERROR("CreateVM event without virtual_machine attached");
-        return;
-    }
-
-    virtual_machines_.push_back(server_event->virtual_machine);
-
-    auto vm_startup_event = new VMEvent();
-    vm_startup_event->type = VMEventType::kProvisionCompleted;
-    vm_startup_event->addressee = server_event->virtual_machine.get();
-    vm_startup_event->happen_time = server_event->happen_time;
-    schedule_event(vm_startup_event, true);
-}
-
-void
-sim::infra::Server::KillVM(const ServerEvent* server_event)
-{
 }

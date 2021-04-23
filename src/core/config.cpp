@@ -36,10 +36,11 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
 
 void
 sim::core::SimulatorConfig::ParseResources(
-    const std::shared_ptr<infra::Cloud>& cloud)
+    const std::shared_ptr<infra::Cloud>& cloud,
+    const std::shared_ptr<infra::VMStorage>& vm_storage)
 {
     ParseSpecs(config_path_ + "/specs.yaml");
-    ParseCloud(config_path_ + "/cloud.yaml", cloud);
+    ParseCloud(config_path_ + "/cloud.yaml", cloud, vm_storage);
 }
 
 void
@@ -98,7 +99,8 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
 void
 sim::core::SimulatorConfig::ParseCloud(
     const std::string& cloud_file_name,
-    const std::shared_ptr<infra::Cloud>& cloud)
+    const std::shared_ptr<infra::Cloud>& cloud,
+    const std::shared_ptr<infra::VMStorage>& vm_storage)
 {
     auto cloud_config = YAML::LoadFile(cloud_file_name);
 

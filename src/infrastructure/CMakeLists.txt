@@ -8,7 +8,11 @@ set(SOURCES
         vm.h
         vm.cpp
         cloud.h
-        cloud.cpp)
+        cloud.cpp
+        resource-register.h
+        resource-register.cpp
+        vm-storage.h
+        vm-storage.cpp)
 
 add_library(infrastructure STATIC ${SOURCES})
 

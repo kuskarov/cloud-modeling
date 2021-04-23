@@ -1,9 +1,12 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "actor.h"
 #include "event.h"
 #include "resource.h"
 #include "types.h"
+#include "vm-storage.h"
 #include "vm.h"
 
 namespace sim::infra {
@@ -12,13 +15,13 @@ enum class ServerEventType
 {
     kNone,
     kProvisionVM,
-    kKillVM
+    kUnprovisionVM
 };
 
 struct ServerEvent : events::Event
 {
     ServerEventType type{ServerEventType::kNone};
-    std::shared_ptr<VM> virtual_machine{};
+    std::string vm_name;
 };
 
 class Server : public IResource
@@ -42,8 +45,12 @@ class Server : public IResource
     [[nodiscard]] types::Currency GetCost() const;
     void SetCost(types::Currency cost);
 
+    void SetVMStorage(VMStorage* vm_storage) { vm_storage_ = vm_storage; }
+
  private:
-    std::vector<std::shared_ptr<VM>> virtual_machines_{};
+    std::unordered_set<std::string> virtual_machines_{};
+
+    VMStorage* vm_storage_{};
 
     types::RAMBytes ram_{};
     types::CPUHertz clock_rate_{};
@@ -52,7 +59,7 @@ class Server : public IResource
 
     // event handlers
     void ProvisionVM(const ServerEvent* server_event);
-    void KillVM(const ServerEvent* server_event);
+    void UnprovisionVM(const ServerEvent* server_event);
 };
 
 }   // namespace sim::infra

@@ -1,6 +1,7 @@
 #include "resource.h"
 
 #include "logger.h"
+#include "resource-register.h"
 
 void
 sim::infra::IResource::HandleEvent(const events::Event* event)
@@ -81,6 +82,13 @@ sim::infra::IResource::SetShutdownDelay(types::TimeInterval shutdown_delay)
     shutdown_delay_ = shutdown_delay;
 }
 
+void
+sim::infra::IResource::SetName(std::string name)
+{
+    name_ = std::move(name);
+    sim::infra::ResourceRegister::RegisterResource(this);
+}
+
 bool
 sim::infra::IResource::PowerStateIs(ResourcePowerState expected,
                                     const std::string& caller_info)
@@ -142,20 +150,20 @@ void
 sim::infra::IResource::StartShutdown(const ResourceEvent* resource_event)
 {
     // switch state to kTurningOff and schedule kShutdownFinished event
-    if (!PowerStateIs(ResourcePowerState::kRunning, "Shutdown Event Handler")) {
-        return;
+    if (power_state_ == ResourcePowerState::kOff) {
+        ACTOR_LOG_INFO("Already OFF");
+    } else {
+        power_state_ = ResourcePowerState::kTurningOff;
+        ACTOR_LOG_INFO("State changed to {}", PowerStateToString(power_state_));
+
+        auto shutdown_finished_event = new ResourceEvent();
+        shutdown_finished_event->addressee = this;
+        shutdown_finished_event->type = ResourceEventType::kShutdownFinished;
+        shutdown_finished_event->happen_time =
+            resource_event->happen_time + shutdown_delay_;
+
+        schedule_event(shutdown_finished_event, false);
     }
-
-    power_state_ = ResourcePowerState::kTurningOff;
-    ACTOR_LOG_INFO("State changed to {}", PowerStateToString(power_state_));
-
-    auto shutdown_finished_event = new ResourceEvent();
-    shutdown_finished_event->addressee = this;
-    shutdown_finished_event->type = ResourceEventType::kShutdownFinished;
-    shutdown_finished_event->happen_time =
-        resource_event->happen_time + shutdown_delay_;
-
-    schedule_event(shutdown_finished_event, false);
 }
 
 void

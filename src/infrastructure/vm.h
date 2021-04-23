@@ -61,11 +61,15 @@ class VM : public events::IActor
     void SetStopDelay(sim::types::TimeInterval stop_delay);
     [[nodiscard]] types::TimeInterval GetDeleteDelay() const;
     void SetDeleteDelay(sim::types::TimeInterval delete_delay);
+    [[nodiscard]] types::RAMBytes GetRam() const;
+    void SetRam(types::RAMBytes ram);
 
  private:
     VMState state_{VMState::kProvisioning};
 
     inline void SetState(VMState new_state);
+
+    types::RAMBytes ram_{};
 
     // TODO: remove magic numbers
     types::TimeInterval start_delay_{4}, restart_delay_{3}, stop_delay_{8},

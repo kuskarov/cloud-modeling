@@ -31,10 +31,10 @@ class IActor
     void SetOwner(IActor* owner) { owner_ = owner; }
 
     [[nodiscard]] const std::string& GetName() const { return name_; }
-    void SetName(const std::string& name) { name_ = name; }
+    virtual void SetName(std::string name) { name_ = std::move(name); }
 
     [[nodiscard]] const std::string& GetType() const { return type_; }
-    void SetType(const std::string& type) { type_ = type; }
+    void SetType(std::string type) { type_ = std::move(type); }
 
     virtual ~IActor() = default;
 

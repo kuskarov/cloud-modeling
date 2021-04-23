@@ -63,6 +63,8 @@ class IResource : public events::IActor
     [[nodiscard]] types::TimeInterval GetShutdownDelay() const;
     void SetShutdownDelay(types::TimeInterval shutdown_delay);
 
+    void SetName(std::string name) override;
+
     ~IResource() override = default;
 
  protected:

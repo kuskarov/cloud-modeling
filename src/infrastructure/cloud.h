@@ -8,7 +8,7 @@ namespace sim::infra {
 class Cloud : public IResource
 {
  public:
-    Cloud() : IResource("Cloud") { name_ = "Cloud"; }
+    Cloud() : IResource("Cloud") { SetName("cloud"); }
 
     // for scheduler
     [[nodiscard]] const auto& DataCenters() const { return data_centers_; }
@@ -27,6 +27,7 @@ class Cloud : public IResource
     std::vector<std::shared_ptr<infra::DataCenter>> data_centers_{};
 
     void StartBoot(const ResourceEvent* resource_event) override;
+    void StartShutdown(const ResourceEvent* resource_event) override;
 };
 
 }   // namespace sim::infra

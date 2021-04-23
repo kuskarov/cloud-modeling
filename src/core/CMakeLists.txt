@@ -3,8 +3,6 @@ set(SOURCES
         manager.cpp
         config.h
         config.cpp
-        vm-storage.h
-        vm-storage.cpp
         scheduler.h
         scheduler.cpp)
 

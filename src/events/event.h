@@ -34,7 +34,7 @@ struct Event
      * Event which should be scheduled after the chain of events ended
      *
      */
-    std::shared_ptr<Event> notificator{};
+    Event* notificator{};
 
     virtual ~Event() = default;
 };

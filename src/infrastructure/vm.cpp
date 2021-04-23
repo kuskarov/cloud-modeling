@@ -1,5 +1,7 @@
 #include "vm.h"
 
+#include "server.h"
+
 #define CHECK_STATE(expected, extra_text)                                      \
     if (state_ != (expected)) {                                                \
         ACTOR_LOG_ERROR("{}: current state is {} but expected {}", extra_text, \
@@ -77,6 +79,7 @@ sim::infra::VM::CompleteProvision(const sim::infra::VMEvent* vm_event)
     next_event->happen_time = vm_event->happen_time;
     next_event->type = VMEventType::kStart;
     next_event->addressee = this;
+    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, true);
 }
@@ -84,7 +87,7 @@ sim::infra::VM::CompleteProvision(const sim::infra::VMEvent* vm_event)
 void
 sim::infra::VM::Start(const sim::infra::VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kProvisioning, "Start Event handler");
+    CHECK_STATE(VMState::kProvisioning, "Boot Event handler");
 
     SetState(VMState::kStarting);
 
@@ -92,6 +95,7 @@ sim::infra::VM::Start(const sim::infra::VMEvent* vm_event)
     next_event->happen_time = vm_event->happen_time + start_delay_;
     next_event->type = VMEventType::kStartCompleted;
     next_event->addressee = this;
+    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, false);
 }
@@ -99,11 +103,13 @@ sim::infra::VM::Start(const sim::infra::VMEvent* vm_event)
 void
 sim::infra::VM::CompleteStart(const sim::infra::VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kStarting, "Start Completed Event handler");
+    CHECK_STATE(VMState::kStarting, "Boot Completed Event handler");
 
     SetState(VMState::kRunning);
 
-    // TODO: schedule notification to the caller
+    auto event = vm_event->notificator;
+    event->happen_time = vm_event->happen_time;
+    schedule_event(event, false);
 }
 
 void
@@ -117,6 +123,7 @@ sim::infra::VM::Restart(const sim::infra::VMEvent* vm_event)
     next_event->happen_time = vm_event->happen_time + restart_delay_;
     next_event->type = VMEventType::kRestartCompleted;
     next_event->addressee = this;
+    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, false);
 }
@@ -128,7 +135,9 @@ sim::infra::VM::CompleteRestart(const sim::infra::VMEvent* vm_event)
 
     SetState(VMState::kRunning);
 
-    // TODO: schedule notification to the caller
+    auto event = vm_event->notificator;
+    event->happen_time = vm_event->happen_time;
+    schedule_event(event, false);
 }
 
 void
@@ -142,6 +151,7 @@ sim::infra::VM::Stop(const sim::infra::VMEvent* vm_event)
     next_event->happen_time = vm_event->happen_time + stop_delay_;
     next_event->type = VMEventType::kStopCompleted;
     next_event->addressee = this;
+    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, false);
 }
@@ -153,20 +163,28 @@ sim::infra::VM::CompleteStop(const sim::infra::VMEvent* vm_event)
 
     SetState(VMState::kStopped);
 
-    // TODO: schedule notification to the caller
+    auto free_server_event = new ServerEvent;
+    free_server_event->addressee = owner_;
+    free_server_event->happen_time = vm_event->happen_time;
+    free_server_event->notificator = vm_event->notificator;
+    free_server_event->type = ServerEventType::kUnprovisionVM;
+    free_server_event->vm_name = GetName();
+
+    schedule_event(free_server_event, false);
+
+    owner_ = nullptr;
 }
 
 void
 sim::infra::VM::Delete(const sim::infra::VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kRunning, "Delete Event handler");
-
     SetState(VMState::kDeleting);
 
     auto next_event = new VMEvent();
     next_event->happen_time = vm_event->happen_time + delete_delay_;
     next_event->type = VMEventType::kDeleteCompleted;
     next_event->addressee = this;
+    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, false);
 }
@@ -176,9 +194,20 @@ sim::infra::VM::CompleteDelete(const sim::infra::VMEvent* vm_event)
 {
     CHECK_STATE(VMState::kDeleting, "Delete Completed Event handler");
 
-    SetState(VMState::kNone);
+    if (owner_) {
+        auto free_server_event = new ServerEvent;
+        free_server_event->addressee = owner_;
+        free_server_event->happen_time = vm_event->happen_time;
+        free_server_event->notificator = vm_event->notificator;
+        free_server_event->type = ServerEventType::kUnprovisionVM;
+        free_server_event->vm_name = GetName();
 
-    // TODO: schedule notification to the caller
+        schedule_event(free_server_event, false);
+    } else {
+        auto event = vm_event->notificator;
+        event->happen_time = vm_event->happen_time;
+        schedule_event(event, false);
+    }
 }
 
 sim::types::TimeInterval
@@ -227,6 +256,18 @@ void
 sim::infra::VM::SetDeleteDelay(types::TimeInterval delete_delay)
 {
     delete_delay_ = delete_delay;
+}
+
+sim::types::RAMBytes
+sim::infra::VM::GetRam() const
+{
+    return ram_;
+}
+
+void
+sim::infra::VM::SetRam(sim::types::RAMBytes ram)
+{
+    ram_ = ram;
 }
 
 void
