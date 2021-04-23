@@ -3,7 +3,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <algorithm>
-#include <argparse/argparse.hpp>
+#include <argparse.hpp>
 
 #include "data-center.h"
 #include "file-utils.h"
