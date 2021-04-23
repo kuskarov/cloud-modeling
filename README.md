@@ -13,7 +13,10 @@ From build directory do `cmake .. && make`.
    with `--config path/to/config/directory` options
 3) Log is printed to stdout and duplicated to `log.csv` in the directory with
    binary
-4) Temporal CLI is printed to stderr at the start
+4) Temporal CLI is printed to stderr at the start. 
+   * By default the whole Cloud has name `cloud`, so it can be booted by `boot cloud` CLI command
+   * Data centers are named as in the `cloud.yaml` spec
+   * Servers are named as `SERVER_NAME-SERVER_SERIAL`, where `SERVER_NAME` is the `name` value specified in `spec.yaml`
 
 ## Dependencies
 
