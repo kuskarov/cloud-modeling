@@ -56,7 +56,8 @@ void
 sim::core::Manager::Listen()
 {
     std::cerr
-        << "Temporal CLI:\n"
+        << "\n"
+           "Temporal CLI:\n"
            "boot <name>                 : boot resource <name>\n"
            "shutdown <name>             : shutdown resource <name>\n"
            "create-vm <vm-name> <ram>   : create (but do not provision) vm\n"
