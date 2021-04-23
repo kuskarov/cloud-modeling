@@ -6,13 +6,20 @@ From build directory do `cmake .. && make`.
 
 ## Usage
 
-To be added.
+### MVP version
+
+1) Specify configuration of the cloud ([sample](/config))
+2) The binary is located in `src/simulator` folder. Run simulator
+   with `--config path/to/config/directory` options
+3) Log is printed to stdout and duplicated to `log.csv` in the directory with
+   binary
+4) Temporal CLI is printed to stderr at the start
 
 ## Dependencies
 
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * [argparse](https://github.com/p-ranav/argparse)
-* [loguru](https://github.com/emilk/loguru)
+* [spdlog](https://github.com/gabime/spdlog)
 
 Dependencies are attached to the project using git submodules, to do not forget
 to load them before compiling.
@@ -23,8 +30,9 @@ The simulator has a layered design, as most of the analogues do. Everything is
 based on a discrete-time event loop, which gives ability of creating and
 receiving events using special API.
 
-On the top of the event loop there are representations of physical entities and
-virtual machines, management classes and API of the simulator.
+On the top of the event loop there are representations of the infrastructure (
+physical entities and virtual machines), management classes and API of the
+simulator.
 
 ### TODO: the scheme
 
@@ -32,13 +40,22 @@ virtual machines, management classes and API of the simulator.
 
 The code is divided on 5 catalogues, located at `src` folder:
 
-* `util`
-* `events`
-* `infrastructure`
-* `core`
+* `util`: some helpers not related to main purpose of the program and
+  SimulationLogger
+* `events`: discrete event system with `EventLoop` and interfaces `Event`
+  and `IActor`
+* `infrastructure`: the interface `IResource` and derived from it `Server`
+  , `DataCenter`, `Cloud`. Some classes for management as `ResourceRegister`
+  and `VMStorage`. They break abstractions a bit and should be refactored.
+* `core`: management and API classes such as `Manager`, `SimulatorConfig`
+  and `IScheduler` - an interface for used-implemented schedulers
 * `simulator/simulator.cpp` file with `main()`
 
-### TODO: add brief descriptions of modules + dependency scheme
+### TODO: add dependency scheme
+
+## Work plan for the nearest future
+
+Look to the `Github Projects` tab.
 
 ## Used links
 
