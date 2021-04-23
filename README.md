@@ -16,7 +16,7 @@ From build directory do `cmake .. && make`.
 4) Temporal CLI is printed to stderr at the start. 
    * By default the whole Cloud has name `cloud`, so it can be booted by `boot cloud` CLI command
    * Data centers are named as in the `cloud.yaml` spec
-   * Servers are named as `SERVER_NAME-SERVER_SERIAL`, where `SERVER_NAME` is the `name` value specified in `spec.yaml`
+   * Servers are named as `SERVER_NAME-SERVER_SERIAL`, where `SERVER_NAME` is the `name` value specified in `specs.yaml`
 
 ## Dependencies
 
