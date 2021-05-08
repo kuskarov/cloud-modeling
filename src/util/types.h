@@ -26,4 +26,10 @@ GenerateUUID()
     return serial++;
 }
 
+static UUID
+NoneUUID()
+{
+    return 0;
+}
+
 }   // namespace sim::types

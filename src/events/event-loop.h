@@ -47,8 +47,15 @@ class EventLoop : public IActor
 
     void HandleEvent(const events::Event* event) override {}
 
+    void SetActorFromUUIDCallback(const std::function<IActor*(types::UUID)>& cb)
+    {
+        actor_from_uuid = cb;
+    }
+
  private:
     void SimulateNextStep();
+
+    std::function<IActor*(types::UUID)> actor_from_uuid;
 
     types::TimeStamp current_ts_{1};
     EventQueue queue_{};

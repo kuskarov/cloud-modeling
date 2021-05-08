@@ -3,9 +3,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "cloud.h"
+#include "actor-register.h"
 #include "server.h"
-#include "vm-storage.h"
 
 namespace sim::core {
 
@@ -13,19 +12,18 @@ class SimulatorConfig
 {
  public:
     void ParseArgs(int argc, char** argv);
-    void ParseResources(const std::shared_ptr<infra::Cloud>& cloud,
-                        const std::shared_ptr<infra::VMStorage>& vm_storage);
+    void ParseResources(types::UUID cloud_handle,
+                        ActorRegister* actor_register);
 
  private:
     void ParseSpecs(const std::string& specs_file_name);
     void ParseCloud(const std::string& cloud_file_name,
-                    const std::shared_ptr<infra::Cloud>& cloud,
-                    const std::shared_ptr<infra::VMStorage>& vm_storage);
+                    types::UUID cloud_handle, ActorRegister* actor_register);
 
     std::string config_path_{};
 
-    std::unordered_map<std::string, infra::ResourceGenerator<infra::Server>>
-        server_specs_{};
+    std::unordered_map<std::string, infra::ServerSpec> server_specs_{};
+    std::unordered_map<std::string, uint32_t> servers_count_{};
 };
 
 }   // namespace sim::core

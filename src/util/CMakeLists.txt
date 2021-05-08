@@ -1,6 +1,5 @@
 set(SOURCES
         types.h
-        types.cpp
         file-utils.h
         logger.h
         logger.cpp)

@@ -4,13 +4,9 @@ set(SOURCES
         server.h
         server.cpp
         data-center.h
-        data-center.cpp
         vm.h
         vm.cpp
         cloud.h
-        cloud.cpp
-        resource-register.h
-        resource-register.cpp
         vm-storage.h
         vm-storage.cpp)
 

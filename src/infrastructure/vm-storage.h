@@ -13,21 +13,30 @@ enum class VMStorageEventType
 {
     kNone,
     kVMCreated,
+    kVMProvisionRequested,
     kVMStopped,
     kVMProvisioned,
     kVMDeleted
+};
+
+enum class VMStatus
+{
+    kHostedVM,            // VMs that are currently hosted on some server
+    kStoppedVM,           // VMs that were stopped but not deleted
+    kPendingProvisionVM   // VMs that were created but not provisioned yet
 };
 
 struct VMStorageEvent : events::Event
 {
     VMStorageEventType type{VMStorageEventType::kNone};
 
-    std::string vm_name{};
+    types::UUID uuid{};
 };
 
 /**
- * A class for VMStorage --- some component of the Cloud, which is responsible
- * for holding VM images (esp. when VM is stopped)
+ * A class for VMStorage --- virtual component of the Cloud, which is
+ * responsible for holding VM images (esp. when VM is stopped)
+ *
  */
 class VMStorage : public events::IActor
 {
@@ -36,30 +45,11 @@ class VMStorage : public events::IActor
 
     void HandleEvent(const events::Event* event) override;
 
-    // TODO: remove from here
-    void InsertVM(const std::shared_ptr<infra::VM>& vm)
-    {
-        if (vms_.count(vm->GetName())) {
-            ACTOR_LOG_ERROR("vm_name {} is not unique", vm->GetName());
-            state_ = VMStorageState::kFailure;
-        } else {
-            vms_[vm->GetName()] = vm;
-            ACTOR_LOG_INFO("Created VM with name {}", vm->GetName());
-        }
-    }
-
-    const auto& PendingVMs() { return pending_vms_; }
-
-    const auto& GetVM(const std::string& vm_name) { return vms_.at(vm_name); }
+    // For scheduler
+    const auto& VMs() const { return vms_; }
 
  private:
-    // TODO: this should not be inside VMStorage
-    std::unordered_map<std::string, std::shared_ptr<infra::VM>> vms_;
-
-    std::unordered_set<std::string>
-        hosted_vms_{},    // VMs that are currently hosted on some server
-        stopped_vms_{},   // VMs that were stopped but not deleted
-        pending_vms_{};   // VMs that were created but not provisioned yet
+    std::unordered_map<types::UUID, VMStatus> vms_;
 
     enum class VMStorageState
     {
@@ -70,10 +60,11 @@ class VMStorage : public events::IActor
     VMStorageState state_{VMStorageState::kOk};
 
     // event handlers
-    void MoveToProvisioning(const std::string& name);
-    void MoveToStopped(const std::string& name);
-    void MoveToHosted(const std::string& name);
-    void DeleteVM(const std::string& name);
+    void AddVM(const VMStorageEvent* event);
+    void MoveToProvisioning(const VMStorageEvent* event);
+    void MoveToStopped(const VMStorageEvent* event);
+    void MoveToHosted(const VMStorageEvent* event);
+    void DeleteVM(const VMStorageEvent* event);
 };
 
-}   // namespace sim::core
+}   // namespace sim::infra

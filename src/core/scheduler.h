@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "actor-register.h"
 #include "actor.h"
 #include "cloud.h"
 #include "event.h"
@@ -33,12 +34,13 @@ struct SchedulerEvent : events::Event
 class IScheduler : public events::IActor
 {
  public:
-    IScheduler(std::shared_ptr<infra::Cloud> cloud,
-               std::shared_ptr<infra::VMStorage> vm_storage)
-        : events::IActor("Scheduler"),
-          cloud_(std::move(cloud)),
-          vm_storage_(std::move(vm_storage))
+    IScheduler() : events::IActor("Scheduler") {}
+
+    void SetCloud(types::UUID cloud_handle) { cloud_handle_ = cloud_handle; }
+
+    void SetActorRegister(const ActorRegister* actor_register)
     {
+        actor_register_ = actor_register;
     }
 
     void HandleEvent(const events::Event* event) override;
@@ -54,20 +56,16 @@ class IScheduler : public events::IActor
      */
     virtual void UpdateSchedule(const SchedulerEvent* scheduler_event) = 0;
 
-    // scheduler has read access to Cloud and VMStorage states
-    std::shared_ptr<infra::Cloud> cloud_{};
-    std::shared_ptr<infra::VMStorage> vm_storage_{};
+    const ActorRegister* actor_register_{};
+
+    // scheduler has read access to Cloud state
+    types::UUID cloud_handle_{};
+
+    std::function<const IActor*(types::UUID)> get_actor_state;
 };
 
 class FirstAvailableScheduler : public IScheduler
 {
- public:
-    FirstAvailableScheduler(std::shared_ptr<infra::Cloud> cloud,
-                            std::shared_ptr<infra::VMStorage> vm_storage)
-        : IScheduler(std::move(cloud), std::move(vm_storage))
-    {
-    }
-
  protected:
     void UpdateSchedule(const SchedulerEvent* scheduler_event) override;
 };

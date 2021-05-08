@@ -73,11 +73,17 @@ sim::events::EventLoop::SimulateNextStep()
         auto event = (*ts_queue.begin());
         ts_queue.pop_front();
 
-        if (!event->is_cancelled()) {
-            event->addressee->HandleEvent(event.get());
-        } else {
-            ACTOR_LOG_INFO("Event {} was not called because it was cancelled",
-                           event->id);
+        try {
+            if (!event->is_cancelled()) {
+                auto addressee_ptr = actor_from_uuid(event->addressee);
+                addressee_ptr->HandleEvent(event.get());
+            } else {
+                ACTOR_LOG_INFO(
+                    "Event {} was not called because it was cancelled",
+                    event->id);
+            }
+        } catch (...) {
+            ACTOR_LOG_ERROR("Error has occurred when handling event");
         }
 
         if (ts_queue.empty()) {
