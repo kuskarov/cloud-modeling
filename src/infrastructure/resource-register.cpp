@@ -9,13 +9,13 @@ void
 sim::infra::ResourceRegister::RegisterResource(infra::IResource* resource)
 {
     if (mapping_.count(resource->GetName())) {
-        SimulatorLogger().PrintErrorToConsole("Name {} is already in use",
-                                              resource->GetName());
+        SimulatorLogger::Log("", "ResourceRegister", LogSeverity::kError,
+                             "Name {} is already in use", resource->GetName());
     } else {
         mapping_[resource->GetName()] = resource;
-        SimulatorLogger().PrintErrorToConsole("Registered resource {} :: {}",
-                                              resource->GetType(),
-                                              resource->GetName());
+        SimulatorLogger::Log("", "ResourceRegister", LogSeverity::kInfo,
+                             "Registered resource {} :: {}",
+                             resource->GetType(), resource->GetName());
     }
 }
 

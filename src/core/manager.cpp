@@ -13,9 +13,10 @@
 void
 sim::core::Manager::Setup()
 {
-    SimulatorLogger::EnableCSVLogging("log.csv");
+    SimulatorLogger::SetCSVFolder("../../../");
+    SimulatorLogger::SetMaxCSVSeverity(LogSeverity::kDebug);
+    SimulatorLogger::SetMaxConsoleSeverity(LogSeverity::kDebug);
     SimulatorLogger::SetTimeCallback([this] { return event_loop_->Now(); });
-    SimulatorLogger::Setup();
 
     event_loop_ = std::make_shared<events::EventLoop>();
     schedule_event = [this](events::Event* event, bool immediate) {
