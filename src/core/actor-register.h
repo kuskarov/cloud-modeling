@@ -58,9 +58,8 @@ class ActorRegister
 
         actors_names_[name] = actor->UUID();
 
-        SimulatorLogger().LogInfo("ActorRegister", "ActorRegister",
-                                  "Registered Actor {} with name {}",
-                                  actor->UUID(), actor->GetName());
+        CORE_LOG_INFO("ActorRegister", "Registered Actor {} with name {}",
+                      actor->UUID(), actor->GetName());
 
         return actor->UUID();
     }

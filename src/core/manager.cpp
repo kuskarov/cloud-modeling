@@ -105,8 +105,7 @@ sim::core::Manager::ResolveNameFromInput(const std::string& command)
         resource_uuid = actor_register_->GetActorHandle(name);
         return resource_uuid;
     } catch (...) {
-        SimulatorLogger().LogError("Manager", "Manager", "Name {} not found",
-                                   name);
+        CORE_LOG_ERROR("Manager", "Name {} not found", name);
         return types::NoneUUID();
     }
 }
@@ -148,8 +147,7 @@ sim::core::Manager::CreateVM(const std::string& command)
     try {
         vm_uuid = actor_register_->Make<infra::VM>(vm_name);
     } catch (const std::logic_error& le) {
-        SimulatorLogger().LogError("Manager", "Manager",
-                                   "Name {} is not unique", vm_name);
+        CORE_LOG_ERROR("Manager", "Name {} is not unique", vm_name);
         return;
     }
 

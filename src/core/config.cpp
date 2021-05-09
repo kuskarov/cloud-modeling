@@ -27,13 +27,12 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
     config_path_ = parser.get<std::string>("--config");
 }
 
-#define CHECK(condition, ...)                                       \
-    {                                                               \
-        if (!(condition)) {                                         \
-            SimulatorLogger::Log("", "Config", LogSeverity::kError, \
-                                 __VA_ARGS__);                      \
-            throw std::runtime_error("Parse error");                \
-        }                                                           \
+#define CHECK(condition, ...)                        \
+    {                                                \
+        if (!(condition)) {                          \
+            CORE_LOG_ERROR("Config", __VA_ARGS__);   \
+            throw std::runtime_error("Parse error"); \
+        }                                            \
     }
 
 void

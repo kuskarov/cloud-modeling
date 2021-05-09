@@ -59,8 +59,8 @@ class SimulatorLogger
     }
 
     template <typename... Args>
-    static void Log(const std::string& caller_type,
-                    const std::string& caller_name, LogSeverity severity,
+    static void Log(LogSeverity severity, const std::string& caller_type,
+                    const std::string& caller_name,
                     const std::string& format_string, Args&&... args)
     {
         std::string caller{};
@@ -101,11 +101,17 @@ class SimulatorLogger
 
     static fmt::ostream& CSVFileStream()
     {
-        static fmt::ostream csv_file_stream_ =
-            std::move(fmt::output_file(csv_file_name_));
+        static fmt::ostream csv_file_stream_ = fmt::output_file(csv_file_name_);
 
         return csv_file_stream_;
     }
 };
+
+#define CORE_LOG_INFO(...) \
+    SimulatorLogger::Log(LogSeverity::kInfo, "", __VA_ARGS__)
+#define CORE_LOG_ERROR(...) \
+    SimulatorLogger::Log(LogSeverity::kError, "", __VA_ARGS__)
+#define CORE_LOG_DEBUG(...) \
+    SimulatorLogger::Log(LogSeverity::kDebug, "", __VA_ARGS__)
 
 }   // namespace sim
