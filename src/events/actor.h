@@ -54,10 +54,11 @@ class IActor
     const types::UUID uuid_;
 };
 
-#define ACTOR_LOG_INFO(...) SimulatorLogger().LogInfo(type_, name_, __VA_ARGS__)
+#define ACTOR_LOG_INFO(...) \
+    SimulatorLogger::Log(type_, name_, LogSeverity::kInfo, __VA_ARGS__)
 #define ACTOR_LOG_ERROR(...) \
-    SimulatorLogger().LogError(type_, name_, __VA_ARGS__)
+    SimulatorLogger::Log(type_, name_, LogSeverity::kError, __VA_ARGS__)
 #define ACTOR_LOG_DEBUG(...) \
-    SimulatorLogger().LogDebug(type_, name_, __VA_ARGS__)
+    SimulatorLogger::Log(type_, name_, LogSeverity::kDebug, __VA_ARGS__)
 
 }   // namespace sim::events
