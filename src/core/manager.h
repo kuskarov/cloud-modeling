@@ -18,7 +18,7 @@ class Manager
 {
  public:
     explicit Manager(std::shared_ptr<SimulatorConfig> config)
-        : config_(std::move(config))
+        : whoami_("Manager"), config_(std::move(config))
     {
     }
 
@@ -26,6 +26,8 @@ class Manager
     void Listen();
 
  private:
+    std::string whoami_{};
+
     std::unique_ptr<events::EventLoop> event_loop_;
 
     events::ScheduleFunction schedule_event;

@@ -90,7 +90,8 @@ sim::core::Manager::Listen()
         }
         event_loop_->SimulateAll();
     }
-    // ACTOR_LOG_INFO("Quit!");
+
+    CORE_LOG_INFO("Quit!");
 }
 
 sim::types::UUID
@@ -105,7 +106,7 @@ sim::core::Manager::ResolveNameFromInput(const std::string& command)
         resource_uuid = actor_register_->GetActorHandle(name);
         return resource_uuid;
     } catch (...) {
-        CORE_LOG_ERROR("Manager", "Name {} not found", name);
+        CORE_LOG_ERROR("Name {} not found", name);
         return types::NoneUUID();
     }
 }
@@ -147,14 +148,14 @@ sim::core::Manager::CreateVM(const std::string& command)
     try {
         vm_uuid = actor_register_->Make<infra::VM>(vm_name);
     } catch (const std::logic_error& le) {
-        CORE_LOG_ERROR("Manager", "Name {} is not unique", vm_name);
+        CORE_LOG_ERROR("Name {} is not unique", vm_name);
         return;
     }
 
     auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
         vm_storage_handle, event_loop_->Now(), nullptr);
     vm_storage_event->type = infra::VMStorageEventType::kVMCreated;
-    vm_storage_event->uuid = vm_uuid;
+    vm_storage_event->vm_uuid = vm_uuid;
 
     schedule_event(vm_storage_event, false);
 }
@@ -168,7 +169,7 @@ sim::core::Manager::ProvisionVM(const std::string& command)
             vm_storage_handle, event_loop_->Now(), nullptr);
         vm_storage_event->type =
             infra::VMStorageEventType::kVMProvisionRequested;
-        vm_storage_event->uuid = vm_uuid;
+        vm_storage_event->vm_uuid = vm_uuid;
         schedule_event(vm_storage_event, true);
 
         // event that should happen after the chain of events ends
@@ -176,7 +177,7 @@ sim::core::Manager::ProvisionVM(const std::string& command)
         vm_storage_notification->type =
             infra::VMStorageEventType::kVMProvisioned;
         vm_storage_notification->addressee = vm_storage_handle;
-        vm_storage_notification->uuid = vm_uuid;
+        vm_storage_notification->vm_uuid = vm_uuid;
 
         auto scheduler_event = events::MakeEvent<SchedulerEvent>(
             scheduler_handle, event_loop_->Now(), vm_storage_notification);
@@ -195,7 +196,7 @@ sim::core::Manager::StopVM(const std::string& command)
         auto vm_storage_notification = new infra::VMStorageEvent();
         vm_storage_notification->type = infra::VMStorageEventType::kVMStopped;
         vm_storage_notification->addressee = vm_storage_handle;
-        vm_storage_notification->uuid = vm_uuid;
+        vm_storage_notification->vm_uuid = vm_uuid;
 
         auto stop_vm_event = events::MakeEvent<infra::VMEvent>(
             vm_uuid, event_loop_->Now(), vm_storage_notification);
@@ -214,7 +215,7 @@ sim::core::Manager::DeleteVM(const std::string& command)
         auto vm_storage_notification = new infra::VMStorageEvent();
         vm_storage_notification->type = infra::VMStorageEventType::kVMDeleted;
         vm_storage_notification->addressee = vm_storage_handle;
-        vm_storage_notification->uuid = vm_uuid;
+        vm_storage_notification->vm_uuid = vm_uuid;
 
         auto delete_vm_event = events::MakeEvent<infra::VMEvent>(
             vm_uuid, event_loop_->Now(), vm_storage_notification);

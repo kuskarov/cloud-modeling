@@ -56,12 +56,11 @@ sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
     virtual_machines_.insert(server_event->vm_uuid);
     ACTOR_LOG_INFO("VM {} is hosted here", server_event->vm_uuid);
 
-    auto vm_provisioned_event = new VMEvent();
+    auto vm_provisioned_event = events::MakeInheritedEvent<VMEvent>(
+        server_event->vm_uuid, server_event, types::TimeInterval{0});
     vm_provisioned_event->type = VMEventType::kProvisionCompleted;
     vm_provisioned_event->server_uuid = UUID();
-    vm_provisioned_event->addressee = server_event->vm_uuid;
-    vm_provisioned_event->happen_time = server_event->happen_time;
-    vm_provisioned_event->notificator = server_event->notificator;
+
     schedule_event(vm_provisioned_event, false);
 }
 

@@ -100,14 +100,11 @@ sim::infra::VM::CompleteProvision(const sim::infra::VMEvent* vm_event)
 {
     CHECK_STATE(VMState::kProvisioning, "Provision Completed Event handler");
 
-    auto next_event = new VMEvent();
-
     SetOwner(vm_event->server_uuid);
 
-    next_event->happen_time = vm_event->happen_time;
+    auto next_event =
+        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, start_delay_);
     next_event->type = VMEventType::kStart;
-    next_event->addressee = UUID();
-    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, true);
 }
@@ -119,11 +116,9 @@ sim::infra::VM::Start(const sim::infra::VMEvent* vm_event)
 
     SetState(VMState::kStarting);
 
-    auto next_event = new VMEvent();
-    next_event->happen_time = vm_event->happen_time + start_delay_;
+    auto next_event =
+        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, start_delay_);
     next_event->type = VMEventType::kStartCompleted;
-    next_event->addressee = UUID();
-    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, false);
 }
@@ -147,11 +142,9 @@ sim::infra::VM::Restart(const sim::infra::VMEvent* vm_event)
 
     SetState(VMState::kRestarting);
 
-    auto next_event = new VMEvent();
-    next_event->happen_time = vm_event->happen_time + restart_delay_;
+    auto next_event =
+        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, restart_delay_);
     next_event->type = VMEventType::kRestartCompleted;
-    next_event->addressee = UUID();
-    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, false);
 }
@@ -175,11 +168,9 @@ sim::infra::VM::Stop(const sim::infra::VMEvent* vm_event)
 
     SetState(VMState::kStopping);
 
-    auto next_event = new VMEvent();
-    next_event->happen_time = vm_event->happen_time + stop_delay_;
+    auto next_event =
+        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, stop_delay_);
     next_event->type = VMEventType::kStopCompleted;
-    next_event->addressee = UUID();
-    next_event->notificator = vm_event->notificator;
 
     schedule_event(next_event, false);
 }
@@ -191,10 +182,8 @@ sim::infra::VM::CompleteStop(const sim::infra::VMEvent* vm_event)
 
     SetState(VMState::kStopped);
 
-    auto free_server_event = new ServerEvent;
-    free_server_event->addressee = owner_;
-    free_server_event->happen_time = vm_event->happen_time;
-    free_server_event->notificator = vm_event->notificator;
+    auto free_server_event = events::MakeInheritedEvent<ServerEvent>(
+        owner_, vm_event, types::TimeInterval{0});
     free_server_event->type = ServerEventType::kUnprovisionVM;
     free_server_event->vm_uuid = UUID();
 

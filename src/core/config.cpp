@@ -30,7 +30,7 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
 #define CHECK(condition, ...)                        \
     {                                                \
         if (!(condition)) {                          \
-            CORE_LOG_ERROR("Config", __VA_ARGS__);   \
+            CORE_LOG_ERROR(__VA_ARGS__);             \
             throw std::runtime_error("Parse error"); \
         }                                            \
     }

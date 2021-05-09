@@ -17,6 +17,8 @@ namespace sim::core {
 class ActorRegister
 {
  public:
+    ActorRegister() : whoami_("Actor-Register") {}
+
     /**
      * Const version for IScheduler
      */
@@ -58,8 +60,8 @@ class ActorRegister
 
         actors_names_[name] = actor->UUID();
 
-        CORE_LOG_INFO("ActorRegister", "Registered Actor {} with name {}",
-                      actor->UUID(), actor->GetName());
+        CORE_LOG_INFO("Registered Actor {} with name {}", actor->UUID(),
+                      actor->GetName());
 
         return actor->UUID();
     }
@@ -70,6 +72,8 @@ class ActorRegister
     }
 
  private:
+    std::string whoami_{};
+
     events::ScheduleFunction schedule_function_;
 
     std::unordered_map<std::string, types::UUID> actors_names_;

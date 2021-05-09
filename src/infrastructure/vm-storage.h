@@ -30,7 +30,7 @@ struct VMStorageEvent : events::Event
 {
     VMStorageEventType type{VMStorageEventType::kNone};
 
-    types::UUID uuid{};
+    types::UUID vm_uuid{};
 };
 
 /**

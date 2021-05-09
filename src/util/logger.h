@@ -108,11 +108,11 @@ class SimulatorLogger
 };
 
 #define CORE_LOG_INFO(...) \
-    SimulatorLogger::Log(LogSeverity::kInfo, "", __VA_ARGS__)
+    SimulatorLogger::Log(LogSeverity::kInfo, "", whoami_, __VA_ARGS__)
 #define CORE_LOG_ERROR(...) \
-    SimulatorLogger::Log(LogSeverity::kError, "", __VA_ARGS__)
+    SimulatorLogger::Log(LogSeverity::kError, "", whoami_, __VA_ARGS__)
 #define CORE_LOG_DEBUG(...) \
-    SimulatorLogger::Log(LogSeverity::kDebug, "", __VA_ARGS__)
+    SimulatorLogger::Log(LogSeverity::kDebug, "", whoami_, __VA_ARGS__)
 
 #define ACTOR_LOG_INFO(...) \
     SimulatorLogger::Log(LogSeverity::kInfo, type_, name_, __VA_ARGS__)

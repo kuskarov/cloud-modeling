@@ -54,11 +54,11 @@ sim::infra::VMStorage::HandleEvent(const sim::events::Event* event)
 void
 sim::infra::VMStorage::AddVM(const sim::infra::VMStorageEvent* event)
 {
-    if (auto it = vms_.find(event->uuid); it == vms_.end()) {
-        vms_[event->uuid] = VMStatus::kPendingProvisionVM;
-        ACTOR_LOG_INFO("VM {} is added", event->uuid);
+    if (auto it = vms_.find(event->vm_uuid); it == vms_.end()) {
+        vms_[event->vm_uuid] = VMStatus::kPendingProvisionVM;
+        ACTOR_LOG_INFO("VM {} is added", event->vm_uuid);
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->uuid);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
@@ -67,15 +67,16 @@ sim::infra::VMStorage::AddVM(const sim::infra::VMStorageEvent* event)
 void
 sim::infra::VMStorage::MoveToProvisioning(const VMStorageEvent* event)
 {
-    if (auto it = vms_.find(event->uuid); it != vms_.end()) {
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
         if (it->second != VMStatus::kPendingProvisionVM) {
-            ACTOR_LOG_INFO("VM {} is being provisioned", event->uuid);
+            ACTOR_LOG_INFO("VM {} is being provisioned", event->vm_uuid);
             it->second = VMStatus::kPendingProvisionVM;
         } else {
-            ACTOR_LOG_ERROR("VM {} is already being provisioned", event->uuid);
+            ACTOR_LOG_ERROR("VM {} is already being provisioned",
+                            event->vm_uuid);
         }
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->uuid);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
@@ -83,15 +84,15 @@ sim::infra::VMStorage::MoveToProvisioning(const VMStorageEvent* event)
 void
 sim::infra::VMStorage::MoveToStopped(const VMStorageEvent* event)
 {
-    if (auto it = vms_.find(event->uuid); it != vms_.end()) {
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
         if (it->second != VMStatus::kStoppedVM) {
-            ACTOR_LOG_INFO("VM {} is stopped", event->uuid);
+            ACTOR_LOG_INFO("VM {} is stopped", event->vm_uuid);
             it->second = VMStatus::kStoppedVM;
         } else {
-            ACTOR_LOG_ERROR("VM {} is already stopped", event->uuid);
+            ACTOR_LOG_ERROR("VM {} is already stopped", event->vm_uuid);
         }
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->uuid);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
@@ -99,15 +100,15 @@ sim::infra::VMStorage::MoveToStopped(const VMStorageEvent* event)
 void
 sim::infra::VMStorage::MoveToHosted(const VMStorageEvent* event)
 {
-    if (auto it = vms_.find(event->uuid); it != vms_.end()) {
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
         if (it->second != VMStatus::kHostedVM) {
-            ACTOR_LOG_INFO("VM {} is hosted on a server", event->uuid);
+            ACTOR_LOG_INFO("VM {} is hosted on a server", event->vm_uuid);
             it->second = VMStatus::kHostedVM;
         } else {
-            ACTOR_LOG_ERROR("VM {} is already hosted", event->uuid);
+            ACTOR_LOG_ERROR("VM {} is already hosted", event->vm_uuid);
         }
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->uuid);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
@@ -115,11 +116,11 @@ sim::infra::VMStorage::MoveToHosted(const VMStorageEvent* event)
 void
 sim::infra::VMStorage::DeleteVM(const VMStorageEvent* event)
 {
-    if (auto it = vms_.find(event->uuid); it != vms_.end()) {
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
         vms_.erase(it);
-        ACTOR_LOG_INFO("VM {} is deleted", event->uuid);
+        ACTOR_LOG_INFO("VM {} is deleted", event->vm_uuid);
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->uuid);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
