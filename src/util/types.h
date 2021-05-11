@@ -17,13 +17,17 @@ typedef uint64_t RAMBytes;
 
 typedef uint64_t CPUHertz;
 
-typedef uint64_t Currency;
-
 static UUID
 GenerateUUID()
 {
     static UUID serial{1};
     return serial++;
+}
+
+static UUID
+NoneUUID()
+{
+    return 0;
 }
 
 }   // namespace sim::types

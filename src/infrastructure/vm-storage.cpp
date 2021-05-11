@@ -11,34 +11,32 @@ sim::infra::VMStorage::HandleEvent(const sim::events::Event* event)
     }
 
     try {
-        auto vm_event = dynamic_cast<const VMStorageEvent*>(event);
-        if (!vm_event) {
+        auto vms_event = dynamic_cast<const VMStorageEvent*>(event);
+        if (!vms_event) {
             ACTOR_LOG_ERROR("Received invalid event");
             state_ = VMStorageState::kFailure;
             return;
         }
 
-        if (auto it = vms_.find(vm_event->vm_name); it == vms_.end()) {
-            ACTOR_LOG_ERROR("Unknown vm_name: {}", vm_event->vm_name);
-            state_ = VMStorageState::kFailure;
-            return;
-        }
-
-        switch (vm_event->type) {
+        switch (vms_event->type) {
             case VMStorageEventType::kVMCreated: {
-                MoveToProvisioning(vm_event->vm_name);
+                AddVM(vms_event);
+                break;
+            }
+            case VMStorageEventType::kVMProvisionRequested: {
+                MoveToProvisioning(vms_event);
                 break;
             }
             case VMStorageEventType::kVMStopped: {
-                MoveToStopped(vm_event->vm_name);
+                MoveToStopped(vms_event);
                 break;
             }
             case VMStorageEventType::kVMProvisioned: {
-                MoveToHosted(vm_event->vm_name);
+                MoveToHosted(vms_event);
                 break;
             }
             case VMStorageEventType::kVMDeleted: {
-                DeleteVM(vm_event->vm_name);
+                DeleteVM(vms_event);
                 break;
             }
             default: {
@@ -54,52 +52,75 @@ sim::infra::VMStorage::HandleEvent(const sim::events::Event* event)
 }
 
 void
-sim::infra::VMStorage::MoveToProvisioning(const std::string& vm_name)
+sim::infra::VMStorage::AddVM(const sim::infra::VMStorageEvent* event)
 {
-    ACTOR_LOG_INFO("VM {} is being provisioned", vm_name);
-    pending_vms_.insert(vm_name);
+    if (auto it = vms_.find(event->vm_uuid); it == vms_.end()) {
+        vms_[event->vm_uuid] = VMStatus::kPendingProvisionVM;
+        ACTOR_LOG_INFO("VM {} is added", event->vm_uuid);
+    } else {
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
+        state_ = VMStorageState::kFailure;
+    }
 }
 
+// TODO: boilerplate
 void
-sim::infra::VMStorage::MoveToStopped(const std::string& vm_name)
+sim::infra::VMStorage::MoveToProvisioning(const VMStorageEvent* event)
 {
-    if (auto it = hosted_vms_.find(vm_name); it != hosted_vms_.end()) {
-        ACTOR_LOG_INFO("VM {} is stopped and moved to vm-storage", vm_name);
-        stopped_vms_.insert(vm_name);
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
+        if (it->second != VMStatus::kPendingProvisionVM) {
+            ACTOR_LOG_INFO("VM {} is being provisioned", event->vm_uuid);
+            it->second = VMStatus::kPendingProvisionVM;
+        } else {
+            ACTOR_LOG_ERROR("VM {} is already being provisioned",
+                            event->vm_uuid);
+        }
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in hosted VM-s list", vm_name);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
 
 void
-sim::infra::VMStorage::MoveToHosted(const std::string& vm_name)
+sim::infra::VMStorage::MoveToStopped(const VMStorageEvent* event)
 {
-    if (auto it = pending_vms_.find(vm_name); it != pending_vms_.end()) {
-        ACTOR_LOG_INFO("VM {} is hosted on a server", vm_name);
-        hosted_vms_.insert(vm_name);
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
+        if (it->second != VMStatus::kStoppedVM) {
+            ACTOR_LOG_INFO("VM {} is stopped", event->vm_uuid);
+            it->second = VMStatus::kStoppedVM;
+        } else {
+            ACTOR_LOG_ERROR("VM {} is already stopped", event->vm_uuid);
+        }
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in pending VM-s list", vm_name);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
 
 void
-sim::infra::VMStorage::DeleteVM(const std::string& vm_name)
+sim::infra::VMStorage::MoveToHosted(const VMStorageEvent* event)
 {
-    if (auto it = hosted_vms_.find(vm_name); it != hosted_vms_.end()) {
-        hosted_vms_.erase(it);
-        ACTOR_LOG_INFO("VM {} is deleted", vm_name);
-    } else if (auto it2 = stopped_vms_.find(vm_name);
-               it2 != stopped_vms_.end()) {
-        stopped_vms_.erase(it2);
-        ACTOR_LOG_INFO("VM {} is deleted", vm_name);
-    } else if (auto it3 = pending_vms_.find(vm_name);
-               it3 != pending_vms_.end()) {
-        pending_vms_.erase(it3);
-        ACTOR_LOG_INFO("VM {} is deleted", vm_name);
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
+        if (it->second != VMStatus::kHostedVM) {
+            ACTOR_LOG_INFO("VM {} is hosted on a server", event->vm_uuid);
+            it->second = VMStatus::kHostedVM;
+        } else {
+            ACTOR_LOG_ERROR("VM {} is already hosted", event->vm_uuid);
+        }
     } else {
-        ACTOR_LOG_ERROR("VM {} not found in VM-s list", vm_name);
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
+        state_ = VMStorageState::kFailure;
+    }
+}
+
+void
+sim::infra::VMStorage::DeleteVM(const VMStorageEvent* event)
+{
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
+        vms_.erase(it);
+        ACTOR_LOG_INFO("VM {} is deleted", event->vm_uuid);
+    } else {
+        ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }

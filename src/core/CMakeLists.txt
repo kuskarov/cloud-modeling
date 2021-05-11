@@ -4,7 +4,9 @@ set(SOURCES
         config.h
         config.cpp
         scheduler.h
-        scheduler.cpp)
+        scheduler.cpp
+        actor-register.h
+        resource-scheduler.h)
 
 add_library(core STATIC ${SOURCES})
 
@@ -14,7 +16,8 @@ target_compile_features(core PUBLIC cxx_std_17)
 target_link_libraries(core PUBLIC
         util
         events
-        infrastructure)
+        infrastructure
+        custom)
 
 target_link_libraries(core PUBLIC
         yaml-cpp::yaml-cpp

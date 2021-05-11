@@ -22,6 +22,8 @@ enum class VMEventType
 struct VMEvent : events::Event
 {
     VMEventType type{VMEventType::kNone};
+
+    types::UUID server_uuid;
 };
 
 /// Used https://cloud.yandex.ru/docs/compute/concepts/vm-statuses
@@ -38,7 +40,13 @@ enum class VMState
     kFailure,
 };
 
-static inline const char* StateToString(VMState state);
+/**
+ * This struct is returned by VM on each call of GetRequirements()
+ */
+struct VMWorkload
+{
+    types::RAMBytes ram;
+};
 
 /**
  * Representation of Virtual Machine.
@@ -61,19 +69,24 @@ class VM : public events::IActor
     void SetStopDelay(sim::types::TimeInterval stop_delay);
     [[nodiscard]] types::TimeInterval GetDeleteDelay() const;
     void SetDeleteDelay(sim::types::TimeInterval delete_delay);
-    [[nodiscard]] types::RAMBytes GetRam() const;
-    void SetRam(types::RAMBytes ram);
+
+    VMWorkload GetRequiredWorkload() const
+    {
+        // call WorkLoadModel for each field in VMRequirements
+        required_workload_ = {};
+
+        return required_workload_;
+    }
 
  private:
     VMState state_{VMState::kProvisioning};
 
+    mutable VMWorkload required_workload_{};
+
     inline void SetState(VMState new_state);
 
-    types::RAMBytes ram_{};
-
-    // TODO: remove magic numbers
-    types::TimeInterval start_delay_{4}, restart_delay_{3}, stop_delay_{8},
-        delete_delay_{6};
+    types::TimeInterval start_delay_{0}, restart_delay_{0}, stop_delay_{0},
+        delete_delay_{0};
 
     // event handlers
     void CompleteProvision(const VMEvent* vm_event);

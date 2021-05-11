@@ -4,9 +4,7 @@
     ram: 32
     clock-rate: 3.6
     cores-count: 16
-    cost: 123
 -   name: server-type-2
     ram: 16
     clock-rate: 3.9
     cores-count: 8
-    cost: 456

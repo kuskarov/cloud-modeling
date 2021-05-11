@@ -26,17 +26,46 @@ struct Event
     std::function<bool()> is_cancelled = [] { return false; };
 
     /**
-     * Actor which HandleEvent() method should be called
+     * Actor whose HandleEvent() method should be called
      */
-    IActor* addressee{};
+    types::UUID addressee{};
 
     /**
      * Event which should be scheduled after the chain of events ended
-     *
      */
     Event* notificator{};
 
     virtual ~Event() = default;
 };
+
+template <typename TEvent>
+TEvent*
+MakeEvent(types::UUID addressee, types::TimeStamp happen_time,
+          Event* notificator)
+{
+    static_assert(std::is_base_of<Event, TEvent>::value);
+
+    auto event = new TEvent();
+    event->addressee = addressee;
+    event->happen_time = happen_time;
+    event->notificator = notificator;
+
+    return event;
+}
+
+template <typename TEvent>
+TEvent*
+MakeInheritedEvent(types::UUID addressee, const Event* base_event,
+                   types::TimeInterval delay)
+{
+    static_assert(std::is_base_of<Event, TEvent>::value);
+
+    auto event = new TEvent();
+    event->addressee = addressee;
+    event->happen_time = base_event->happen_time + delay;
+    event->notificator = base_event->notificator;
+
+    return event;
+}
 
 }   // namespace sim::events

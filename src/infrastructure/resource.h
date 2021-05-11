@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <functional>
+#include <unordered_set>
 #include <utility>
 
 #include "actor.h"
@@ -34,8 +35,6 @@ enum class ResourcePowerState
     kFailure,
 };
 
-static inline const char* PowerStateToString(ResourcePowerState state);
-
 /**
  * Abstract class for Resource (something physical, e.g. Server, DataCenter,
  * Switch, etc.) Each Resource:
@@ -63,18 +62,22 @@ class IResource : public events::IActor
     [[nodiscard]] types::TimeInterval GetShutdownDelay() const;
     void SetShutdownDelay(types::TimeInterval shutdown_delay);
 
-    void SetName(std::string name) override;
-
     ~IResource() override = default;
 
  protected:
-    inline bool PowerStateIs(ResourcePowerState expected,
-                             const std::string& caller_info);
+    /**
+     * Set of IResources, which are components of this IResource (e.g.,
+     * data-centers are components of the cloud).
+     *
+     * Is used in turning on/off event handlers
+     */
+    std::unordered_set<types::UUID> components_;
+
+    void AddComponent(types::UUID uuid) { components_.insert(uuid); }
+
+    inline void SetPowerState(ResourcePowerState new_state);
 
     ResourcePowerState power_state_{ResourcePowerState::kOff};
-
-    // TODO: remove magic numbers
-    types::TimeInterval startup_delay_{3}, reboot_delay_{4}, shutdown_delay_{1};
 
     // event handlers
     virtual void StartBoot(const ResourceEvent* resource_event);
@@ -82,61 +85,9 @@ class IResource : public events::IActor
     virtual void StartReboot(const ResourceEvent* resource_event);
     virtual void CompleteBoot(const ResourceEvent* resource_event);
     virtual void CompleteShutdown(const ResourceEvent* resource_event);
-};
-
-/**
- * Class for convenient way to create a colony of identical IResource instances
- * from the template
- *
- */
-template <class Resource>
-class ResourceGenerator
-{
- public:
-    explicit ResourceGenerator(Resource&& resource_template)
-        : resource_template_(resource_template)
-    {
-        static_assert(std::is_base_of<IResource, Resource>::value);
-    }
-
-    void SetOwner(events::IActor* owner) { resource_template_.SetOwner(owner); }
-
-    void SetScheduleFunction(const events::ScheduleFunction& function)
-    {
-        resource_template_.SetScheduleFunction(function);
-    }
-
-    std::shared_ptr<Resource> operator()()
-    {
-        auto resource = std::make_shared<Resource>(resource_template_);
-        resource->SetName(resource_template_.GetName() + "-" +
-                          std::to_string(++serial));
-
-        return resource;
-    }
 
  private:
-    Resource resource_template_;
-    uint32_t serial{};
-};
-
-/**
- * Only to avoid passing generator by value to std::generate_n
- *
- */
-template <class Resource>
-class ResourceGeneratorWrapper
-{
- public:
-    explicit ResourceGeneratorWrapper(ResourceGenerator<Resource>& generator)
-        : generator_(&generator)
-    {
-    }
-
-    std::shared_ptr<Resource> operator()() { return (*generator_)(); }
-
- private:
-    ResourceGenerator<Resource>* generator_{};
+    types::TimeInterval startup_delay_{0}, reboot_delay_{0}, shutdown_delay_{0};
 };
 
 }   // namespace sim::infra

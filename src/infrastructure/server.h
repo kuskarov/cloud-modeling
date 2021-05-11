@@ -21,7 +21,14 @@ enum class ServerEventType
 struct ServerEvent : events::Event
 {
     ServerEventType type{ServerEventType::kNone};
-    std::string vm_name;
+    types::UUID vm_uuid;
+};
+
+struct ServerSpec
+{
+    types::RAMBytes ram{};
+    types::CPUHertz clock_rate{};
+    uint32_t cores_count{};
 };
 
 class Server : public IResource
@@ -36,26 +43,15 @@ class Server : public IResource
     // for scheduler
     [[nodiscard]] const auto& VMs() const { return virtual_machines_; }
 
-    [[nodiscard]] types::RAMBytes GetRam() const;
-    void SetRam(types::RAMBytes ram);
-    [[nodiscard]] types::CPUHertz GetClockRate() const;
-    void SetClockRate(types::CPUHertz clock_rate);
-    [[nodiscard]] uint32_t GetCoreCount() const;
-    void SetCoresCount(uint32_t cores_count);
-    [[nodiscard]] types::Currency GetCost() const;
-    void SetCost(types::Currency cost);
+    void SetSpec(ServerSpec spec) { spec_ = spec; }
 
-    void SetVMStorage(VMStorage* vm_storage) { vm_storage_ = vm_storage; }
+    [[nodiscard]] auto GetSpec() const { return spec_; }
 
  private:
-    std::unordered_set<std::string> virtual_machines_{};
+    ServerSpec spec_{};
 
-    VMStorage* vm_storage_{};
-
-    types::RAMBytes ram_{};
-    types::CPUHertz clock_rate_{};
-    uint32_t cores_count_{};
-    types::Currency cost_{};
+    // consumers of Server as a resource
+    std::unordered_set<types::UUID> virtual_machines_{};
 
     // event handlers
     void ProvisionVM(const ServerEvent* server_event);

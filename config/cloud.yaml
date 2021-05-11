@@ -5,11 +5,15 @@ data-centers:
         servers:
             -   name: server-type-1
                 count: 1
+                scheduler: greedy
             -   name: server-type-2
                 count: 1
+                scheduler: greedy
     -   name: data-center-2
         servers:
             -   name: server-type-1
                 count: 1
+                scheduler: greedy
             -   name: server-type-2
                 count: 1
+                scheduler: greedy
