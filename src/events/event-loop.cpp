@@ -13,7 +13,7 @@ sim::events::EventLoop::Insert(Event* event, bool immediate)
     }
 
     if (event->happen_time < current_ts_) {
-        ACTOR_LOG_ERROR("Timestamp in the past!");
+        WORLD_LOG_ERROR("Timestamp in the past!");
         return;
     }
 
@@ -63,7 +63,7 @@ void
 sim::events::EventLoop::SimulateNextStep()
 {
     if (queue_.empty()) {
-        ACTOR_LOG_INFO("Queue is empty!");
+        WORLD_LOG_INFO("Queue is empty!");
     } else {
         auto& [ts, ts_queue] = *queue_.begin();
 
@@ -78,16 +78,20 @@ sim::events::EventLoop::SimulateNextStep()
                 auto addressee_ptr = actor_from_uuid(event->addressee);
                 addressee_ptr->HandleEvent(event.get());
             } else {
-                ACTOR_LOG_INFO(
+                WORLD_LOG_INFO(
                     "Event {} was not called because it was cancelled",
                     event->id);
             }
         } catch (...) {
-            ACTOR_LOG_ERROR("Error has occurred when handling event");
+            WORLD_LOG_ERROR("Error has occurred when handling event");
         }
 
         if (ts_queue.empty()) {
             queue_.erase(ts);
+
+            update_world();
+
+            ++current_ts_;
         }
     }
 }

@@ -26,26 +26,38 @@ sim::core::Manager::Setup()
     actor_register_ = std::make_unique<ActorRegister>();
     actor_register_->SetScheduleFunction(schedule_event);
 
+    server_scheduler_manager_ = std::make_unique<ServerSchedulerManager>();
+    server_scheduler_manager_->SetScheduleFunction(schedule_event);
+    server_scheduler_manager_->SetActorRegister(actor_register_.get());
+
     event_loop_->SetActorFromUUIDCallback(
         [this](types::UUID uuid) -> events::IActor* {
             return actor_register_->GetActor<events::IActor>(uuid);
         });
 
-    cloud_handle = actor_register_->Make<infra::Cloud>("cloud-1");
+    auto cloud = actor_register_->Make<infra::Cloud>("cloud-1");
+    cloud_handle_ = cloud->UUID();
 
-    auto cloud = actor_register_->GetActor<infra::Cloud>(cloud_handle);
+    auto vm_storage = actor_register_->Make<infra::VMStorage>("vm-storage-1");
+    vm_storage_handle_ = vm_storage->UUID();
 
-    vm_storage_handle = actor_register_->Make<infra::VMStorage>("vm-storage-1");
-    cloud->SetVMStorage(vm_storage_handle);
+    cloud->SetVMStorage(vm_storage_handle_);
 
-    scheduler_handle =
+    auto scheduler =
         actor_register_->Make<FirstAvailableScheduler>("scheduler-1");
-    auto scheduler_ =
-        actor_register_->GetActor<FirstAvailableScheduler>(scheduler_handle);
-    scheduler_->SetActorRegister(actor_register_.get());
-    scheduler_->SetCloud(cloud_handle);
+    scheduler->SetActorRegister(actor_register_.get());
+    scheduler->SetCloud(cloud_handle_);
 
-    config_->ParseResources(cloud_handle, actor_register_.get());
+    scheduler_handle_ = scheduler->UUID();
+
+    event_loop_->SetUpdateWorldCallback([this] {
+        WORLD_LOG_INFO("Updating world...");
+        server_scheduler_manager_->ScheduleAll();
+        WORLD_LOG_INFO("Updating world... ok");
+    });
+
+    config_->ParseResources(cloud_handle_, actor_register_.get(),
+                            server_scheduler_manager_.get());
 }
 
 /** First version: simple CLI loop, which can
@@ -91,7 +103,7 @@ sim::core::Manager::Listen()
         event_loop_->SimulateAll();
     }
 
-    CORE_LOG_INFO("Quit!");
+    WORLD_LOG_INFO("Quit!");
 }
 
 sim::types::UUID
@@ -106,7 +118,7 @@ sim::core::Manager::ResolveNameFromInput(const std::string& command)
         resource_uuid = actor_register_->GetActorHandle(name);
         return resource_uuid;
     } catch (...) {
-        CORE_LOG_ERROR("Name {} not found", name);
+        WORLD_LOG_ERROR("Name {} not found", name);
         return types::NoneUUID();
     }
 }
@@ -146,14 +158,14 @@ sim::core::Manager::CreateVM(const std::string& command)
 
     types::UUID vm_uuid{};
     try {
-        vm_uuid = actor_register_->Make<infra::VM>(vm_name);
+        vm_uuid = actor_register_->Make<infra::VM>(vm_name)->UUID();
     } catch (const std::logic_error& le) {
-        CORE_LOG_ERROR("Name {} is not unique", vm_name);
+        WORLD_LOG_ERROR("Name {} is not unique", vm_name);
         return;
     }
 
     auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
-        vm_storage_handle, event_loop_->Now(), nullptr);
+        vm_storage_handle_, event_loop_->Now(), nullptr);
     vm_storage_event->type = infra::VMStorageEventType::kVMCreated;
     vm_storage_event->vm_uuid = vm_uuid;
 
@@ -166,7 +178,7 @@ sim::core::Manager::ProvisionVM(const std::string& command)
     if (auto vm_uuid = ResolveNameFromInput(command);
         vm_uuid != types::NoneUUID()) {
         auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
-            vm_storage_handle, event_loop_->Now(), nullptr);
+            vm_storage_handle_, event_loop_->Now(), nullptr);
         vm_storage_event->type =
             infra::VMStorageEventType::kVMProvisionRequested;
         vm_storage_event->vm_uuid = vm_uuid;
@@ -176,11 +188,11 @@ sim::core::Manager::ProvisionVM(const std::string& command)
         auto vm_storage_notification = new infra::VMStorageEvent();
         vm_storage_notification->type =
             infra::VMStorageEventType::kVMProvisioned;
-        vm_storage_notification->addressee = vm_storage_handle;
+        vm_storage_notification->addressee = vm_storage_handle_;
         vm_storage_notification->vm_uuid = vm_uuid;
 
         auto scheduler_event = events::MakeEvent<SchedulerEvent>(
-            scheduler_handle, event_loop_->Now(), vm_storage_notification);
+            scheduler_handle_, event_loop_->Now(), vm_storage_notification);
         scheduler_event->type = SchedulerEventType::kProvisionVM;
 
         schedule_event(scheduler_event, false);
@@ -195,7 +207,7 @@ sim::core::Manager::StopVM(const std::string& command)
         // event that should happen after the chain of events ends
         auto vm_storage_notification = new infra::VMStorageEvent();
         vm_storage_notification->type = infra::VMStorageEventType::kVMStopped;
-        vm_storage_notification->addressee = vm_storage_handle;
+        vm_storage_notification->addressee = vm_storage_handle_;
         vm_storage_notification->vm_uuid = vm_uuid;
 
         auto stop_vm_event = events::MakeEvent<infra::VMEvent>(
@@ -214,7 +226,7 @@ sim::core::Manager::DeleteVM(const std::string& command)
         // event that should happen after the chain of events ends
         auto vm_storage_notification = new infra::VMStorageEvent();
         vm_storage_notification->type = infra::VMStorageEventType::kVMDeleted;
-        vm_storage_notification->addressee = vm_storage_handle;
+        vm_storage_notification->addressee = vm_storage_handle_;
         vm_storage_notification->vm_uuid = vm_uuid;
 
         auto delete_vm_event = events::MakeEvent<infra::VMEvent>(

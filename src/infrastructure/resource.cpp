@@ -17,7 +17,7 @@ PowerStateToString(sim::infra::ResourcePowerState state)
         case sim::infra::ResourcePowerState::kFailure:
             return "FAILURE";
         default:
-            return "UNREACHABLE";
+            abort();
     }
 }
 

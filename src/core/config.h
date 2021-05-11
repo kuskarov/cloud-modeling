@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "actor-register.h"
+#include "resource-scheduler.h"
 #include "server.h"
 
 namespace sim::core {
@@ -14,15 +15,16 @@ class SimulatorConfig
     SimulatorConfig() : whoami_("Config") {}
 
     void ParseArgs(int argc, char** argv);
-    void ParseResources(types::UUID cloud_handle,
-                        ActorRegister* actor_register);
+    void ParseResources(types::UUID cloud_handle, ActorRegister* actor_register,
+                        ServerSchedulerManager* server_scheduler_manager);
 
  private:
     std::string whoami_{};
 
     void ParseSpecs(const std::string& specs_file_name);
     void ParseCloud(const std::string& cloud_file_name,
-                    types::UUID cloud_handle, ActorRegister* actor_register);
+                    types::UUID cloud_handle, ActorRegister* actor_register,
+                    ServerSchedulerManager* server_scheduler_manager);
 
     std::string config_path_{};
 

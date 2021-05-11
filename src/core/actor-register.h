@@ -44,7 +44,7 @@ class ActorRegister
     }
 
     template <class Actor>
-    types::UUID Make(std::string name)
+    Actor* Make(std::string name)
     {
         static_assert(std::is_base_of<events::IActor, Actor>::value);
 
@@ -60,10 +60,10 @@ class ActorRegister
 
         actors_names_[name] = actor->UUID();
 
-        CORE_LOG_INFO("Registered Actor {} with name {}", actor->UUID(),
-                      actor->GetName());
+        WORLD_LOG_INFO("Registered Actor {} with name {}", actor->UUID(),
+                       actor->GetName());
 
-        return actor->UUID();
+        return actor;
     }
 
     void SetScheduleFunction(const events::ScheduleFunction& sf)

@@ -41,6 +41,14 @@ enum class VMState
 };
 
 /**
+ * This struct is returned by VM on each call of GetRequirements()
+ */
+struct VMWorkload
+{
+    types::RAMBytes ram;
+};
+
+/**
  * Representation of Virtual Machine.
  *
  * VM is an Actor, but it is not a Resource, as VM's life cycle is different
@@ -62,8 +70,18 @@ class VM : public events::IActor
     [[nodiscard]] types::TimeInterval GetDeleteDelay() const;
     void SetDeleteDelay(sim::types::TimeInterval delete_delay);
 
+    VMWorkload GetRequiredWorkload() const
+    {
+        // call WorkLoadModel for each field in VMRequirements
+        required_workload_ = {};
+
+        return required_workload_;
+    }
+
  private:
     VMState state_{VMState::kProvisioning};
+
+    mutable VMWorkload required_workload_{};
 
     inline void SetState(VMState new_state);
 

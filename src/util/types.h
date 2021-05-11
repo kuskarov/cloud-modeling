@@ -17,8 +17,6 @@ typedef uint64_t RAMBytes;
 
 typedef uint64_t CPUHertz;
 
-typedef uint64_t Currency;
-
 static UUID
 GenerateUUID()
 {

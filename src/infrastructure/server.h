@@ -24,6 +24,13 @@ struct ServerEvent : events::Event
     types::UUID vm_uuid;
 };
 
+struct ServerSpec
+{
+    types::RAMBytes ram{};
+    types::CPUHertz clock_rate{};
+    uint32_t cores_count{};
+};
+
 class Server : public IResource
 {
  public:
@@ -36,19 +43,19 @@ class Server : public IResource
     // for scheduler
     [[nodiscard]] const auto& VMs() const { return virtual_machines_; }
 
+    void SetSpec(ServerSpec spec) { spec_ = spec; }
+
+    [[nodiscard]] auto GetSpec() const { return spec_; }
+
  private:
+    ServerSpec spec_{};
+
+    // consumers of Server as a resource
     std::unordered_set<types::UUID> virtual_machines_{};
 
     // event handlers
     void ProvisionVM(const ServerEvent* server_event);
     void UnprovisionVM(const ServerEvent* server_event);
-};
-
-struct ServerSpec
-{
-    types::RAMBytes ram{};
-    types::CPUHertz clock_rate{};
-    uint32_t cores_count{};
 };
 
 }   // namespace sim::infra

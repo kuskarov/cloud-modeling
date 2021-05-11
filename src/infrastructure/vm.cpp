@@ -23,7 +23,7 @@ StateToString(sim::infra::VMState state)
         case sim::infra::VMState::kFailure:
             return "FAILURE";
         default:
-            return "UNREACHABLE";
+            abort();
     }
 }
 

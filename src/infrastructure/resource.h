@@ -71,9 +71,9 @@ class IResource : public events::IActor
      *
      * Is used in turning on/off event handlers
      */
-    void AddComponent(types::UUID uuid) { components_.insert(uuid); }
-
     std::unordered_set<types::UUID> components_;
+
+    void AddComponent(types::UUID uuid) { components_.insert(uuid); }
 
     inline void SetPowerState(ResourcePowerState new_state);
 

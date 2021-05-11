@@ -5,7 +5,8 @@ set(SOURCES
         config.cpp
         scheduler.h
         scheduler.cpp
-        actor-register.h)
+        actor-register.h
+        resource-scheduler.h)
 
 add_library(core STATIC ${SOURCES})
 

@@ -9,6 +9,7 @@
 #include "cloud.h"
 #include "config.h"
 #include "event-loop.h"
+#include "resource-scheduler.h"
 #include "scheduler.h"
 #include "vm-storage.h"
 
@@ -36,11 +37,13 @@ class Manager
 
     std::shared_ptr<SimulatorConfig> config_;
 
-    types::UUID scheduler_handle{types::NoneUUID()};
+    std::unique_ptr<ServerSchedulerManager> server_scheduler_manager_;
 
-    types::UUID cloud_handle{types::NoneUUID()};
+    types::UUID scheduler_handle_{types::NoneUUID()};
 
-    types::UUID vm_storage_handle{types::NoneUUID()};
+    types::UUID cloud_handle_{types::NoneUUID()};
+
+    types::UUID vm_storage_handle_{types::NoneUUID()};
 
     void Boot(const std::string& command);
     void CreateVM(const std::string& command);

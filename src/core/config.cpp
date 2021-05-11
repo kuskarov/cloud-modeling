@@ -30,17 +30,19 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
 #define CHECK(condition, ...)                        \
     {                                                \
         if (!(condition)) {                          \
-            CORE_LOG_ERROR(__VA_ARGS__);             \
+            WORLD_LOG_ERROR(__VA_ARGS__);            \
             throw std::runtime_error("Parse error"); \
         }                                            \
     }
 
 void
-sim::core::SimulatorConfig::ParseResources(sim::types::UUID cloud_handle,
-                                           ActorRegister* actor_register)
+sim::core::SimulatorConfig::ParseResources(
+    sim::types::UUID cloud_handle, ActorRegister* actor_register,
+    ServerSchedulerManager* server_scheduler_manager)
 {
     ParseSpecs(config_path_ + "/specs.yaml");
-    ParseCloud(config_path_ + "/cloud.yaml", cloud_handle, actor_register);
+    ParseCloud(config_path_ + "/cloud.yaml", cloud_handle, actor_register,
+               server_scheduler_manager);
 }
 
 void
@@ -58,7 +60,6 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
         auto spec_ram = spec["ram"];
         auto spec_clock_rate = spec["clock-rate"];
         auto spec_cores_count = spec["cores-count"];
-        auto spec_cost = spec["cost"];
 
         CHECK(spec_name, "Field \"name\" not found");
         CHECK(spec_name.IsScalar(), "Field \"name\" is not a single value");
@@ -73,9 +74,6 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
         CHECK(spec_cores_count, "Field \"cores-count\" not found");
         CHECK(spec_cores_count.IsScalar(),
               "Field \"cores-count\" is not a single value");
-
-        CHECK(spec_cost, "Field \"cost\" not found");
-        CHECK(spec_cost.IsScalar(), "Field \"cost\" is not a single value");
 
         auto name = spec_name.as<std::string>();
 
@@ -95,9 +93,10 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
 }
 
 void
-sim::core::SimulatorConfig::ParseCloud(const std::string& cloud_file_name,
-                                       sim::types::UUID cloud_handle,
-                                       ActorRegister* actor_register)
+sim::core::SimulatorConfig::ParseCloud(
+    const std::string& cloud_file_name, sim::types::UUID cloud_handle,
+    ActorRegister* actor_register,
+    ServerSchedulerManager* server_scheduler_manager)
 {
     auto cloud_config = YAML::LoadFile(cloud_file_name);
 
@@ -118,17 +117,15 @@ sim::core::SimulatorConfig::ParseCloud(const std::string& cloud_file_name,
         CHECK(servers_config, "Field \"servers\" not found");
         CHECK(servers_config.IsSequence(), "\"servers\" is not a sequence");
 
-        auto data_center_handle = actor_register->Make<infra::DataCenter>(
+        auto data_center = actor_register->Make<infra::DataCenter>(
             name_config.as<std::string>());
 
-        cloud->AddDataCenter(data_center_handle);
-
-        auto data_center =
-            actor_register->GetActor<infra::DataCenter>(data_center_handle);
+        cloud->AddDataCenter(data_center->UUID());
 
         for (const auto& server_config : servers_config) {
             auto server_name_config = server_config["name"];
             auto server_count_config = server_config["count"];
+            auto server_scheduler_config = server_config["scheduler"];
 
             CHECK(server_name_config, "Field \"name\" not found");
             CHECK(server_name_config.IsScalar(),
@@ -138,8 +135,13 @@ sim::core::SimulatorConfig::ParseCloud(const std::string& cloud_file_name,
             CHECK(server_count_config.IsScalar(),
                   "Field \"count\" is not a single value");
 
+            CHECK(server_scheduler_config, "Field \"scheduler\" not found");
+            CHECK(server_scheduler_config.IsScalar(),
+                  "Field \"scheduler\" is not a single value");
+
             auto server_name = server_name_config.as<std::string>();
             auto servers_count = server_count_config.as<uint32_t>();
+            auto server_scheduler = server_scheduler_config.as<std::string>();
             auto it = server_specs_.find(server_name);
 
             CHECK(it != server_specs_.end(),
@@ -150,12 +152,18 @@ sim::core::SimulatorConfig::ParseCloud(const std::string& cloud_file_name,
             for (uint32_t i = 1; i <= servers_count; ++i) {
                 auto& serial = servers_count_[server_name];
 
-                auto server_uuid = actor_register->Make<infra::Server>(
+                auto server = actor_register->Make<infra::Server>(
                     server_name + "-" + std::to_string(++serial));
 
-                // TODO: server params
+                server->SetSpec(server_spec);
 
-                data_center->AddServer(server_uuid);
+                CHECK(server_scheduler == "greedy",
+                      "Unknown server scheduler {}", server_scheduler);
+
+                server_scheduler_manager->Make<GreedyServerScheduler>(
+                    server->UUID());
+
+                data_center->AddServer(server->UUID());
             }
         }
     }

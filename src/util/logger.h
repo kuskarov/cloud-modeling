@@ -29,7 +29,7 @@ SeverityToString(LogSeverity severity)
         case LogSeverity::kDebug:
             return "debug";
         default:
-            return "never";
+            abort();
     }
 }
 
@@ -39,7 +39,7 @@ class SimulatorLogger
     static void SetCSVFolder(const std::string& path_to_csv_folder)
     {
         csv_file_name_ =
-            path_to_csv_folder + "/" + std::to_string(time(nullptr));
+            path_to_csv_folder + "/" + std::to_string(time(nullptr)) + ".csv";
     }
 
     static void SetMaxConsoleSeverity(LogSeverity max_severity)
@@ -63,32 +63,25 @@ class SimulatorLogger
                     const std::string& caller_name,
                     const std::string& format_string, Args&&... args)
     {
-        std::string caller{};
-        if (caller_type.empty()) {
-            caller = "Core :: " + caller_name;
-        } else {
-            caller = caller_type + " :: " + caller_name;
-        }
-
         if (severity <= max_console_severity) {
             if (severity == LogSeverity::kError) {
                 fmt::print(
                     fg(fmt::color::dark_red) | fmt::emphasis::bold,
-                    FMT_STRING("[{:>5}] [{:>5}] [{:>40}] {}\n"), now(),
-                    SeverityToString(severity), caller,
+                    FMT_STRING("[{:>5}] [{:>5}] [{:>15}] [{:>25}] {}\n"), now(),
+                    SeverityToString(severity), caller_type, caller_name,
                     fmt::format(format_string, std::forward<Args>(args)...));
             } else {
                 fmt::print(
-                    FMT_STRING("[{:>5}] [{:>5}] [{:>40}] {}\n"), now(),
-                    SeverityToString(severity), caller,
+                    FMT_STRING("[{:>5}] [{:>5}] [{:>15}] [{:>25}] {}\n"), now(),
+                    SeverityToString(severity), caller_type, caller_name,
                     fmt::format(format_string, std::forward<Args>(args)...));
             }
         }
 
         if (!csv_file_name_.empty() && severity <= max_csv_severity) {
             CSVFileStream().print(
-                FMT_STRING("{},{},{},{}\n"), now(), SeverityToString(severity),
-                caller,
+                FMT_STRING("{},{},{},{},{}\n"), now(),
+                SeverityToString(severity), caller_type, caller_name,
                 fmt::format(format_string, std::forward<Args>(args)...));
         }
     }
@@ -107,12 +100,12 @@ class SimulatorLogger
     }
 };
 
-#define CORE_LOG_INFO(...) \
-    SimulatorLogger::Log(LogSeverity::kInfo, "", whoami_, __VA_ARGS__)
-#define CORE_LOG_ERROR(...) \
-    SimulatorLogger::Log(LogSeverity::kError, "", whoami_, __VA_ARGS__)
-#define CORE_LOG_DEBUG(...) \
-    SimulatorLogger::Log(LogSeverity::kDebug, "", whoami_, __VA_ARGS__)
+#define WORLD_LOG_INFO(...) \
+    SimulatorLogger::Log(LogSeverity::kInfo, "World", whoami_, __VA_ARGS__)
+#define WORLD_LOG_ERROR(...) \
+    SimulatorLogger::Log(LogSeverity::kError, "World", whoami_, __VA_ARGS__)
+#define WORLD_LOG_DEBUG(...) \
+    SimulatorLogger::Log(LogSeverity::kDebug, "World", whoami_, __VA_ARGS__)
 
 #define ACTOR_LOG_INFO(...) \
     SimulatorLogger::Log(LogSeverity::kInfo, type_, name_, __VA_ARGS__)
