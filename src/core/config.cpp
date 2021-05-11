@@ -6,6 +6,7 @@
 #include <argparse.hpp>
 
 #include "cloud.h"
+#include "custom-code.h"
 #include "data-center.h"
 #include "file-utils.h"
 #include "logger.h"
@@ -160,7 +161,7 @@ sim::core::SimulatorConfig::ParseCloud(
                 CHECK(server_scheduler == "greedy",
                       "Unknown server scheduler {}", server_scheduler);
 
-                server_scheduler_manager->Make<GreedyServerScheduler>(
+                server_scheduler_manager->Make<custom::GreedyServerScheduler>(
                     server->UUID());
 
                 data_center->AddServer(server->UUID());

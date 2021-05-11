@@ -16,7 +16,8 @@ target_compile_features(core PUBLIC cxx_std_17)
 target_link_libraries(core PUBLIC
         util
         events
-        infrastructure)
+        infrastructure
+        custom)
 
 target_link_libraries(core PUBLIC
         yaml-cpp::yaml-cpp

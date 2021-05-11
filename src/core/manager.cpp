@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "custom-code.h"
 #include "logger.h"
 #include "scheduler.h"
 #include "types.h"
@@ -44,7 +45,7 @@ sim::core::Manager::Setup()
     cloud->SetVMStorage(vm_storage_handle_);
 
     auto scheduler =
-        actor_register_->Make<FirstAvailableScheduler>("scheduler-1");
+        actor_register_->Make<custom::FirstAvailableScheduler>("scheduler-1");
     scheduler->SetActorRegister(actor_register_.get());
     scheduler->SetCloud(cloud_handle_);
 

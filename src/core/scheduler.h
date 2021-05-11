@@ -64,10 +64,4 @@ class IScheduler : public events::IActor
     std::function<const IActor*(types::UUID)> get_actor_state;
 };
 
-class FirstAvailableScheduler : public IScheduler
-{
- protected:
-    void UpdateSchedule(const SchedulerEvent* scheduler_event) override;
-};
-
 }   // namespace sim::core
