@@ -6,5 +6,6 @@ target_link_libraries(simulator PUBLIC
         util
         events
         infrastructure
+        protocol
         core
         custom)

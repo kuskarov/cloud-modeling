@@ -7,3 +7,9 @@
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "external/grpc"]
+	path = external/grpc
+	url = https://github.com/grpc/grpc.git
+[submodule "external/replxx"]
+	path = external/replxx
+	url = https://github.com/AmokHuginnsson/replxx.git

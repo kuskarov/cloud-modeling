@@ -33,6 +33,10 @@ SeverityToString(LogSeverity severity)
     }
 }
 
+typedef std::function<void(types::TimeStamp, LogSeverity, const std::string&,
+                           const std::string&, const std::string&)>
+    LoggingCallback;
+
 class SimulatorLogger
 {
  public:
@@ -58,31 +62,38 @@ class SimulatorLogger
         now = now_callback;
     }
 
+    static void AddLoggingCallback(const LoggingCallback& cb)
+    {
+        callbacks_.push_back(cb);
+    }
+
+    static void RemoveLastLoggingCallback() { callbacks_.pop_back(); }
+
     template <typename... Args>
-    static void Log(LogSeverity severity, const std::string& caller_type,
+    static void LogNow(LogSeverity severity, const std::string& caller_type,
+                       const std::string& caller_name,
+                       const std::string& format_string, Args&&... args)
+    {
+        Log(now(), severity, caller_type, caller_name, format_string,
+            std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    static void Log(types::TimeStamp ts, LogSeverity severity,
+                    const std::string& caller_type,
                     const std::string& caller_name,
                     const std::string& format_string, Args&&... args)
     {
-        if (severity <= max_console_severity) {
-            if (severity == LogSeverity::kError) {
-                fmt::print(
-                    fg(fmt::color::dark_red) | fmt::emphasis::bold,
-                    FMT_STRING("[{:>5}] [{:>5}] [{:>15}] [{:>25}] {}\n"), now(),
-                    SeverityToString(severity), caller_type, caller_name,
-                    fmt::format(format_string, std::forward<Args>(args)...));
-            } else {
-                fmt::print(
-                    FMT_STRING("[{:>5}] [{:>5}] [{:>15}] [{:>25}] {}\n"), now(),
-                    SeverityToString(severity), caller_type, caller_name,
-                    fmt::format(format_string, std::forward<Args>(args)...));
-            }
-        }
+        auto text = fmt::format(format_string, std::forward<Args>(args)...);
 
-        if (!csv_file_name_.empty() && severity <= max_csv_severity) {
-            CSVFileStream().print(
-                FMT_STRING("{},{},{},{},{}\n"), now(),
-                SeverityToString(severity), caller_type, caller_name,
-                fmt::format(format_string, std::forward<Args>(args)...));
+        // standard callbacks
+        GetPrintToConsoleCallback()(ts, severity, caller_type, caller_name,
+                                    text);
+        GetWriteToCSVCallback()(ts, severity, caller_type, caller_name, text);
+
+        // additional callbacks, e.g. passing to gRPC stream
+        for (const auto& cb : callbacks_) {
+            cb(ts, severity, caller_type, caller_name, text);
         }
     }
 
@@ -98,19 +109,54 @@ class SimulatorLogger
 
         return csv_file_stream_;
     }
+
+    static LoggingCallback GetPrintToConsoleCallback()
+    {
+        return [](types::TimeStamp ts, LogSeverity severity,
+                  const std::string& caller_type,
+                  const std::string& caller_name, const std::string& text) {
+            if (severity <= max_console_severity) {
+                if (severity == LogSeverity::kError) {
+                    fmt::print(fg(fmt::color::dark_red) | fmt::emphasis::bold,
+                               "[{:>5}] [{:>5}] [{:>15}] [{:>25}] {}\n", ts,
+                               SeverityToString(severity), caller_type,
+                               caller_name, text);
+                } else {
+                    fmt::print("[{:>5}] [{:>5}] [{:>15}] [{:>25}] {}\n", ts,
+                               SeverityToString(severity), caller_type,
+                               caller_name, text);
+                }
+            }
+        };
+    }
+
+    static LoggingCallback GetWriteToCSVCallback()
+    {
+        return [](types::TimeStamp ts, LogSeverity severity,
+                  const std::string& caller_type,
+                  const std::string& caller_name, const std::string& text) {
+            if (!csv_file_name_.empty() && severity <= max_csv_severity) {
+                CSVFileStream().print("{},{},{},{},{}\n", ts,
+                                      SeverityToString(severity), caller_type,
+                                      caller_name, text);
+            }
+        };
+    }
+
+    inline static std::vector<LoggingCallback> callbacks_;
 };
 
 #define WORLD_LOG_INFO(...) \
-    SimulatorLogger::Log(LogSeverity::kInfo, "World", whoami_, __VA_ARGS__)
+    SimulatorLogger::LogNow(LogSeverity::kInfo, "World", whoami_, __VA_ARGS__)
 #define WORLD_LOG_ERROR(...) \
-    SimulatorLogger::Log(LogSeverity::kError, "World", whoami_, __VA_ARGS__)
+    SimulatorLogger::LogNow(LogSeverity::kError, "World", whoami_, __VA_ARGS__)
 #define WORLD_LOG_DEBUG(...) \
     SimulatorLogger::Log(LogSeverity::kDebug, "World", whoami_, __VA_ARGS__)
 
 #define ACTOR_LOG_INFO(...) \
-    SimulatorLogger::Log(LogSeverity::kInfo, type_, name_, __VA_ARGS__)
+    SimulatorLogger::LogNow(LogSeverity::kInfo, type_, name_, __VA_ARGS__)
 #define ACTOR_LOG_ERROR(...) \
-    SimulatorLogger::Log(LogSeverity::kError, type_, name_, __VA_ARGS__)
+    SimulatorLogger::LogNow(LogSeverity::kError, type_, name_, __VA_ARGS__)
 #define ACTOR_LOG_DEBUG(...) \
     SimulatorLogger::Log(LogSeverity::kDebug, type_, name_, __VA_ARGS__)
 

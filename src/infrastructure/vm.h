@@ -70,12 +70,11 @@ class VM : public events::IActor
     [[nodiscard]] types::TimeInterval GetDeleteDelay() const;
     void SetDeleteDelay(sim::types::TimeInterval delete_delay);
 
-    VMWorkload GetRequiredWorkload() const
-    {
-        // call WorkLoadModel for each field in VMRequirements
-        required_workload_ = {};
+    VMWorkload GetRequiredWorkload() const { return required_workload_; }
 
-        return required_workload_;
+    void SetWorkload(const VMWorkload& vm_workload)
+    {
+        required_workload_ = vm_workload;
     }
 
  private:
