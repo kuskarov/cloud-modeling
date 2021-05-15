@@ -1,20 +1,16 @@
 syntax = "proto3";
 
-// import "google/protobuf/empty.proto";
+import "google/protobuf/empty.proto";
 
 package simulator_api;
 
 service Simulator {
-  rpc DoResourceAction(ResourceActionMessage) returns (CommandStatusMessage) {}
-  rpc CreateVM(CreateVMMessage) returns (CommandStatusMessage) {}
-  rpc DoVMAction(VMActionMessage) returns (CommandStatusMessage) {}
+  rpc DoResourceAction(ResourceActionMessage) returns (google.protobuf.Empty) {}
+  rpc CreateVM(CreateVMMessage) returns (google.protobuf.Empty) {}
+  rpc DoVMAction(VMActionMessage) returns (google.protobuf.Empty) {}
 
   // event-loop commands
-  rpc SimulateAll(EmptyMessage/*google.protobuf.Empty*/) returns (stream LogMessage) {}
-}
-
-message EmptyMessage {
-
+  rpc SimulateAll(google.protobuf.Empty) returns (stream LogMessage) {}
 }
 
 enum ResourceActionType {
@@ -30,10 +26,6 @@ enum VMActionType {
   REBOOT_VM_ACTION = 2;
   STOP_VM_ACTION = 3;
   DELETE_VM_ACTION = 4;
-}
-
-message CommandStatusMessage {
-  string error_text = 3;
 }
 
 message ResourceActionMessage {

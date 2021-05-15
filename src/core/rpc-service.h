@@ -13,10 +13,9 @@ namespace sim::core {
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
+using grpc::StatusCode;
 
-using simulator_api::CommandStatusMessage;
 using simulator_api::CreateVMMessage;
-using simulator_api::EmptyMessage;
 using simulator_api::LogMessage;
 using simulator_api::ResourceActionMessage;
 using simulator_api::ResourceActionType;
@@ -55,13 +54,13 @@ class SimulatorRPCService final : public Simulator::Service
 
     Status DoResourceAction(ServerContext* context,
                             const ResourceActionMessage* request,
-                            CommandStatusMessage* response) override;
+                            google::protobuf::Empty* response) override;
     Status CreateVM(ServerContext* context, const CreateVMMessage* request,
-                    CommandStatusMessage* response) override;
+                    google::protobuf::Empty* response) override;
     Status DoVMAction(ServerContext* context, const VMActionMessage* request,
-                      CommandStatusMessage* response) override;
+                      google::protobuf::Empty* response) override;
     // event-loop commands
-    Status SimulateAll(ServerContext* context, const EmptyMessage* request,
+    Status SimulateAll(ServerContext* context, const google::protobuf::Empty* request,
                        ServerWriter<LogMessage>* writer) override;
 
     types::UUID ResolveName(const std::string& name);

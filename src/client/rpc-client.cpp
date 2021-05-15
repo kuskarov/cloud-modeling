@@ -18,7 +18,7 @@ sim::client::SimulatorRPCClient::ProcessInput(const std::string& input)
     std::string command;
     iss >> command;
 
-    CommandStatusMessage reply;
+    google::protobuf::Empty reply;
 
     if (auto it = resource_action_mapping.find(command);
         it != resource_action_mapping.end()) {
@@ -57,7 +57,7 @@ void
 sim::client::SimulatorRPCClient::CallResourceAction(
     ResourceActionType type, const std::string& resource_name)
 {
-    CommandStatusMessage reply{};
+    google::protobuf::Empty reply;
     ClientContext cntx{};
 
     ResourceActionMessage request{};
@@ -77,7 +77,7 @@ void
 sim::client::SimulatorRPCClient::CallVMAction(VMActionType type,
                                               const std::string& vm_name)
 {
-    CommandStatusMessage reply{};
+    google::protobuf::Empty reply;
     ClientContext cntx{};
 
     VMActionMessage request{};
@@ -88,7 +88,7 @@ sim::client::SimulatorRPCClient::CallVMAction(VMActionType type,
     if (status.ok()) {
         CallSimulateAll();
     } else {
-        std::cerr << "Remote procedure call failed: " << reply.error_text()
+        std::cerr << "Remote procedure call failed: " << status.error_message()
                   << "\n";
     }
 }
@@ -97,7 +97,7 @@ void
 sim::client::SimulatorRPCClient::CallCreateVM(
     const VMWorkloadSpec& vm_workload_spec, const std::string& vm_name)
 {
-    CommandStatusMessage reply{};
+    google::protobuf::Empty reply;
     ClientContext cntx{};
 
     CreateVMMessage request{};
@@ -108,7 +108,7 @@ sim::client::SimulatorRPCClient::CallCreateVM(
     if (status.ok()) {
         CallSimulateAll();
     } else {
-        std::cerr << "Remote procedure call failed: " << reply.error_text()
+        std::cerr << "Remote procedure call failed: " << status.error_message()
                   << "\n";
     }
 }
@@ -117,11 +117,11 @@ void
 sim::client::SimulatorRPCClient::CallSimulateAll()
 {
     ClientContext cntx{};
-    EmptyMessage empty_message{};
+    google::protobuf::Empty reply;
     LogMessage log_message{};
 
     std::unique_ptr<ClientReader<LogMessage>> reader(
-        stub_->SimulateAll(&cntx, empty_message));
+        stub_->SimulateAll(&cntx, reply));
 
     while (reader->Read(&log_message)) {
         if (auto it = severity_mapping.find(log_message.severity());
@@ -135,5 +135,10 @@ sim::client::SimulatorRPCClient::CallSimulateAll()
                       << log_message.severity() << "\n";
         }
     }
+
     Status status = reader->Finish();
+    if (!status.ok()) {
+        std::cerr << "Remote procedure call failed: " << status.error_message()
+                  << "\n";
+    }
 }

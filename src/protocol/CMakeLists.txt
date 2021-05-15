@@ -16,7 +16,7 @@ add_custom_command(
         COMMAND ${_PROTOBUF_PROTOC}
         ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
         --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-        -I "${api_proto_path}"
+        -I "${api_proto_path}" -I "${CMAKE_SOURCE_DIR}/external/grpc/third_party/protobuf/src"
         --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
         "${api_proto}"
         DEPENDS "${api_proto}")

@@ -22,16 +22,16 @@ sim::core::SimulatorRPCService::ResolveName(const std::string& name)
 grpc::Status
 sim::core::SimulatorRPCService::DoResourceAction(
     ServerContext* context, const ResourceActionMessage* request,
-    CommandStatusMessage* response)
+    google::protobuf::Empty* response)
 {
     WORLD_LOG_INFO("DoResourceAction() called");
 
     auto uuid = ResolveName(request->resource_name());
 
     if (uuid == types::NoneUUID()) {
-        response->set_error_text(
-            fmt::format("Unknown resource name: {}", request->resource_name()));
-        return Status::CANCELLED;
+        return Status{
+            StatusCode::INVALID_ARGUMENT,
+            fmt::format("Unknown resource name: {}", request->resource_name())};
     }
 
     auto event = events::MakeEvent<infra::ResourceEvent>(
@@ -48,10 +48,9 @@ sim::core::SimulatorRPCService::DoResourceAction(
             event->type = infra::ResourceEventType::kShutdown;
             break;
         default:
-            response->set_error_text(
-                fmt::format("Invalid resource_action_type: {}",
-                            request->resource_action_type()));
-            return Status::CANCELLED;
+            return Status{StatusCode::INVALID_ARGUMENT,
+                          fmt::format("Invalid resource_action_type: {}",
+                                      request->resource_action_type())};
     }
 
     schedule_event(event, false);
@@ -64,7 +63,7 @@ sim::core::SimulatorRPCService::DoResourceAction(
 grpc::Status
 sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
                                          const CreateVMMessage* request,
-                                         CommandStatusMessage* response)
+                                         google::protobuf::Empty* response)
 {
     WORLD_LOG_INFO("CreateVM() called");
 
@@ -74,10 +73,8 @@ sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
         vm_uuid = vm->UUID();
         vm->SetWorkload(infra::VMWorkload{request->required_ram()});
     } catch (const std::logic_error& le) {
-        response->set_error_text(
-            fmt::format("Name {} is not unique", request->vm_name()));
-
-        return Status::CANCELLED;
+        return Status{StatusCode::INVALID_ARGUMENT,
+                      fmt::format("Name {} is not unique", request->vm_name())};
     }
 
     auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
@@ -93,16 +90,15 @@ sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
 grpc::Status
 sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
                                            const VMActionMessage* request,
-                                           CommandStatusMessage* response)
+                                           google::protobuf::Empty* response)
 {
     WORLD_LOG_INFO("DoVMAction() called");
 
     auto uuid = ResolveName(request->vm_name());
 
     if (uuid == types::NoneUUID()) {
-        response->set_error_text(
-            fmt::format("Unknown VM name: {}", request->vm_name()));
-        return Status::CANCELLED;
+        return Status{StatusCode::INVALID_ARGUMENT,
+                      fmt::format("Unknown VM name: {}", request->vm_name())};
     }
 
     // event that should happen after the chain of events ends
@@ -133,8 +129,8 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
         }
 
         case VMActionType::REBOOT_VM_ACTION:
-            response->set_error_text("not implemented yet");
-            return Status::CANCELLED;
+            return Status{StatusCode::UNIMPLEMENTED,
+                          "VM reboot is not implemented yet"};
 
         case VMActionType::STOP_VM_ACTION: {
             vm_storage_notification->type =
@@ -157,18 +153,18 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
         }
 
         default:
-            response->set_error_text(fmt::format("Invalid vm_action_type: {}",
-                                                 request->vm_action_type()));
-            return Status::CANCELLED;
+            return Status{StatusCode::INVALID_ARGUMENT,
+                          fmt::format("Invalid vm_action_type: {}",
+                                      request->vm_action_type())};
     }
 
     return Status::OK;
 }
 
 grpc::Status
-sim::core::SimulatorRPCService::SimulateAll(ServerContext* context,
-                                            const EmptyMessage* request,
-                                            ServerWriter<LogMessage>* writer)
+sim::core::SimulatorRPCService::SimulateAll(
+    ServerContext* context, const google::protobuf::Empty* request,
+    ServerWriter<LogMessage>* writer)
 {
     WORLD_LOG_INFO("SimulateAll() called");
 

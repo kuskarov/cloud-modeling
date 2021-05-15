@@ -16,9 +16,7 @@ using grpc::ClientContext;
 using grpc::ClientReader;
 using grpc::Status;
 
-using simulator_api::CommandStatusMessage;
 using simulator_api::CreateVMMessage;
-using simulator_api::EmptyMessage;
 using simulator_api::LogMessage;
 using simulator_api::ResourceActionMessage;
 using simulator_api::ResourceActionType;
