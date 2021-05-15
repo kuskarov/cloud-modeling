@@ -22,10 +22,27 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
         .nargs(1)
         .required();
 
-    // throws std::runtime_error on fail, it is handled in the upper scope
-    parser.parse_args(argc, argv);
+    parser.add_argument("--logs-folder")
+        .help("Path to the folder where to write logs")
+        .nargs(1)
+        .required();
+
+    parser.add_argument("--port")
+        .help("Port on which RPC calls will be awaited")
+        .nargs(1)
+        .required();
+
+    try {
+        parser.parse_args(argc, argv);
+    } catch (const std::runtime_error& re) {
+        std::cerr << "Argument parse error: " << re.what() << "\n";
+        std::cerr << parser << "\n";
+        throw;
+    }
 
     config_path_ = parser.get<std::string>("--config");
+    logs_path_ = parser.get<std::string>("--logs-folder");
+    port_ = std::stoi(parser.get<std::string>("--port"));
 }
 
 #define CHECK(condition, ...)                        \

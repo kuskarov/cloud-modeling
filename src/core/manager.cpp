@@ -1,7 +1,8 @@
 #include "manager.h"
 
-#include <iostream>
-#include <sstream>
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 
 #include "custom-code.h"
 #include "logger.h"
@@ -13,7 +14,7 @@
 void
 sim::core::Manager::Setup()
 {
-    SimulatorLogger::SetCSVFolder("../../../");
+    SimulatorLogger::SetCSVFolder(config_->GetLogsPath());
     SimulatorLogger::SetMaxCSVSeverity(LogSeverity::kDebug);
     SimulatorLogger::SetMaxConsoleSeverity(LogSeverity::kDebug);
     SimulatorLogger::SetTimeCallback([this] { return event_loop_->Now(); });
@@ -57,183 +58,36 @@ sim::core::Manager::Setup()
         WORLD_LOG_INFO("Updating world... ok");
     });
 
+    server_ = std::make_unique<SimulatorRPCService>();
+    server_->SetScheduleFunction(schedule_event);
+    server_->SetActorRegister(actor_register_.get());
+    server_->SetEventLoop(event_loop_.get());
+    server_->SetHandles(cloud_handle_, scheduler_handle_, vm_storage_handle_);
+
     config_->ParseResources(cloud_handle_, actor_register_.get(),
                             server_scheduler_manager_.get());
 }
 
-/** First version: simple CLI loop, which can
- *
- * 1) run 1,2,...,n, all simulation steps in event-loop
- * 2) create and schedule events like CreateVM, DeleteVM, ...
- *
- */
 void
 sim::core::Manager::Listen()
 {
-    std::cerr
-        << "\n"
-           "Temporal CLI:\n"
-           "boot <name>                 : boot resource <name>\n"
-           "shutdown <name>             : shutdown resource <name>\n"
-           "create-vm <vm-name> <ram>   : create (but do not provision) vm\n"
-           "provision-vm <vm-name>      : provision and run vm <vm-name>\n"
-           "stop-vm <vm-name>           : stop (but do not delete) vm "
-           "<vm-name>\n"
-           "delete-vm <vm-name>         : delete vm <vm-name>\n"
-           "q                           : quit\n";
+    std::string server_address("0.0.0.0:" + std::to_string(config_->GetPort()));
 
-    std::string command{};
-    while (true) {
-        std::getline(std::cin, command);
+    grpc::EnableDefaultHealthCheckService(true);
+    grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+    grpc::ServerBuilder builder;
+    // Listen on the given address without any authentication mechanism.
+    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    // Register "service" as the instance through which we'll communicate with
+    // clients. In this case it corresponds to an *synchronous* service.
+    builder.RegisterService(server_.get());
+    // Finally assemble the server.
+    std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+    std::cout << "Server listening on " << server_address << std::endl;
 
-        if (command == "q") {
-            break;
-        } else if (command.find("boot") != std::string::npos) {
-            Boot(command);
-        } else if (command.find("shutdown") != std::string::npos) {
-            Shutdown(command);
-        } else if (command.find("create-vm") != std::string::npos) {
-            CreateVM(command);
-        } else if (command.find("provision-vm") != std::string::npos) {
-            ProvisionVM(command);
-        } else if (command.find("stop-vm") != std::string::npos) {
-            StopVM(command);
-        } else if (command.find("delete-vm") != std::string::npos) {
-            DeleteVM(command);
-        }
-        event_loop_->SimulateAll();
-    }
+    // Wait for the server to shutdown. Note that some other thread must be
+    // responsible for shutting down the server for this call to ever return.
+    server->Wait();
 
     WORLD_LOG_INFO("Quit!");
-}
-
-sim::types::UUID
-sim::core::Manager::ResolveNameFromInput(const std::string& command)
-{
-    std::istringstream ss(command);
-    std::string _, name;
-    ss >> _ >> name;
-
-    types::UUID resource_uuid;
-    try {
-        resource_uuid = actor_register_->GetActorHandle(name);
-        return resource_uuid;
-    } catch (...) {
-        WORLD_LOG_ERROR("Name {} not found", name);
-        return types::NoneUUID();
-    }
-}
-
-void
-sim::core::Manager::Boot(const std::string& command)
-{
-    if (auto resource_uuid = ResolveNameFromInput(command);
-        resource_uuid != types::NoneUUID()) {
-        auto boot_event = events::MakeEvent<infra::ResourceEvent>(
-            resource_uuid, event_loop_->Now(), nullptr);
-        boot_event->type = infra::ResourceEventType::kBoot;
-
-        schedule_event(boot_event, false);
-    }
-}
-
-void
-sim::core::Manager::Shutdown(const std::string& command)
-{
-    if (auto resource_uuid = ResolveNameFromInput(command);
-        resource_uuid != types::NoneUUID()) {
-        auto shutdown_event = events::MakeEvent<infra::ResourceEvent>(
-            resource_uuid, event_loop_->Now(), nullptr);
-        shutdown_event->type = infra::ResourceEventType::kShutdown;
-
-        schedule_event(shutdown_event, false);
-    }
-}
-
-void
-sim::core::Manager::CreateVM(const std::string& command)
-{
-    std::istringstream ss(command);
-    std::string _, vm_name;
-    ss >> _ >> vm_name;
-
-    types::UUID vm_uuid{};
-    try {
-        vm_uuid = actor_register_->Make<infra::VM>(vm_name)->UUID();
-    } catch (const std::logic_error& le) {
-        WORLD_LOG_ERROR("Name {} is not unique", vm_name);
-        return;
-    }
-
-    auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
-        vm_storage_handle_, event_loop_->Now(), nullptr);
-    vm_storage_event->type = infra::VMStorageEventType::kVMCreated;
-    vm_storage_event->vm_uuid = vm_uuid;
-
-    schedule_event(vm_storage_event, false);
-}
-
-void
-sim::core::Manager::ProvisionVM(const std::string& command)
-{
-    if (auto vm_uuid = ResolveNameFromInput(command);
-        vm_uuid != types::NoneUUID()) {
-        auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
-            vm_storage_handle_, event_loop_->Now(), nullptr);
-        vm_storage_event->type =
-            infra::VMStorageEventType::kVMProvisionRequested;
-        vm_storage_event->vm_uuid = vm_uuid;
-        schedule_event(vm_storage_event, true);
-
-        // event that should happen after the chain of events ends
-        auto vm_storage_notification = new infra::VMStorageEvent();
-        vm_storage_notification->type =
-            infra::VMStorageEventType::kVMProvisioned;
-        vm_storage_notification->addressee = vm_storage_handle_;
-        vm_storage_notification->vm_uuid = vm_uuid;
-
-        auto scheduler_event = events::MakeEvent<SchedulerEvent>(
-            scheduler_handle_, event_loop_->Now(), vm_storage_notification);
-        scheduler_event->type = SchedulerEventType::kProvisionVM;
-
-        schedule_event(scheduler_event, false);
-    }
-}
-
-void
-sim::core::Manager::StopVM(const std::string& command)
-{
-    if (auto vm_uuid = ResolveNameFromInput(command);
-        vm_uuid != types::NoneUUID()) {
-        // event that should happen after the chain of events ends
-        auto vm_storage_notification = new infra::VMStorageEvent();
-        vm_storage_notification->type = infra::VMStorageEventType::kVMStopped;
-        vm_storage_notification->addressee = vm_storage_handle_;
-        vm_storage_notification->vm_uuid = vm_uuid;
-
-        auto stop_vm_event = events::MakeEvent<infra::VMEvent>(
-            vm_uuid, event_loop_->Now(), vm_storage_notification);
-        stop_vm_event->type = infra::VMEventType::kStop;
-
-        schedule_event(stop_vm_event, false);
-    }
-}
-
-void
-sim::core::Manager::DeleteVM(const std::string& command)
-{
-    if (auto vm_uuid = ResolveNameFromInput(command);
-        vm_uuid != types::NoneUUID()) {
-        // event that should happen after the chain of events ends
-        auto vm_storage_notification = new infra::VMStorageEvent();
-        vm_storage_notification->type = infra::VMStorageEventType::kVMDeleted;
-        vm_storage_notification->addressee = vm_storage_handle_;
-        vm_storage_notification->vm_uuid = vm_uuid;
-
-        auto delete_vm_event = events::MakeEvent<infra::VMEvent>(
-            vm_uuid, event_loop_->Now(), vm_storage_notification);
-        delete_vm_event->type = infra::VMEventType::kDelete;
-
-        schedule_event(delete_vm_event, false);
-    }
 }

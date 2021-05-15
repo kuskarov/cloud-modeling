@@ -18,6 +18,9 @@ class SimulatorConfig
     void ParseResources(types::UUID cloud_handle, ActorRegister* actor_register,
                         ServerSchedulerManager* server_scheduler_manager);
 
+    auto GetLogsPath() const { return logs_path_; }
+    auto GetPort() const { return port_; }
+
  private:
     std::string whoami_{};
 
@@ -26,7 +29,8 @@ class SimulatorConfig
                     types::UUID cloud_handle, ActorRegister* actor_register,
                     ServerSchedulerManager* server_scheduler_manager);
 
-    std::string config_path_{};
+    std::string config_path_{}, logs_path_{};
+    uint32_t port_{};
 
     std::unordered_map<std::string, infra::ServerSpec> server_specs_{};
     std::unordered_map<std::string, uint32_t> servers_count_{};

@@ -10,6 +10,7 @@
 #include "config.h"
 #include "event-loop.h"
 #include "resource-scheduler.h"
+#include "rpc-service.h"
 #include "scheduler.h"
 #include "vm-storage.h"
 
@@ -27,6 +28,8 @@ class Manager
     void Listen();
 
  private:
+    std::unique_ptr<SimulatorRPCService> server_;
+
     std::string whoami_{};
 
     std::unique_ptr<events::EventLoop> event_loop_;
@@ -44,15 +47,6 @@ class Manager
     types::UUID cloud_handle_{types::NoneUUID()};
 
     types::UUID vm_storage_handle_{types::NoneUUID()};
-
-    void Boot(const std::string& command);
-    void CreateVM(const std::string& command);
-    void ProvisionVM(const std::string& command);
-    void StopVM(const std::string& command);
-    void Shutdown(const std::string& command);
-    void DeleteVM(const std::string& command);
-
-    types::UUID ResolveNameFromInput(const std::string& command);
 };
 
 }   // namespace sim::core
