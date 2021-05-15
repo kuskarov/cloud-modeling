@@ -189,7 +189,7 @@ sim::infra::VM::CompleteStop(const sim::infra::VMEvent* vm_event)
 
     schedule_event(free_server_event, false);
 
-    owner_ = types::NoneUUID();
+    owner_ = types::UUID{};
 }
 
 void

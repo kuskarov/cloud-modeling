@@ -25,7 +25,7 @@ sim::core::Manager::Setup()
         event_loop_->Insert(event, immediate);
     };
 
-    actor_register_ = std::make_unique<ActorRegister>();
+    actor_register_ = std::make_unique<events::ActorRegister>();
     actor_register_->SetScheduleFunction(schedule_event);
 
     server_scheduler_manager_ = std::make_unique<ServerSchedulerManager>();

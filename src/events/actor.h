@@ -20,7 +20,7 @@ class IActor
 {
  public:
     explicit IActor(std::string&& type)
-        : type_(type), uuid_(types::GenerateUUID())
+        : type_(type), uuid_(types::UUID::Generate())
     {
     }
 

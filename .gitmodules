@@ -13,3 +13,6 @@
 [submodule "external/replxx"]
 	path = external/replxx
 	url = https://github.com/AmokHuginnsson/replxx.git
+[submodule "external/NamedType"]
+	path = external/NamedType
+	url = https://github.com/joboccara/NamedType.git

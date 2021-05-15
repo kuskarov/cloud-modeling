@@ -38,7 +38,7 @@ class Server : public IResource
 
     void HandleEvent(const events::Event* event) override;
 
-    types::EnergyCount SpentPower() override { return 0; }
+    types::EnergyCount SpentPower() override { return types::EnergyCount{0}; }
 
     // for scheduler
     [[nodiscard]] const auto& VMs() const { return virtual_machines_; }

@@ -6,7 +6,7 @@
 #include "actor.h"
 #include "types.h"
 
-namespace sim::core {
+namespace sim::events {
 
 /**
  * This class is responsible for owning all IActor objects in the simulator.
@@ -80,4 +80,4 @@ class ActorRegister
     std::unordered_map<types::UUID, std::unique_ptr<events::IActor>> actors_;
 };
 
-}   // namespace sim::core
+}   // namespace sim::events

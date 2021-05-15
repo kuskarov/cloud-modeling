@@ -22,7 +22,7 @@ class IResourceScheduler
 
     IResourceScheduler(const IResourceScheduler& other) = delete;
 
-    void SetActorRegister(const ActorRegister* actor_register)
+    void SetActorRegister(const events::ActorRegister* actor_register)
     {
         actor_register_ = actor_register;
     }
@@ -42,7 +42,7 @@ class IResourceScheduler
 
     events::ScheduleFunction schedule_function;
 
-    const ActorRegister* actor_register_{};
+    const events::ActorRegister* actor_register_{};
 
     types::UUID shared_resource_;
 
@@ -87,7 +87,7 @@ class ServerSchedulerManager
         schedule_function_ = sf;
     }
 
-    void SetActorRegister(const ActorRegister* actor_register)
+    void SetActorRegister(const events::ActorRegister* actor_register)
     {
         actor_register_ = actor_register;
     }
@@ -96,7 +96,7 @@ class ServerSchedulerManager
     std::string whoami_{};
 
     events::ScheduleFunction schedule_function_;
-    const ActorRegister* actor_register_{};
+    const events::ActorRegister* actor_register_{};
 
     std::vector<std::unique_ptr<IServerScheduler>> schedulers_;
 };

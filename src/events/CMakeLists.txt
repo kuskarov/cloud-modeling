@@ -2,7 +2,8 @@ set(SOURCES
         actor.h
         event.h
         event-loop.h
-        event-loop.cpp)
+        event-loop.cpp
+        actor-register.h)
 
 add_library(events STATIC ${SOURCES})
 

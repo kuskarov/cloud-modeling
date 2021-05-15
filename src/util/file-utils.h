@@ -1,13 +1,8 @@
-#include <sys/stat.h>
-#include <unistd.h>
-
+#include <filesystem>
 #include <string>
 
-static inline bool
-FileExists(const std::string& name)
+static inline auto
+FileExists(const std::string& path) -> bool
 {
-    struct stat buffer
-    {
-    };
-    return !stat(name.c_str(), &buffer);
+    return std::filesystem::exists(path);
 }

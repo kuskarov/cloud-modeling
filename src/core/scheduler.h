@@ -38,7 +38,7 @@ class IScheduler : public events::IActor
 
     void SetCloud(types::UUID cloud_handle) { cloud_handle_ = cloud_handle; }
 
-    void SetActorRegister(const ActorRegister* actor_register)
+    void SetActorRegister(const events::ActorRegister* actor_register)
     {
         actor_register_ = actor_register;
     }
@@ -56,7 +56,7 @@ class IScheduler : public events::IActor
      */
     virtual void UpdateSchedule(const SchedulerEvent* scheduler_event) = 0;
 
-    const ActorRegister* actor_register_{};
+    const events::ActorRegister* actor_register_{};
 
     // scheduler has read access to Cloud state
     types::UUID cloud_handle_{};

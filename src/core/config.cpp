@@ -55,7 +55,7 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
 
 void
 sim::core::SimulatorConfig::ParseResources(
-    sim::types::UUID cloud_handle, ActorRegister* actor_register,
+    sim::types::UUID cloud_handle, events::ActorRegister* actor_register,
     ServerSchedulerManager* server_scheduler_manager)
 {
     ParseSpecs(config_path_ + "/specs.yaml");
@@ -96,10 +96,10 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
         auto name = spec_name.as<std::string>();
 
         infra::ServerSpec server_spec{};
-        server_spec.ram = spec_ram.as<types::RAMBytes>();
+        server_spec.ram = types::RAMBytes{spec_ram.as<uint32_t>()};
         // TODO: write in a normal way
-        server_spec.clock_rate = static_cast<types::CPUHertz>(
-            spec_clock_rate.as<float>() * 1'000'000);
+        server_spec.clock_rate =
+            types::CPUHertz{spec_clock_rate.as<float>() * 1'000'000};
         server_spec.cores_count = spec_cores_count.as<uint32_t>();
 
         auto it = server_specs_.find(name);
@@ -113,7 +113,7 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
 void
 sim::core::SimulatorConfig::ParseCloud(
     const std::string& cloud_file_name, sim::types::UUID cloud_handle,
-    ActorRegister* actor_register,
+    events::ActorRegister* actor_register,
     ServerSchedulerManager* server_scheduler_manager)
 {
     auto cloud_config = YAML::LoadFile(cloud_file_name);

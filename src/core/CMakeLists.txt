@@ -5,7 +5,6 @@ set(SOURCES
         config.cpp
         scheduler.h
         scheduler.cpp
-        actor-register.h
         resource-scheduler.h
         rpc-service.h
         rpc-service.cpp)

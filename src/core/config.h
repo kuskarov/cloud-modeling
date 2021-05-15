@@ -15,7 +15,8 @@ class SimulatorConfig
     SimulatorConfig() : whoami_("Config") {}
 
     void ParseArgs(int argc, char** argv);
-    void ParseResources(types::UUID cloud_handle, ActorRegister* actor_register,
+    void ParseResources(types::UUID cloud_handle,
+                        events::ActorRegister* actor_register,
                         ServerSchedulerManager* server_scheduler_manager);
 
     auto GetLogsPath() const { return logs_path_; }
@@ -26,7 +27,8 @@ class SimulatorConfig
 
     void ParseSpecs(const std::string& specs_file_name);
     void ParseCloud(const std::string& cloud_file_name,
-                    types::UUID cloud_handle, ActorRegister* actor_register,
+                    types::UUID cloud_handle,
+                    events::ActorRegister* actor_register,
                     ServerSchedulerManager* server_scheduler_manager);
 
     std::string config_path_{}, logs_path_{};

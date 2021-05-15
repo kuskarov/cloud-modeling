@@ -21,7 +21,7 @@ class Cloud : public IResource
         vm_storage_ = vm_storage_handle;
     }
 
-    types::EnergyCount SpentPower() override { return 0; }
+    types::EnergyCount SpentPower() override { return types::EnergyCount{0}; }
 
     void AddDataCenter(types::UUID uuid)
     {
@@ -31,7 +31,7 @@ class Cloud : public IResource
 
  private:
     std::vector<types::UUID> data_centers_{};
-    types::UUID vm_storage_{types::NoneUUID()};
+    types::UUID vm_storage_{};
 };
 
 }   // namespace sim::infra

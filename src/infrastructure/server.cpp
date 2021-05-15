@@ -48,7 +48,7 @@ sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
         return;
     }
 
-    if (server_event->vm_uuid == types::NoneUUID()) {
+    if (!server_event->vm_uuid) {
         ACTOR_LOG_ERROR("ProvisionVM event without virtual_machine attached");
         return;
     }

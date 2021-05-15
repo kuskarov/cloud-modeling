@@ -19,7 +19,7 @@ class DataCenter : public IResource
         AddComponent(uuid);
     }
 
-    types::EnergyCount SpentPower() override { return 0; }
+    types::EnergyCount SpentPower() override { return types::EnergyCount{0}; }
 
     // for scheduler
     [[nodiscard]] const auto& Servers() const { return servers_; }

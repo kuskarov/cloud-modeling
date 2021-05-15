@@ -36,17 +36,17 @@ class Manager
 
     events::ScheduleFunction schedule_event;
 
-    std::unique_ptr<ActorRegister> actor_register_;
+    std::unique_ptr<events::ActorRegister> actor_register_;
 
     std::shared_ptr<SimulatorConfig> config_;
 
     std::unique_ptr<ServerSchedulerManager> server_scheduler_manager_;
 
-    types::UUID scheduler_handle_{types::NoneUUID()};
+    types::UUID scheduler_handle_{};
 
-    types::UUID cloud_handle_{types::NoneUUID()};
+    types::UUID cloud_handle_{};
 
-    types::UUID vm_storage_handle_{types::NoneUUID()};
+    types::UUID vm_storage_handle_{};
 };
 
 }   // namespace sim::core

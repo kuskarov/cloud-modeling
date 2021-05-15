@@ -15,7 +15,7 @@ sim::core::SimulatorRPCService::ResolveName(const std::string& name)
         uuid = actor_register_->GetActorHandle(name);
         return uuid;
     } catch (...) {
-        return types::NoneUUID();
+        return types::UUID{};
     }
 }
 
@@ -28,7 +28,7 @@ sim::core::SimulatorRPCService::DoResourceAction(
 
     auto uuid = ResolveName(request->resource_name());
 
-    if (uuid == types::NoneUUID()) {
+    if (!uuid) {
         return Status{
             StatusCode::INVALID_ARGUMENT,
             fmt::format("Unknown resource name: {}", request->resource_name())};
@@ -71,7 +71,8 @@ sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
     try {
         auto vm = actor_register_->Make<infra::VM>(request->vm_name());
         vm_uuid = vm->UUID();
-        vm->SetWorkload(infra::VMWorkload{request->required_ram()});
+        vm->SetWorkload(
+            infra::VMWorkload{types::RAMBytes{request->required_ram()}});
     } catch (const std::logic_error& le) {
         return Status{StatusCode::INVALID_ARGUMENT,
                       fmt::format("Name {} is not unique", request->vm_name())};
@@ -96,7 +97,7 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
 
     auto uuid = ResolveName(request->vm_name());
 
-    if (uuid == types::NoneUUID()) {
+    if (!uuid) {
         return Status{StatusCode::INVALID_ARGUMENT,
                       fmt::format("Unknown VM name: {}", request->vm_name())};
     }

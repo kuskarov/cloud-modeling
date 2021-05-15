@@ -36,7 +36,7 @@ class SimulatorRPCService final : public Simulator::Service
         event_loop_ = event_loop;
     }
 
-    void SetActorRegister(ActorRegister* actor_register)
+    void SetActorRegister(events::ActorRegister* actor_register)
     {
         actor_register_ = actor_register;
     }
@@ -67,13 +67,13 @@ class SimulatorRPCService final : public Simulator::Service
 
     events::ScheduleFunction schedule_event;
 
-    types::UUID scheduler_handle_{types::NoneUUID()};
+    types::UUID scheduler_handle_{};
 
-    types::UUID cloud_handle_{types::NoneUUID()};
+    types::UUID cloud_handle_{};
 
-    types::UUID vm_storage_handle_{types::NoneUUID()};
+    types::UUID vm_storage_handle_{};
 
-    ActorRegister* actor_register_{};
+    events::ActorRegister* actor_register_{};
     events::EventLoop* event_loop_{};
 
     std::unordered_map<LogSeverity, simulator_api::LogSeverity>
