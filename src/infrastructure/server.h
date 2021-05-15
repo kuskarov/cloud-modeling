@@ -21,13 +21,13 @@ enum class ServerEventType
 struct ServerEvent : events::Event
 {
     ServerEventType type{ServerEventType::kNone};
-    types::UUID vm_uuid;
+    UUID vm_uuid;
 };
 
 struct ServerSpec
 {
-    types::RAMBytes ram{};
-    types::CPUHertz clock_rate{};
+    RAMBytes ram{};
+    CPUHertz clock_rate{};
     uint32_t cores_count{};
 };
 
@@ -38,7 +38,7 @@ class Server : public IResource
 
     void HandleEvent(const events::Event* event) override;
 
-    types::EnergyCount SpentPower() override { return types::EnergyCount{0}; }
+    EnergyCount SpentPower() override { return EnergyCount{0}; }
 
     // for scheduler
     [[nodiscard]] const auto& VMs() const { return virtual_machines_; }
@@ -51,7 +51,7 @@ class Server : public IResource
     ServerSpec spec_{};
 
     // consumers of Server as a resource
-    std::unordered_set<types::UUID> virtual_machines_{};
+    std::unordered_set<UUID> virtual_machines_{};
 
     // event handlers
     void ProvisionVM(const ServerEvent* server_event);

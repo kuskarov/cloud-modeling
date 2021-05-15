@@ -33,7 +33,7 @@ SeverityToString(LogSeverity severity)
     }
 }
 
-typedef std::function<void(types::TimeStamp, LogSeverity, const std::string&,
+typedef std::function<void(TimeStamp, LogSeverity, const std::string&,
                            const std::string&, const std::string&)>
     LoggingCallback;
 
@@ -56,8 +56,7 @@ class SimulatorLogger
         max_csv_severity = max_severity;
     }
 
-    static void SetTimeCallback(
-        const std::function<types::TimeStamp()>& now_callback)
+    static void SetTimeCallback(const std::function<TimeStamp()>& now_callback)
     {
         now = now_callback;
     }
@@ -79,7 +78,7 @@ class SimulatorLogger
     }
 
     template <typename... Args>
-    static void Log(types::TimeStamp ts, LogSeverity severity,
+    static void Log(TimeStamp ts, LogSeverity severity,
                     const std::string& caller_type,
                     const std::string& caller_name,
                     const std::string& format_string, Args&&... args)
@@ -99,7 +98,7 @@ class SimulatorLogger
 
  private:
     inline static std::string csv_file_name_{};
-    inline static std::function<types::TimeStamp()> now{};
+    inline static std::function<TimeStamp()> now{};
     inline static LogSeverity max_console_severity{LogSeverity::kDebug},
         max_csv_severity{LogSeverity::kDebug};
 
@@ -112,7 +111,7 @@ class SimulatorLogger
 
     static LoggingCallback GetPrintToConsoleCallback()
     {
-        return [](types::TimeStamp ts, LogSeverity severity,
+        return [](TimeStamp ts, LogSeverity severity,
                   const std::string& caller_type,
                   const std::string& caller_name, const std::string& text) {
             if (severity <= max_console_severity) {
@@ -132,7 +131,7 @@ class SimulatorLogger
 
     static LoggingCallback GetWriteToCSVCallback()
     {
-        return [](types::TimeStamp ts, LogSeverity severity,
+        return [](TimeStamp ts, LogSeverity severity,
                   const std::string& caller_type,
                   const std::string& caller_name, const std::string& text) {
             if (!csv_file_name_.empty() && severity <= max_csv_severity) {

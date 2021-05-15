@@ -91,7 +91,7 @@ sim::infra::IResource::StartBoot(const ResourceEvent* resource_event)
         }
 
         auto boot_finished_event = events::MakeEvent<ResourceEvent>(
-            UUID(), resource_event->happen_time + startup_delay_, nullptr);
+            GetUUID(), resource_event->happen_time + startup_delay_, nullptr);
         boot_finished_event->type = ResourceEventType::kBootFinished;
 
         schedule_event(boot_finished_event, false);
@@ -119,7 +119,7 @@ sim::infra::IResource::StartShutdown(const ResourceEvent* resource_event)
         }
 
         auto shutdown_finished_event = events::MakeEvent<ResourceEvent>(
-            UUID(), resource_event->happen_time + shutdown_delay_, nullptr);
+            GetUUID(), resource_event->happen_time + shutdown_delay_, nullptr);
         shutdown_finished_event->type = ResourceEventType::kShutdownFinished;
 
         schedule_event(shutdown_finished_event, false);
@@ -153,38 +153,38 @@ sim::infra::IResource::CompleteShutdown(const ResourceEvent* resource_event)
     SetPowerState(ResourcePowerState::kOff);
 }
 
-sim::types::TimeInterval
+sim::TimeInterval
 sim::infra::IResource::GetStartupDelay() const
 {
     return startup_delay_;
 }
 
 void
-sim::infra::IResource::SetStartupDelay(types::TimeInterval startup_delay)
+sim::infra::IResource::SetStartupDelay(TimeInterval startup_delay)
 {
     startup_delay_ = startup_delay;
 }
 
-sim::types::TimeInterval
+sim::TimeInterval
 sim::infra::IResource::GetRebootDelay() const
 {
     return reboot_delay_;
 }
 
 void
-sim::infra::IResource::SetRebootDelay(types::TimeInterval reboot_delay)
+sim::infra::IResource::SetRebootDelay(TimeInterval reboot_delay)
 {
     reboot_delay_ = reboot_delay;
 }
 
-sim::types::TimeInterval
+sim::TimeInterval
 sim::infra::IResource::GetShutdownDelay() const
 {
     return shutdown_delay_;
 }
 
 void
-sim::infra::IResource::SetShutdownDelay(types::TimeInterval shutdown_delay)
+sim::infra::IResource::SetShutdownDelay(TimeInterval shutdown_delay)
 {
     shutdown_delay_ = shutdown_delay;
 }

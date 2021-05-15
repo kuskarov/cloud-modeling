@@ -127,9 +127,9 @@ sim::client::SimulatorRPCClient::CallSimulateAll()
         if (auto it = severity_mapping.find(log_message.severity());
             it != severity_mapping.end()) {
             SimulatorLogger::Log(
-                types::TimeStamp{static_cast<int64_t>(log_message.time())},
-                it->second, log_message.caller_type(),
-                log_message.caller_name(), log_message.text());
+                TimeStamp{static_cast<int64_t>(log_message.time())}, it->second,
+                log_message.caller_type(), log_message.caller_name(),
+                log_message.text());
         } else {
             std::cerr << "Received invalid LogSeverity: "
                       << log_message.severity() << "\n";

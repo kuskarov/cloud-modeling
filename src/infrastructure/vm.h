@@ -23,7 +23,7 @@ struct VMEvent : events::Event
 {
     VMEventType type{VMEventType::kNone};
 
-    types::UUID server_uuid;
+    UUID server_uuid;
 };
 
 /// Used https://cloud.yandex.ru/docs/compute/concepts/vm-statuses
@@ -45,7 +45,7 @@ enum class VMState
  */
 struct VMWorkload
 {
-    types::RAMBytes ram;
+    RAMBytes ram;
 };
 
 /**
@@ -61,14 +61,14 @@ class VM : public events::IActor
 
     void HandleEvent(const events::Event* event) override;
 
-    [[nodiscard]] types::TimeInterval GetStartDelay() const;
-    void SetStartDelay(sim::types::TimeInterval start_delay);
-    [[nodiscard]] types::TimeInterval GetRestartDelay() const;
-    void SetRestartDelay(sim::types::TimeInterval restart_delay);
-    [[nodiscard]] types::TimeInterval GetStopDelay() const;
-    void SetStopDelay(sim::types::TimeInterval stop_delay);
-    [[nodiscard]] types::TimeInterval GetDeleteDelay() const;
-    void SetDeleteDelay(sim::types::TimeInterval delete_delay);
+    [[nodiscard]] TimeInterval GetStartDelay() const;
+    void SetStartDelay(sim::TimeInterval start_delay);
+    [[nodiscard]] TimeInterval GetRestartDelay() const;
+    void SetRestartDelay(sim::TimeInterval restart_delay);
+    [[nodiscard]] TimeInterval GetStopDelay() const;
+    void SetStopDelay(sim::TimeInterval stop_delay);
+    [[nodiscard]] TimeInterval GetDeleteDelay() const;
+    void SetDeleteDelay(sim::TimeInterval delete_delay);
 
     VMWorkload GetRequiredWorkload() const { return required_workload_; }
 
@@ -84,7 +84,7 @@ class VM : public events::IActor
 
     inline void SetState(VMState new_state);
 
-    types::TimeInterval start_delay_{0}, restart_delay_{0}, stop_delay_{0},
+    TimeInterval start_delay_{0}, restart_delay_{0}, stop_delay_{0},
         delete_delay_{0};
 
     // event handlers

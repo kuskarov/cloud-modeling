@@ -16,22 +16,22 @@ class Cloud : public IResource
 
     [[nodiscard]] auto VMStorage() const { return vm_storage_; }
 
-    void SetVMStorage(types::UUID vm_storage_handle)
+    void SetVMStorage(UUID vm_storage_handle)
     {
         vm_storage_ = vm_storage_handle;
     }
 
-    types::EnergyCount SpentPower() override { return types::EnergyCount{0}; }
+    EnergyCount SpentPower() override { return EnergyCount{0}; }
 
-    void AddDataCenter(types::UUID uuid)
+    void AddDataCenter(UUID uuid)
     {
         data_centers_.push_back(uuid);
         AddComponent(uuid);
     }
 
  private:
-    std::vector<types::UUID> data_centers_{};
-    types::UUID vm_storage_{};
+    std::vector<UUID> data_centers_{};
+    UUID vm_storage_{};
 };
 
 }   // namespace sim::infra

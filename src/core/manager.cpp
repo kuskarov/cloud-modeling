@@ -32,16 +32,15 @@ sim::core::Manager::Setup()
     server_scheduler_manager_->SetScheduleFunction(schedule_event);
     server_scheduler_manager_->SetActorRegister(actor_register_.get());
 
-    event_loop_->SetActorFromUUIDCallback(
-        [this](types::UUID uuid) -> events::IActor* {
-            return actor_register_->GetActor<events::IActor>(uuid);
-        });
+    event_loop_->SetActorFromUUIDCallback([this](UUID uuid) -> events::IActor* {
+        return actor_register_->GetActor<events::IActor>(uuid);
+    });
 
     auto cloud = actor_register_->Make<infra::Cloud>("cloud-1");
-    cloud_handle_ = cloud->UUID();
+    cloud_handle_ = cloud->GetUUID();
 
     auto vm_storage = actor_register_->Make<infra::VMStorage>("vm-storage-1");
-    vm_storage_handle_ = vm_storage->UUID();
+    vm_storage_handle_ = vm_storage->GetUUID();
 
     cloud->SetVMStorage(vm_storage_handle_);
 
@@ -50,7 +49,7 @@ sim::core::Manager::Setup()
     scheduler->SetActorRegister(actor_register_.get());
     scheduler->SetCloud(cloud_handle_);
 
-    scheduler_handle_ = scheduler->UUID();
+    scheduler_handle_ = scheduler->GetUUID();
 
     event_loop_->SetUpdateWorldCallback([this] {
         WORLD_LOG_INFO("Updating world...");

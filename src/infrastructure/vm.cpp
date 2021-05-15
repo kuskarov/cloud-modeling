@@ -103,7 +103,7 @@ sim::infra::VM::CompleteProvision(const sim::infra::VMEvent* vm_event)
     SetOwner(vm_event->server_uuid);
 
     auto next_event =
-        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, start_delay_);
+        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, start_delay_);
     next_event->type = VMEventType::kStart;
 
     schedule_event(next_event, true);
@@ -117,7 +117,7 @@ sim::infra::VM::Start(const sim::infra::VMEvent* vm_event)
     SetState(VMState::kStarting);
 
     auto next_event =
-        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, start_delay_);
+        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, start_delay_);
     next_event->type = VMEventType::kStartCompleted;
 
     schedule_event(next_event, false);
@@ -142,8 +142,8 @@ sim::infra::VM::Restart(const sim::infra::VMEvent* vm_event)
 
     SetState(VMState::kRestarting);
 
-    auto next_event =
-        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, restart_delay_);
+    auto next_event = events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event,
+                                                          restart_delay_);
     next_event->type = VMEventType::kRestartCompleted;
 
     schedule_event(next_event, false);
@@ -169,7 +169,7 @@ sim::infra::VM::Stop(const sim::infra::VMEvent* vm_event)
     SetState(VMState::kStopping);
 
     auto next_event =
-        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, stop_delay_);
+        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, stop_delay_);
     next_event->type = VMEventType::kStopCompleted;
 
     schedule_event(next_event, false);
@@ -183,13 +183,13 @@ sim::infra::VM::CompleteStop(const sim::infra::VMEvent* vm_event)
     SetState(VMState::kStopped);
 
     auto free_server_event = events::MakeInheritedEvent<ServerEvent>(
-        owner_, vm_event, types::TimeInterval{0});
+        owner_, vm_event, TimeInterval{0});
     free_server_event->type = ServerEventType::kUnprovisionVM;
-    free_server_event->vm_uuid = UUID();
+    free_server_event->vm_uuid = GetUUID();
 
     schedule_event(free_server_event, false);
 
-    owner_ = types::UUID{};
+    owner_ = UUID{};
 }
 
 void
@@ -198,7 +198,7 @@ sim::infra::VM::Delete(const sim::infra::VMEvent* vm_event)
     SetState(VMState::kDeleting);
 
     auto next_event =
-        events::MakeInheritedEvent<VMEvent>(UUID(), vm_event, delete_delay_);
+        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, delete_delay_);
     next_event->type = VMEventType::kDeleteCompleted;
 
     schedule_event(next_event, false);
@@ -213,7 +213,7 @@ sim::infra::VM::CompleteDelete(const sim::infra::VMEvent* vm_event)
         auto free_server_event = events::MakeEvent<ServerEvent>(
             owner_, vm_event->happen_time, vm_event->notificator);
         free_server_event->type = ServerEventType::kUnprovisionVM;
-        free_server_event->vm_uuid = UUID();
+        free_server_event->vm_uuid = GetUUID();
 
         schedule_event(free_server_event, false);
     } else {
@@ -223,50 +223,50 @@ sim::infra::VM::CompleteDelete(const sim::infra::VMEvent* vm_event)
     }
 }
 
-sim::types::TimeInterval
+sim::TimeInterval
 sim::infra::VM::GetStartDelay() const
 {
     return start_delay_;
 }
 
 void
-sim::infra::VM::SetStartDelay(types::TimeInterval start_delay)
+sim::infra::VM::SetStartDelay(TimeInterval start_delay)
 {
     start_delay_ = start_delay;
 }
 
-sim::types::TimeInterval
+sim::TimeInterval
 sim::infra::VM::GetRestartDelay() const
 {
     return restart_delay_;
 }
 
 void
-sim::infra::VM::SetRestartDelay(types::TimeInterval restart_delay)
+sim::infra::VM::SetRestartDelay(TimeInterval restart_delay)
 {
     restart_delay_ = restart_delay;
 }
 
-sim::types::TimeInterval
+sim::TimeInterval
 sim::infra::VM::GetStopDelay() const
 {
     return stop_delay_;
 }
 
 void
-sim::infra::VM::SetStopDelay(types::TimeInterval stop_delay)
+sim::infra::VM::SetStopDelay(TimeInterval stop_delay)
 {
     stop_delay_ = stop_delay;
 }
 
-sim::types::TimeInterval
+sim::TimeInterval
 sim::infra::VM::GetDeleteDelay() const
 {
     return delete_delay_;
 }
 
 void
-sim::infra::VM::SetDeleteDelay(types::TimeInterval delete_delay)
+sim::infra::VM::SetDeleteDelay(TimeInterval delete_delay)
 {
     delete_delay_ = delete_delay;
 }

@@ -16,9 +16,9 @@ class IActor;
  */
 struct Event
 {
-    types::UUID id;
+    UUID id;
 
-    types::TimeStamp happen_time;
+    TimeStamp happen_time;
 
     /**
      * A closure to get info about if the event was cancelled
@@ -28,7 +28,7 @@ struct Event
     /**
      * Actor whose HandleEvent() method should be called
      */
-    types::UUID addressee{};
+    UUID addressee{};
 
     /**
      * Event which should be scheduled after the chain of events ended
@@ -40,8 +40,7 @@ struct Event
 
 template <typename TEvent>
 TEvent*
-MakeEvent(types::UUID addressee, types::TimeStamp happen_time,
-          Event* notificator)
+MakeEvent(UUID addressee, TimeStamp happen_time, Event* notificator)
 {
     static_assert(std::is_base_of<Event, TEvent>::value);
 
@@ -55,8 +54,7 @@ MakeEvent(types::UUID addressee, types::TimeStamp happen_time,
 
 template <typename TEvent>
 TEvent*
-MakeInheritedEvent(types::UUID addressee, const Event* base_event,
-                   types::TimeInterval delay)
+MakeInheritedEvent(UUID addressee, const Event* base_event, TimeInterval delay)
 {
     static_assert(std::is_base_of<Event, TEvent>::value);
 

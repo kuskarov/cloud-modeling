@@ -13,7 +13,7 @@ template <class Resource, class Consumer>
 class IResourceScheduler
 {
  public:
-    explicit IResourceScheduler(std::string name, types::UUID shared_resource)
+    explicit IResourceScheduler(std::string name, UUID shared_resource)
         : name_(std::move(name)), shared_resource_(shared_resource)
     {
         static_assert(std::is_base_of<infra::IResource, Resource>::value);
@@ -44,7 +44,7 @@ class IResourceScheduler
 
     const events::ActorRegister* actor_register_{};
 
-    types::UUID shared_resource_;
+    UUID shared_resource_;
 
     // may contain any extra state if needed
 };
@@ -66,7 +66,7 @@ class ServerSchedulerManager
     }
 
     template <class ServerScheduler>
-    void Make(types::UUID server_handle)
+    void Make(UUID server_handle)
     {
         static_assert(
             std::is_base_of<IServerScheduler, ServerScheduler>::value);

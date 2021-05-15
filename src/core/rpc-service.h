@@ -41,8 +41,7 @@ class SimulatorRPCService final : public Simulator::Service
         actor_register_ = actor_register;
     }
 
-    void SetHandles(types::UUID cloud, types::UUID scheduler,
-                    types::UUID vm_storage)
+    void SetHandles(UUID cloud, UUID scheduler, UUID vm_storage)
     {
         cloud_handle_ = cloud;
         scheduler_handle_ = scheduler;
@@ -63,15 +62,15 @@ class SimulatorRPCService final : public Simulator::Service
     Status SimulateAll(ServerContext* context, const google::protobuf::Empty* request,
                        ServerWriter<LogMessage>* writer) override;
 
-    types::UUID ResolveName(const std::string& name);
+    UUID ResolveName(const std::string& name);
 
     events::ScheduleFunction schedule_event;
 
-    types::UUID scheduler_handle_{};
+    UUID scheduler_handle_{};
 
-    types::UUID cloud_handle_{};
+    UUID cloud_handle_{};
 
-    types::UUID vm_storage_handle_{};
+    UUID vm_storage_handle_{};
 
     events::ActorRegister* actor_register_{};
     events::EventLoop* event_loop_{};

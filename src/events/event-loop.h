@@ -11,8 +11,7 @@ namespace sim::events {
 /**
 Using deque to have ability of adding event to the head or to the end of queue
  */
-typedef std::map<types::TimeStamp, std::deque<std::shared_ptr<Event>>>
-    EventQueue;
+typedef std::map<TimeStamp, std::deque<std::shared_ptr<Event>>> EventQueue;
 
 class EventLoop
 {
@@ -43,9 +42,9 @@ class EventLoop
      *
      * @return real time at the moment of call
      */
-    [[nodiscard]] types::TimeStamp Now() const { return current_ts_; }
+    [[nodiscard]] TimeStamp Now() const { return current_ts_; }
 
-    void SetActorFromUUIDCallback(const std::function<IActor*(types::UUID)>& cb)
+    void SetActorFromUUIDCallback(const std::function<IActor*(UUID)>& cb)
     {
         actor_from_uuid = cb;
     }
@@ -60,11 +59,11 @@ class EventLoop
 
     void SimulateNextStep();
 
-    std::function<IActor*(types::UUID)> actor_from_uuid;
+    std::function<IActor*(UUID)> actor_from_uuid;
 
     std::function<void()> update_world;
 
-    types::TimeStamp current_ts_{1};
+    TimeStamp current_ts_{1};
     EventQueue queue_{};
 };
 

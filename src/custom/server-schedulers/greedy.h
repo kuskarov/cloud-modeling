@@ -9,7 +9,7 @@ using namespace sim::core;
 class GreedyServerScheduler : public IServerScheduler
 {
  public:
-    explicit GreedyServerScheduler(types::UUID server_handle)
+    explicit GreedyServerScheduler(UUID server_handle)
         : IServerScheduler("Greedy", server_handle)
     {
     }
@@ -21,7 +21,7 @@ class GreedyServerScheduler : public IServerScheduler
         auto server_spec = server->GetSpec();
         const auto& vm_handles = server->VMs();
 
-        types::RAMBytes remaining_ram = server_spec.ram;
+        RAMBytes remaining_ram = server_spec.ram;
 
         for (const auto& vm_handle : vm_handles) {
             auto vm = actor_register_->GetActor<infra::VM>(vm_handle);

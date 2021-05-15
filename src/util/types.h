@@ -5,14 +5,12 @@
 #include <cstdint>
 #include <NamedType/named_type.hpp>
 
-namespace sim::types {
+namespace sim {
 
 using fluent::Addable;
 using fluent::Comparable;
 using fluent::NamedType;
 using fluent::Subtractable;
-
-// TODO: strong typedef
 
 using EnergyCount = NamedType<uint64_t, struct EnergyCountTag>;
 
@@ -36,8 +34,6 @@ class UUID
 
     UUID(UUID&& other) = default;
 
-    // UUID(UUID&& other) = default;
-
     static UUID Generate()
     {
         static uint32_t serial{1};
@@ -56,24 +52,24 @@ class UUID
     uint32_t value_{};
 };
 
-}   // namespace sim::types
+}   // namespace sim
 
 template <>
-struct fmt::formatter<sim::types::UUID>
+struct fmt::formatter<sim::UUID>
 {
     constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
 
     template <typename FormatContext>
-    auto format(const sim::types::UUID& uuid, FormatContext& ctx)
+    auto format(const sim::UUID& uuid, FormatContext& ctx)
     {
         return format_to(ctx.out(), "{}", static_cast<uint32_t>(uuid));
     }
 };
 
 template <>
-struct std::hash<sim::types::UUID>
+struct std::hash<sim::UUID>
 {
-    size_t operator()(const sim::types::UUID& uuid) const
+    size_t operator()(const sim::UUID& uuid) const
     {
         return hash<uint32_t>()(static_cast<uint32_t>(uuid));
     }

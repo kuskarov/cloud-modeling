@@ -15,7 +15,7 @@ class SimulatorConfig
     SimulatorConfig() : whoami_("Config") {}
 
     void ParseArgs(int argc, char** argv);
-    void ParseResources(types::UUID cloud_handle,
+    void ParseResources(UUID cloud_handle,
                         events::ActorRegister* actor_register,
                         ServerSchedulerManager* server_scheduler_manager);
 
@@ -26,8 +26,7 @@ class SimulatorConfig
     std::string whoami_{};
 
     void ParseSpecs(const std::string& specs_file_name);
-    void ParseCloud(const std::string& cloud_file_name,
-                    types::UUID cloud_handle,
+    void ParseCloud(const std::string& cloud_file_name, UUID cloud_handle,
                     events::ActorRegister* actor_register,
                     ServerSchedulerManager* server_scheduler_manager);
 

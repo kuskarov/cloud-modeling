@@ -24,7 +24,7 @@ sim::custom::FirstAvailableScheduler::UpdateSchedule(
             actor_register_->GetActor<infra::Server>(first_server_handle);
 
         auto server_event = events::MakeInheritedEvent<infra::ServerEvent>(
-            first_server_handle, scheduler_event, types::TimeInterval{0});
+            first_server_handle, scheduler_event, TimeInterval{0});
         server_event->type = infra::ServerEventType::kProvisionVM;
         server_event->vm_uuid = vm_uuid;
 

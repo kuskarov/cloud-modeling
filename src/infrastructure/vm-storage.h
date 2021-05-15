@@ -30,7 +30,7 @@ struct VMStorageEvent : events::Event
 {
     VMStorageEventType type{VMStorageEventType::kNone};
 
-    types::UUID vm_uuid{};
+    UUID vm_uuid{};
 };
 
 /**
@@ -49,7 +49,7 @@ class VMStorage : public events::IActor
     const auto& VMs() const { return vms_; }
 
  private:
-    std::unordered_map<types::UUID, VMStatus> vms_;
+    std::unordered_map<UUID, VMStatus> vms_;
 
     enum class VMStorageState
     {

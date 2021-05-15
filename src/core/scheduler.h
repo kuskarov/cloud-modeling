@@ -36,7 +36,7 @@ class IScheduler : public events::IActor
  public:
     IScheduler() : events::IActor("Scheduler") {}
 
-    void SetCloud(types::UUID cloud_handle) { cloud_handle_ = cloud_handle; }
+    void SetCloud(UUID cloud_handle) { cloud_handle_ = cloud_handle; }
 
     void SetActorRegister(const events::ActorRegister* actor_register)
     {
@@ -59,9 +59,9 @@ class IScheduler : public events::IActor
     const events::ActorRegister* actor_register_{};
 
     // scheduler has read access to Cloud state
-    types::UUID cloud_handle_{};
+    UUID cloud_handle_{};
 
-    std::function<const IActor*(types::UUID)> get_actor_state;
+    std::function<const IActor*(UUID)> get_actor_state;
 };
 
 }   // namespace sim::core

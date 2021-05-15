@@ -7,15 +7,15 @@
 #include "scheduler.h"
 #include "vm-storage.h"
 
-sim::types::UUID
+sim::UUID
 sim::core::SimulatorRPCService::ResolveName(const std::string& name)
 {
-    types::UUID uuid;
+    UUID uuid;
     try {
         uuid = actor_register_->GetActorHandle(name);
         return uuid;
     } catch (...) {
-        return types::UUID{};
+        return UUID{};
     }
 }
 
@@ -67,12 +67,11 @@ sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
 {
     WORLD_LOG_INFO("CreateVM() called");
 
-    types::UUID vm_uuid;
+    UUID vm_uuid;
     try {
         auto vm = actor_register_->Make<infra::VM>(request->vm_name());
-        vm_uuid = vm->UUID();
-        vm->SetWorkload(
-            infra::VMWorkload{types::RAMBytes{request->required_ram()}});
+        vm_uuid = vm->GetUUID();
+        vm->SetWorkload(infra::VMWorkload{RAMBytes{request->required_ram()}});
     } catch (const std::logic_error& le) {
         return Status{StatusCode::INVALID_ARGUMENT,
                       fmt::format("Name {} is not unique", request->vm_name())};
@@ -140,6 +139,9 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
             auto stop_vm_event = events::MakeEvent<infra::VMEvent>(
                 uuid, event_loop_->Now(), vm_storage_notification);
             stop_vm_event->type = infra::VMEventType::kStop;
+
+            schedule_event(stop_vm_event, false);
+
             break;
         }
 
@@ -150,6 +152,9 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
             auto delete_vm_event = events::MakeEvent<infra::VMEvent>(
                 uuid, event_loop_->Now(), vm_storage_notification);
             delete_vm_event->type = infra::VMEventType::kDelete;
+
+            schedule_event(delete_vm_event, false);
+
             break;
         }
 
@@ -170,10 +175,9 @@ sim::core::SimulatorRPCService::SimulateAll(
     WORLD_LOG_INFO("SimulateAll() called");
 
     SimulatorLogger::AddLoggingCallback(
-        [&writer, this](types::TimeStamp ts, LogSeverity severity,
-                        const std::string& caller_type,
-                        const std::string& caller_name,
-                        const std::string& text) {
+        [&writer, this](
+            TimeStamp ts, LogSeverity severity, const std::string& caller_type,
+            const std::string& caller_name, const std::string& text) {
             LogMessage log_message{};
 
             log_message.set_time(ts);

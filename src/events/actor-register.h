@@ -23,7 +23,7 @@ class ActorRegister
      * Const version for IScheduler
      */
     template <class Actor>
-    const Actor* GetActor(types::UUID uuid) const
+    const Actor* GetActor(UUID uuid) const
     {
         static_assert(std::is_base_of<events::IActor, Actor>::value);
 
@@ -31,14 +31,14 @@ class ActorRegister
     }
 
     template <class Actor>
-    Actor* GetActor(types::UUID uuid)
+    Actor* GetActor(UUID uuid)
     {
         static_assert(std::is_base_of<events::IActor, Actor>::value);
 
         return dynamic_cast<Actor*>(actors_.at(uuid).get());
     }
 
-    types::UUID GetActorHandle(const std::string& name)
+    UUID GetActorHandle(const std::string& name)
     {
         return actors_names_.at(name);
     }
@@ -51,16 +51,16 @@ class ActorRegister
         auto actor = new Actor();
         actor->SetScheduleFunction(schedule_function_);
 
-        actors_.emplace(actor->UUID(), actor);
+        actors_.emplace(actor->GetUUID(), actor);
 
         actor->SetName(name);
         if (auto it = actors_names_.find(name); it != actors_names_.end()) {
             throw std::logic_error("Name is not unique");
         }
 
-        actors_names_[name] = actor->UUID();
+        actors_names_[name] = actor->GetUUID();
 
-        WORLD_LOG_INFO("Registered Actor {} with name {}", actor->UUID(),
+        WORLD_LOG_INFO("Registered Actor {} with name {}", actor->GetUUID(),
                        actor->GetName());
 
         return actor;
@@ -76,8 +76,8 @@ class ActorRegister
 
     events::ScheduleFunction schedule_function_;
 
-    std::unordered_map<std::string, types::UUID> actors_names_;
-    std::unordered_map<types::UUID, std::unique_ptr<events::IActor>> actors_;
+    std::unordered_map<std::string, UUID> actors_names_;
+    std::unordered_map<UUID, std::unique_ptr<events::IActor>> actors_;
 };
 
 }   // namespace sim::events

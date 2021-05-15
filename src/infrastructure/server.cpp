@@ -57,9 +57,9 @@ sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
     ACTOR_LOG_INFO("VM {} is hosted here", server_event->vm_uuid);
 
     auto vm_provisioned_event = events::MakeInheritedEvent<VMEvent>(
-        server_event->vm_uuid, server_event, types::TimeInterval{0});
+        server_event->vm_uuid, server_event, TimeInterval{0});
     vm_provisioned_event->type = VMEventType::kProvisionCompleted;
-    vm_provisioned_event->server_uuid = UUID();
+    vm_provisioned_event->server_uuid = GetUUID();
 
     schedule_event(vm_provisioned_event, false);
 }

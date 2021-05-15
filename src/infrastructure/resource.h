@@ -53,14 +53,14 @@ class IResource : public events::IActor
 
     void HandleEvent(const events::Event* event) override;
 
-    virtual types::EnergyCount SpentPower() = 0;
+    virtual EnergyCount SpentPower() = 0;
 
-    [[nodiscard]] types::TimeInterval GetStartupDelay() const;
-    void SetStartupDelay(types::TimeInterval startup_delay);
-    [[nodiscard]] types::TimeInterval GetRebootDelay() const;
-    void SetRebootDelay(types::TimeInterval reboot_delay);
-    [[nodiscard]] types::TimeInterval GetShutdownDelay() const;
-    void SetShutdownDelay(types::TimeInterval shutdown_delay);
+    [[nodiscard]] TimeInterval GetStartupDelay() const;
+    void SetStartupDelay(TimeInterval startup_delay);
+    [[nodiscard]] TimeInterval GetRebootDelay() const;
+    void SetRebootDelay(TimeInterval reboot_delay);
+    [[nodiscard]] TimeInterval GetShutdownDelay() const;
+    void SetShutdownDelay(TimeInterval shutdown_delay);
 
     ~IResource() override = default;
 
@@ -71,9 +71,9 @@ class IResource : public events::IActor
      *
      * Is used in turning on/off event handlers
      */
-    std::unordered_set<types::UUID> components_;
+    std::unordered_set<UUID> components_;
 
-    void AddComponent(types::UUID uuid) { components_.insert(uuid); }
+    void AddComponent(UUID uuid) { components_.insert(uuid); }
 
     inline void SetPowerState(ResourcePowerState new_state);
 
@@ -87,7 +87,7 @@ class IResource : public events::IActor
     virtual void CompleteShutdown(const ResourceEvent* resource_event);
 
  private:
-    types::TimeInterval startup_delay_{0}, reboot_delay_{0}, shutdown_delay_{0};
+    TimeInterval startup_delay_{0}, reboot_delay_{0}, shutdown_delay_{0};
 };
 
 }   // namespace sim::infra

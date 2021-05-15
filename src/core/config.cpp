@@ -55,7 +55,7 @@ sim::core::SimulatorConfig::ParseArgs(int argc, char** argv)
 
 void
 sim::core::SimulatorConfig::ParseResources(
-    sim::types::UUID cloud_handle, events::ActorRegister* actor_register,
+    sim::UUID cloud_handle, events::ActorRegister* actor_register,
     ServerSchedulerManager* server_scheduler_manager)
 {
     ParseSpecs(config_path_ + "/specs.yaml");
@@ -96,10 +96,10 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
         auto name = spec_name.as<std::string>();
 
         infra::ServerSpec server_spec{};
-        server_spec.ram = types::RAMBytes{spec_ram.as<uint32_t>()};
+        server_spec.ram = RAMBytes{spec_ram.as<uint32_t>()};
         // TODO: write in a normal way
         server_spec.clock_rate =
-            types::CPUHertz{spec_clock_rate.as<float>() * 1'000'000};
+            CPUHertz{spec_clock_rate.as<float>() * 1'000'000};
         server_spec.cores_count = spec_cores_count.as<uint32_t>();
 
         auto it = server_specs_.find(name);
@@ -112,7 +112,7 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
 
 void
 sim::core::SimulatorConfig::ParseCloud(
-    const std::string& cloud_file_name, sim::types::UUID cloud_handle,
+    const std::string& cloud_file_name, sim::UUID cloud_handle,
     events::ActorRegister* actor_register,
     ServerSchedulerManager* server_scheduler_manager)
 {
@@ -138,7 +138,7 @@ sim::core::SimulatorConfig::ParseCloud(
         auto data_center = actor_register->Make<infra::DataCenter>(
             name_config.as<std::string>());
 
-        cloud->AddDataCenter(data_center->UUID());
+        cloud->AddDataCenter(data_center->GetUUID());
 
         for (const auto& server_config : servers_config) {
             auto server_name_config = server_config["name"];
@@ -179,9 +179,9 @@ sim::core::SimulatorConfig::ParseCloud(
                       "Unknown server scheduler {}", server_scheduler);
 
                 server_scheduler_manager->Make<custom::GreedyServerScheduler>(
-                    server->UUID());
+                    server->GetUUID());
 
-                data_center->AddServer(server->UUID());
+                data_center->AddServer(server->GetUUID());
             }
         }
     }

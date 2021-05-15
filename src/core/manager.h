@@ -42,11 +42,11 @@ class Manager
 
     std::unique_ptr<ServerSchedulerManager> server_scheduler_manager_;
 
-    types::UUID scheduler_handle_{};
+    UUID scheduler_handle_{};
 
-    types::UUID cloud_handle_{};
+    UUID cloud_handle_{};
 
-    types::UUID vm_storage_handle_{};
+    UUID vm_storage_handle_{};
 };
 
 }   // namespace sim::core
