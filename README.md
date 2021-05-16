@@ -2,27 +2,45 @@
 
 ## Build
 
-From build directory do `cmake .. && make`.
+1) Clone submodules: `git submodule init --update` from repo root;
+2) Generate Makefiles: `cmake PATH_TO_REPO_ROOT` from build directory;
+3) Build simulator engine: `make simulator`;
+4) Build console client: `make client`.
 
 ## Usage
 
-### MVP version
-
 1) Specify configuration of the cloud ([sample](/config))
-2) The binary is located in `src/simulator` folder. Run simulator
-   with `--config path/to/config/directory` options
-3) Log is printed to stdout and duplicated to `log.csv` in the directory with
-   binary
-4) Temporal CLI is printed to stderr at the start. 
-   * By default the whole Cloud has name `cloud`, so it can be booted by `boot cloud` CLI command
-   * Data centers are named as in the `cloud.yaml` spec
-   * Servers are named as `SERVER_NAME-SERVER_SERIAL`, where `SERVER_NAME` is the `name` value specified in `specs.yaml`
+2) The simulator engine binary is located in `src/simulator` folder. Run
+   simulator with 3 required arguments:
+   * `--config path/to/config/directory`
+   * `--logs-folder path/to/folder/for/logs`
+   * `--port <port-which-engine-should-listen>`
+3) The client binary is located in `src/client` folder. It should be runned with
+   arguments `--host <engine-host> --port <engine-port>`.
+4) Log is printed to the engine's stdout, duplicated to `.csv`-file in the
+   specified directory and sent to the client.
+5) Available console commands:
+   * `boot`/`shutdown` `RESOURCE_NAME`;
+   * `create-vm`/`provision-vm`/`stop-vm`/`delete-vm` `VM_NAME`.
+
+Notes:
+
+* By default the whole Cloud has name `cloud-1`, so it can be booted
+  by `boot cloud-1` CLI command
+* Data centers are named as in the `cloud.yaml` spec
+* Servers are named as `SERVER_NAME-SERVER_SERIAL`, where `SERVER_NAME` is
+  the `name` value specified in `specs.yaml`
 
 ## Dependencies
 
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-* [argparse](https://github.com/p-ranav/argparse)
-* [spdlog](https://github.com/gabime/spdlog)
+* [yaml-cpp](https://github.com/jbeder/yaml-cpp) for parsing YAML files
+* [argparse](https://github.com/p-ranav/argparse) for parsing command-line
+  arguments
+* [fmtlib](https://github.com/fmtlib/fmt.git) for convenient string formatting
+* [replxx](https://github.com/AmokHuginnsson/replxx.git) for CLI
+* [NamedType](https://github.com/joboccara/NamedType.git) for convenient strong
+  typedef
+* [gRPC](https://github.com/grpc/grpc.git) for RPC communication
 
 Dependencies are attached to the project using git submodules, to do not forget
 to load them before compiling.
@@ -37,24 +55,7 @@ On the top of the event loop there are representations of the infrastructure (
 physical entities and virtual machines), management classes and API of the
 simulator.
 
-### TODO: the scheme
-
-## Code structure
-
-The code is divided on 5 catalogues, located at `src` folder:
-
-* `util`: some helpers not related to main purpose of the program and
-  SimulationLogger
-* `events`: discrete event system with `EventLoop` and interfaces `Event`
-  and `IActor`
-* `infrastructure`: the interface `IResource` and derived from it `Server`
-  , `DataCenter`, `Cloud`. Some classes for management as `ResourceRegister`
-  and `VMStorage`. They break abstractions a bit and should be refactored.
-* `core`: management and API classes such as `Manager`, `SimulatorConfig`
-  and `IScheduler` - an interface for used-implemented schedulers
-* `simulator/simulator.cpp` file with `main()`
-
-### TODO: add dependency scheme
+![arch](images/my-arch.png "Architecture")
 
 ## Work plan for the nearest future
 
