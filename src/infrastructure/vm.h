@@ -41,12 +41,18 @@ enum class VMState
 };
 
 /**
- * This struct is returned by VM on each call of GetRequirements()
+ * This struct is returned by VM on each call of GetWorkload(). Should be
+ * implemented by researcher
  */
-struct VMWorkload
+struct IVMWorkload
 {
-    RAMBytes ram;
+    virtual ~IVMWorkload() = default;
 };
+
+/**
+ * Will be called each tick, should match with IWorkload impl
+ */
+typedef std::function<std::shared_ptr<IVMWorkload>(TimeStamp)> WorkloadFunction;
 
 /**
  * Representation of Virtual Machine.
@@ -70,17 +76,21 @@ class VM : public events::IActor
     [[nodiscard]] TimeInterval GetDeleteDelay() const;
     void SetDeleteDelay(sim::TimeInterval delete_delay);
 
-    VMWorkload GetRequiredWorkload() const { return required_workload_; }
-
-    void SetWorkload(const VMWorkload& vm_workload)
+    // TODO: get access to the time for actors!
+    [[nodiscard]] auto GetWorkload() const
     {
-        required_workload_ = vm_workload;
+        return workload_function_(TimeStamp{0});
+    }
+
+    void SetWorkloadFunction(const WorkloadFunction& workload_function)
+    {
+        workload_function_ = workload_function;
     }
 
  private:
     VMState state_{VMState::kProvisioning};
 
-    mutable VMWorkload required_workload_{};
+    WorkloadFunction workload_function_;
 
     inline void SetState(VMState new_state);
 

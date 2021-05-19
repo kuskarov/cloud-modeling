@@ -23,6 +23,8 @@ using simulator_api::Simulator;
 using simulator_api::VMActionMessage;
 using simulator_api::VMActionType;
 
+using google::protobuf::Empty;
+
 class SimulatorRPCService final : public Simulator::Service
 {
  public:
@@ -53,13 +55,14 @@ class SimulatorRPCService final : public Simulator::Service
 
     Status DoResourceAction(ServerContext* context,
                             const ResourceActionMessage* request,
-                            google::protobuf::Empty* response) override;
+                            Empty* response) override;
     Status CreateVM(ServerContext* context, const CreateVMMessage* request,
-                    google::protobuf::Empty* response) override;
+                    Empty* response) override;
     Status DoVMAction(ServerContext* context, const VMActionMessage* request,
-                      google::protobuf::Empty* response) override;
+                      Empty* response) override;
+
     // event-loop commands
-    Status SimulateAll(ServerContext* context, const google::protobuf::Empty* request,
+    Status SimulateAll(ServerContext* context, const Empty* request,
                        ServerWriter<LogMessage>* writer) override;
 
     UUID ResolveName(const std::string& name);

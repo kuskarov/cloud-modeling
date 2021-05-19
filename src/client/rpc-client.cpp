@@ -102,7 +102,7 @@ sim::client::SimulatorRPCClient::CallCreateVM(
 
     CreateVMMessage request{};
     request.set_vm_name(vm_name);
-    request.set_required_ram(vm_workload_spec.required_ram);
+    request.set_vm_workload_model("ram");
 
     auto status = stub_->CreateVM(&cntx, request, &reply);
     if (status.ok()) {

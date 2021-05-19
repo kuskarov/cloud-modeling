@@ -9,30 +9,25 @@
 void
 sim::infra::Server::HandleEvent(const events::Event* event)
 {
-    try {
-        auto server_event = dynamic_cast<const ServerEvent*>(event);
+    auto server_event = dynamic_cast<const ServerEvent*>(event);
 
-        if (!server_event) {
-            IResource::HandleEvent(event);
-        } else {
-            switch (server_event->type) {
-                case ServerEventType::kProvisionVM: {
-                    ProvisionVM(server_event);
-                    break;
-                }
-                case ServerEventType::kUnprovisionVM: {
-                    UnprovisionVM(server_event);
-                    break;
-                }
-                default: {
-                    ACTOR_LOG_ERROR("Received server event with invalid type");
-                    break;
-                }
+    if (!server_event) {
+        IResource::HandleEvent(event);
+    } else {
+        switch (server_event->type) {
+            case ServerEventType::kProvisionVM: {
+                ProvisionVM(server_event);
+                break;
+            }
+            case ServerEventType::kUnprovisionVM: {
+                UnprovisionVM(server_event);
+                break;
+            }
+            default: {
+                ACTOR_LOG_ERROR("Received server event with invalid type");
+                break;
             }
         }
-    } catch (const std::bad_cast& bc) {
-        // may be an event of underlying class
-        IResource::HandleEvent(event);
     }
 }
 

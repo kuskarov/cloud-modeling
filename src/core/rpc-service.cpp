@@ -22,7 +22,7 @@ sim::core::SimulatorRPCService::ResolveName(const std::string& name)
 grpc::Status
 sim::core::SimulatorRPCService::DoResourceAction(
     ServerContext* context, const ResourceActionMessage* request,
-    google::protobuf::Empty* response)
+    Empty* response)
 {
     WORLD_LOG_INFO("DoResourceAction() called");
 
@@ -63,7 +63,7 @@ sim::core::SimulatorRPCService::DoResourceAction(
 grpc::Status
 sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
                                          const CreateVMMessage* request,
-                                         google::protobuf::Empty* response)
+                                         Empty* response)
 {
     WORLD_LOG_INFO("CreateVM() called");
 
@@ -71,7 +71,7 @@ sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
     try {
         auto vm = actor_register_->Make<infra::VM>(request->vm_name());
         vm_uuid = vm->GetUUID();
-        vm->SetWorkload(infra::VMWorkload{RAMBytes{request->required_ram()}});
+        // vm->SetWorkLoadSpec([](){});
     } catch (const std::logic_error& le) {
         return Status{StatusCode::INVALID_ARGUMENT,
                       fmt::format("Name {} is not unique", request->vm_name())};
@@ -90,7 +90,7 @@ sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
 grpc::Status
 sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
                                            const VMActionMessage* request,
-                                           google::protobuf::Empty* response)
+                                           Empty* response)
 {
     WORLD_LOG_INFO("DoVMAction() called");
 
@@ -168,9 +168,9 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
 }
 
 grpc::Status
-sim::core::SimulatorRPCService::SimulateAll(
-    ServerContext* context, const google::protobuf::Empty* request,
-    ServerWriter<LogMessage>* writer)
+sim::core::SimulatorRPCService::SimulateAll(ServerContext* context,
+                                            const Empty* request,
+                                            ServerWriter<LogMessage>* writer)
 {
     WORLD_LOG_INFO("SimulateAll() called");
 

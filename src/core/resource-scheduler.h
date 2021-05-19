@@ -16,8 +16,8 @@ class IResourceScheduler
     explicit IResourceScheduler(std::string name, UUID shared_resource)
         : name_(std::move(name)), shared_resource_(shared_resource)
     {
-        static_assert(std::is_base_of<infra::IResource, Resource>::value);
-        // static_assert(std::is_base_of<infra::IConsumer, Consumer>::value);
+        static_assert(std::is_base_of_v<infra::IResource, Resource>);
+        // static_assert(std::is_base_of_v<infra::IConsumer, Consumer>);
     }
 
     IResourceScheduler(const IResourceScheduler& other) = delete;
@@ -51,8 +51,6 @@ class IResourceScheduler
 
 using IServerScheduler = IResourceScheduler<infra::Server, infra::VM>;
 
-
-
 class ServerSchedulerManager
 {
  public:
@@ -68,8 +66,7 @@ class ServerSchedulerManager
     template <class ServerScheduler>
     void Make(UUID server_handle)
     {
-        static_assert(
-            std::is_base_of<IServerScheduler, ServerScheduler>::value);
+        static_assert(std::is_base_of_v<IServerScheduler, ServerScheduler>);
 
         auto scheduler = std::make_unique<ServerScheduler>(server_handle);
 

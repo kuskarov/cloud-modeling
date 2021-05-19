@@ -16,8 +16,6 @@ class IActor;
  */
 struct Event
 {
-    UUID id;
-
     TimeStamp happen_time;
 
     /**
@@ -42,7 +40,7 @@ template <typename TEvent>
 TEvent*
 MakeEvent(UUID addressee, TimeStamp happen_time, Event* notificator)
 {
-    static_assert(std::is_base_of<Event, TEvent>::value);
+    static_assert(std::is_base_of_v<Event, TEvent>);
 
     auto event = new TEvent();
     event->addressee = addressee;
@@ -56,7 +54,7 @@ template <typename TEvent>
 TEvent*
 MakeInheritedEvent(UUID addressee, const Event* base_event, TimeInterval delay)
 {
-    static_assert(std::is_base_of<Event, TEvent>::value);
+    static_assert(std::is_base_of_v<Event, TEvent>);
 
     auto event = new TEvent();
     event->addressee = addressee;

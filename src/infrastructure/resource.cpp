@@ -33,43 +33,38 @@ PowerStateToString(sim::infra::ResourcePowerState state)
 void
 sim::infra::IResource::HandleEvent(const events::Event* event)
 {
-    try {
-        auto resource_event = dynamic_cast<const ResourceEvent*>(event);
+    auto resource_event = dynamic_cast<const ResourceEvent*>(event);
 
-        if (!resource_event) {
-            ACTOR_LOG_ERROR("Resource Event is null");
-            return;
+    if (!resource_event) {
+        ACTOR_LOG_ERROR("Received invalid event");
+        return;
+    }
+
+    switch (resource_event->type) {
+        case ResourceEventType::kBoot: {
+            StartBoot(resource_event);
+            break;
         }
-
-        switch (resource_event->type) {
-            case ResourceEventType::kBoot: {
-                StartBoot(resource_event);
-                break;
-            }
-            case ResourceEventType::kReboot: {
-                StartReboot(resource_event);
-                break;
-            }
-            case ResourceEventType::kBootFinished: {
-                CompleteBoot(resource_event);
-                break;
-            }
-            case ResourceEventType::kShutdown: {
-                StartShutdown(resource_event);
-                break;
-            }
-            case ResourceEventType::kShutdownFinished: {
-                CompleteShutdown(resource_event);
-                break;
-            }
-            default: {
-                ACTOR_LOG_ERROR("Received resource event with invalid type");
-                break;
-            }
+        case ResourceEventType::kReboot: {
+            StartReboot(resource_event);
+            break;
         }
-
-    } catch (const std::bad_cast& bc) {
-        ACTOR_LOG_ERROR("Received unknown event!");
+        case ResourceEventType::kBootFinished: {
+            CompleteBoot(resource_event);
+            break;
+        }
+        case ResourceEventType::kShutdown: {
+            StartShutdown(resource_event);
+            break;
+        }
+        case ResourceEventType::kShutdownFinished: {
+            CompleteShutdown(resource_event);
+            break;
+        }
+        default: {
+            ACTOR_LOG_ERROR("Received event with invalid type");
+            break;
+        }
     }
 }
 

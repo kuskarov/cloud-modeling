@@ -6,6 +6,13 @@ namespace sim::custom {
 
 using namespace sim::core;
 
+struct RamVMWorkLoad : infra::IVMWorkload
+{
+    RAMBytes ram;
+
+
+};
+
 class GreedyServerScheduler : public IServerScheduler
 {
  public:
@@ -26,10 +33,16 @@ class GreedyServerScheduler : public IServerScheduler
         for (const auto& vm_handle : vm_handles) {
             auto vm = actor_register_->GetActor<infra::VM>(vm_handle);
 
-            auto vm_requirements = vm->GetRequiredWorkload();
+            auto vm_requirements =
+                std::static_pointer_cast<RamVMWorkLoad>(vm->GetWorkload());
 
-            if (remaining_ram >= vm_requirements.ram) {
-                remaining_ram -= vm_requirements.ram;
+            if (!vm_requirements) {
+                WORLD_LOG_ERROR("VM Workload type mismatch");
+                return;
+            }
+
+            if (remaining_ram >= vm_requirements->ram) {
+                remaining_ram -= vm_requirements->ram;
 
                 WORLD_LOG_INFO("VM {} is saturated", vm->GetName());
 

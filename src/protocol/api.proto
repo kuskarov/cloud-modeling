@@ -41,7 +41,7 @@ message VMActionMessage {
 // temporal! a researcher should provide his custom workload spec manually for now
 message CreateVMMessage {
   string vm_name = 1;
-  uint32 required_ram = 2;
+  string vm_workload_model = 3;
 }
 
 enum LogSeverity {

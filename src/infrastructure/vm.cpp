@@ -38,60 +38,55 @@ StateToString(sim::infra::VMState state)
 void
 sim::infra::VM::HandleEvent(const events::Event* event)
 {
-    try {
-        auto vm_event = dynamic_cast<const VMEvent*>(event);
+    auto vm_event = dynamic_cast<const VMEvent*>(event);
 
-        if (!vm_event) {
-            ACTOR_LOG_ERROR("Ptr is null, why?");
-            SetState(VMState::kFailure);
-            return;
+    if (!vm_event) {
+        ACTOR_LOG_ERROR("Received invalid event");
+        SetState(VMState::kFailure);
+        return;
+    }
+
+    switch (vm_event->type) {
+        case VMEventType::kProvisionCompleted: {
+            CompleteProvision(vm_event);
+            break;
         }
-
-        switch (vm_event->type) {
-            case VMEventType::kProvisionCompleted: {
-                CompleteProvision(vm_event);
-                break;
-            }
-            case VMEventType::kStart: {
-                Start(vm_event);
-                break;
-            }
-            case VMEventType::kStartCompleted: {
-                CompleteStart(vm_event);
-                break;
-            }
-            case VMEventType::kRestart: {
-                Restart(vm_event);
-                break;
-            }
-            case VMEventType::kRestartCompleted: {
-                CompleteRestart(vm_event);
-                break;
-            }
-            case VMEventType::kStop: {
-                Stop(vm_event);
-                break;
-            }
-            case VMEventType::kStopCompleted: {
-                CompleteStop(vm_event);
-                break;
-            }
-            case VMEventType::kDelete: {
-                Delete(vm_event);
-                break;
-            }
-            case VMEventType::kDeleteCompleted: {
-                CompleteDelete(vm_event);
-                break;
-            }
-            default: {
-                ACTOR_LOG_ERROR("Received VM event with invalid type", name_);
-                break;
-            }
+        case VMEventType::kStart: {
+            Start(vm_event);
+            break;
         }
-
-    } catch (const std::bad_cast& bc) {
-        ACTOR_LOG_ERROR("Received non-VM event!", name_);
+        case VMEventType::kStartCompleted: {
+            CompleteStart(vm_event);
+            break;
+        }
+        case VMEventType::kRestart: {
+            Restart(vm_event);
+            break;
+        }
+        case VMEventType::kRestartCompleted: {
+            CompleteRestart(vm_event);
+            break;
+        }
+        case VMEventType::kStop: {
+            Stop(vm_event);
+            break;
+        }
+        case VMEventType::kStopCompleted: {
+            CompleteStop(vm_event);
+            break;
+        }
+        case VMEventType::kDelete: {
+            Delete(vm_event);
+            break;
+        }
+        case VMEventType::kDeleteCompleted: {
+            CompleteDelete(vm_event);
+            break;
+        }
+        default: {
+            ACTOR_LOG_ERROR("Received event with invalid type");
+            break;
+        }
     }
 }
 
@@ -132,6 +127,7 @@ sim::infra::VM::CompleteStart(const sim::infra::VMEvent* vm_event)
 
     auto event = vm_event->notificator;
     event->happen_time = vm_event->happen_time;
+
     schedule_event(event, false);
 }
 
@@ -158,6 +154,7 @@ sim::infra::VM::CompleteRestart(const sim::infra::VMEvent* vm_event)
 
     auto event = vm_event->notificator;
     event->happen_time = vm_event->happen_time;
+
     schedule_event(event, false);
 }
 

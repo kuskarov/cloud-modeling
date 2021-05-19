@@ -79,8 +79,7 @@ sim::events::EventLoop::SimulateNextStep()
                 addressee_ptr->HandleEvent(event.get());
             } else {
                 WORLD_LOG_INFO(
-                    "Event {} was not called because it was cancelled",
-                    event->id);
+                    "Event was not called because it was cancelled");
             }
         } catch (...) {
             WORLD_LOG_ERROR("Error has occurred when handling event");

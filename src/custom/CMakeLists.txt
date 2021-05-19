@@ -1,5 +1,6 @@
 set(SOURCES
         custom-code.h
+        util.h
         cloud-schedulers/place-to-first.h
         cloud-schedulers/place-to-first.cpp
         server-schedulers/greedy.h

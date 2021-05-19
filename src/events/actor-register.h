@@ -25,7 +25,7 @@ class ActorRegister
     template <class Actor>
     const Actor* GetActor(UUID uuid) const
     {
-        static_assert(std::is_base_of<events::IActor, Actor>::value);
+        static_assert(std::is_base_of_v<events::IActor, Actor>);
 
         return dynamic_cast<const Actor*>(actors_.at(uuid).get());
     }
@@ -33,7 +33,7 @@ class ActorRegister
     template <class Actor>
     Actor* GetActor(UUID uuid)
     {
-        static_assert(std::is_base_of<events::IActor, Actor>::value);
+        static_assert(std::is_base_of_v<events::IActor, Actor>);
 
         return dynamic_cast<Actor*>(actors_.at(uuid).get());
     }
@@ -46,7 +46,7 @@ class ActorRegister
     template <class Actor>
     Actor* Make(std::string name)
     {
-        static_assert(std::is_base_of<events::IActor, Actor>::value);
+        static_assert(std::is_base_of_v<events::IActor, Actor>);
 
         auto actor = new Actor();
         actor->SetScheduleFunction(schedule_function_);

@@ -10,44 +10,38 @@ sim::infra::VMStorage::HandleEvent(const sim::events::Event* event)
         return;
     }
 
-    try {
-        auto vms_event = dynamic_cast<const VMStorageEvent*>(event);
-        if (!vms_event) {
-            ACTOR_LOG_ERROR("Received invalid event");
-            state_ = VMStorageState::kFailure;
-            return;
-        }
-
-        switch (vms_event->type) {
-            case VMStorageEventType::kVMCreated: {
-                AddVM(vms_event);
-                break;
-            }
-            case VMStorageEventType::kVMProvisionRequested: {
-                MoveToProvisioning(vms_event);
-                break;
-            }
-            case VMStorageEventType::kVMStopped: {
-                MoveToStopped(vms_event);
-                break;
-            }
-            case VMStorageEventType::kVMProvisioned: {
-                MoveToHosted(vms_event);
-                break;
-            }
-            case VMStorageEventType::kVMDeleted: {
-                DeleteVM(vms_event);
-                break;
-            }
-            default: {
-                ACTOR_LOG_ERROR("Received unknown event");
-                state_ = VMStorageState::kFailure;
-            }
-        }
-
-    } catch (std::bad_cast& bc) {
+    auto vms_event = dynamic_cast<const VMStorageEvent*>(event);
+    if (!vms_event) {
         ACTOR_LOG_ERROR("Received invalid event");
         state_ = VMStorageState::kFailure;
+        return;
+    }
+
+    switch (vms_event->type) {
+        case VMStorageEventType::kVMCreated: {
+            AddVM(vms_event);
+            break;
+        }
+        case VMStorageEventType::kVMProvisionRequested: {
+            MoveToProvisioning(vms_event);
+            break;
+        }
+        case VMStorageEventType::kVMStopped: {
+            MoveToStopped(vms_event);
+            break;
+        }
+        case VMStorageEventType::kVMProvisioned: {
+            MoveToHosted(vms_event);
+            break;
+        }
+        case VMStorageEventType::kVMDeleted: {
+            DeleteVM(vms_event);
+            break;
+        }
+        default: {
+            ACTOR_LOG_ERROR("Received event with invalid type");
+            state_ = VMStorageState::kFailure;
+        }
     }
 }
 
