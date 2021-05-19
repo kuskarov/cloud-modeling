@@ -41,8 +41,8 @@ enum class VMState
 };
 
 /**
- * This struct is returned by VM on each call of GetWorkload(). Should be
- * implemented by researcher
+ * This struct is returned by VM on each call of WorkloadModel::GetWorkload().
+ * Should be implemented by researcher
  */
 struct IVMWorkload
 {
@@ -50,9 +50,26 @@ struct IVMWorkload
 };
 
 /**
- * Will be called each tick, should match with IWorkload impl
+ * Stateful object which calculates required amount of resources on each tick.
+ * Should be implemented by a researcher
  */
-typedef std::function<std::shared_ptr<IVMWorkload>(TimeStamp)> WorkloadFunction;
+class IWorkloadModel
+{
+ public:
+    /// May set some inner state from kv params
+    virtual void Setup(
+        const std::unordered_map<std::string, std::string>& params) = 0;
+
+    /// This function is called on each tick
+    virtual std::shared_ptr<IVMWorkload> GetWorkload(TimeStamp time) = 0;
+
+    const auto& Params() { return params_; }
+
+    virtual ~IWorkloadModel() = default;
+
+ private:
+    std::unordered_map<std::string, std::string> params_;
+};
 
 /**
  * Representation of Virtual Machine.
@@ -79,18 +96,18 @@ class VM : public events::IActor
     // TODO: get access to the time for actors!
     [[nodiscard]] auto GetWorkload() const
     {
-        return workload_function_(TimeStamp{0});
+        return workload_model_->GetWorkload(TimeStamp{0});
     }
 
-    void SetWorkloadFunction(const WorkloadFunction& workload_function)
+    void SetWorkloadModel(IWorkloadModel* workload_model)
     {
-        workload_function_ = workload_function;
+        workload_model_ = std::shared_ptr<IWorkloadModel>{workload_model};
     }
 
  private:
     VMState state_{VMState::kProvisioning};
 
-    WorkloadFunction workload_function_;
+    std::shared_ptr<IWorkloadModel> workload_model_;
 
     inline void SetState(VMState new_state);
 

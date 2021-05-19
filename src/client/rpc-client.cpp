@@ -18,7 +18,7 @@ sim::client::SimulatorRPCClient::ProcessInput(const std::string& input)
     std::string command;
     iss >> command;
 
-    google::protobuf::Empty reply;
+    Empty reply;
 
     if (auto it = resource_action_mapping.find(command);
         it != resource_action_mapping.end()) {
@@ -33,8 +33,6 @@ sim::client::SimulatorRPCClient::ProcessInput(const std::string& input)
 
         CallVMAction(it2->second, vm_name);
     } else if (command == "create-vm") {
-        // temporal! a researcher should provide his custom workload spec
-        // parsing manually for now
         std::string vm_name;
         uint32_t required_ram;
 
@@ -45,9 +43,8 @@ sim::client::SimulatorRPCClient::ProcessInput(const std::string& input)
             return;
         }
 
-        VMWorkloadSpec spec{required_ram};
-
-        CallCreateVM(spec, vm_name);
+        CallCreateVM(vm_name, "ram-const",
+                     {{"required_ram", std::to_string(required_ram)}});
     } else {
         std::cerr << "Unknown command: " << command << "\n";
     }
@@ -57,7 +54,7 @@ void
 sim::client::SimulatorRPCClient::CallResourceAction(
     ResourceActionType type, const std::string& resource_name)
 {
-    google::protobuf::Empty reply;
+    Empty reply;
     ClientContext cntx{};
 
     ResourceActionMessage request{};
@@ -77,7 +74,7 @@ void
 sim::client::SimulatorRPCClient::CallVMAction(VMActionType type,
                                               const std::string& vm_name)
 {
-    google::protobuf::Empty reply;
+    Empty reply;
     ClientContext cntx{};
 
     VMActionMessage request{};
@@ -95,14 +92,21 @@ sim::client::SimulatorRPCClient::CallVMAction(VMActionType type,
 
 void
 sim::client::SimulatorRPCClient::CallCreateVM(
-    const VMWorkloadSpec& vm_workload_spec, const std::string& vm_name)
+    const std::string& vm_name, const std::string& vm_workload_spec,
+    const std::unordered_map<std::string, std::string>& params)
 {
-    google::protobuf::Empty reply;
+    Empty reply;
     ClientContext cntx{};
 
     CreateVMMessage request{};
     request.set_vm_name(vm_name);
-    request.set_vm_workload_model("ram");
+    request.set_vm_workload_model(vm_workload_spec);
+
+    for (const auto& [key, value] : params) {
+        auto kv_ptr = request.add_params();
+        kv_ptr->set_key(key);
+        kv_ptr->set_value(value);
+    }
 
     auto status = stub_->CreateVM(&cntx, request, &reply);
     if (status.ok()) {
@@ -117,7 +121,7 @@ void
 sim::client::SimulatorRPCClient::CallSimulateAll()
 {
     ClientContext cntx{};
-    google::protobuf::Empty reply;
+    Empty reply;
     LogMessage log_message{};
 
     std::unique_ptr<ClientReader<LogMessage>> reader(

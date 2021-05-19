@@ -55,7 +55,7 @@ class ActorRegister
 
         actor->SetName(name);
         if (auto it = actors_names_.find(name); it != actors_names_.end()) {
-            throw std::logic_error("Name is not unique");
+            throw std::logic_error(fmt::format("Name {} is not unique", name));
         }
 
         actors_names_[name] = actor->GetUUID();

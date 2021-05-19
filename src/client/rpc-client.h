@@ -24,11 +24,7 @@ using simulator_api::Simulator;
 using simulator_api::VMActionMessage;
 using simulator_api::VMActionType;
 
-/// Sample workload spec
-struct VMWorkloadSpec
-{
-    uint32_t required_ram;
-};
+using google::protobuf::Empty;
 
 class SimulatorRPCClient
 {
@@ -69,8 +65,9 @@ class SimulatorRPCClient
 
     void CallVMAction(VMActionType type, const std::string& vm_name);
 
-    void CallCreateVM(const VMWorkloadSpec& vm_workload_spec,
-                      const std::string& vm_name);
+    void CallCreateVM(
+        const std::string& vm_name, const std::string& vm_workload_spec,
+        const std::unordered_map<std::string, std::string>& params);
 
     void CallSimulateAll();
 

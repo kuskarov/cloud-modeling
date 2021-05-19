@@ -22,6 +22,7 @@ using simulator_api::ResourceActionType;
 using simulator_api::Simulator;
 using simulator_api::VMActionMessage;
 using simulator_api::VMActionType;
+using proto_log_severity = simulator_api::LogSeverity;
 
 using google::protobuf::Empty;
 
@@ -80,11 +81,9 @@ class SimulatorRPCService final : public Simulator::Service
 
     std::unordered_map<LogSeverity, simulator_api::LogSeverity>
         severity_mapping{
-            {LogSeverity::kError,
-             simulator_api::LogSeverity::ERROR_LOG_SEVERITY},
-            {LogSeverity::kInfo, simulator_api::LogSeverity::INFO_LOG_SEVERITY},
-            {LogSeverity::kDebug,
-             simulator_api::LogSeverity::DEBUG_LOG_SEVERITY},
+            {LogSeverity::kError, proto_log_severity::ERROR_LOG_SEVERITY},
+            {LogSeverity::kInfo, proto_log_severity::INFO_LOG_SEVERITY},
+            {LogSeverity::kDebug, proto_log_severity::DEBUG_LOG_SEVERITY},
         };
 };
 

@@ -6,11 +6,29 @@ namespace sim::custom {
 
 using namespace sim::core;
 
-struct RamVMWorkLoad : infra::IVMWorkload
+struct RAMVMWorkload : infra::IVMWorkload
 {
     RAMBytes ram;
+};
 
+class RAMConstVMWorkloadModel : public infra::IWorkloadModel
+{
+ public:
+    void Setup(
+        const std::unordered_map<std::string, std::string>& params) override
+    {
+        if (auto it = params.find("required_ram"); it != params.end()) {
+            required_ram_ = RAMBytes{std::stoi(it->second)};
+        }
+    }
 
+    std::shared_ptr<infra::IVMWorkload> GetWorkload(TimeStamp time) override
+    {
+        return {};
+    }
+
+ private:
+    RAMBytes required_ram_;
 };
 
 class GreedyServerScheduler : public IServerScheduler
@@ -34,7 +52,7 @@ class GreedyServerScheduler : public IServerScheduler
             auto vm = actor_register_->GetActor<infra::VM>(vm_handle);
 
             auto vm_requirements =
-                std::static_pointer_cast<RamVMWorkLoad>(vm->GetWorkload());
+                std::static_pointer_cast<RAMVMWorkload>(vm->GetWorkload());
 
             if (!vm_requirements) {
                 WORLD_LOG_ERROR("VM Workload type mismatch");

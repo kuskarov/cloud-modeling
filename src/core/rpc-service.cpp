@@ -3,9 +3,12 @@
 #include <fmt/core.h>
 
 #include "actor.h"
+#include "custom-code.h"
 #include "resource.h"
 #include "scheduler.h"
 #include "vm-storage.h"
+
+using namespace sim::infra;
 
 sim::UUID
 sim::core::SimulatorRPCService::ResolveName(const std::string& name)
@@ -26,26 +29,26 @@ sim::core::SimulatorRPCService::DoResourceAction(
 {
     WORLD_LOG_INFO("DoResourceAction() called");
 
-    auto uuid = ResolveName(request->resource_name());
+    auto resource_uuid = ResolveName(request->resource_name());
 
-    if (!uuid) {
+    if (!resource_uuid) {
         return Status{
             StatusCode::INVALID_ARGUMENT,
             fmt::format("Unknown resource name: {}", request->resource_name())};
     }
 
-    auto event = events::MakeEvent<infra::ResourceEvent>(
-        uuid, event_loop_->Now(), nullptr);
+    auto event = events::MakeEvent<ResourceEvent>(resource_uuid,
+                                                  event_loop_->Now(), nullptr);
 
     switch (request->resource_action_type()) {
         case ResourceActionType::BOOT_RESOURCE_ACTION:
-            event->type = infra::ResourceEventType::kBoot;
+            event->type = ResourceEventType::kBoot;
             break;
         case ResourceActionType::REBOOT_RESOURCE_ACTION:
-            event->type = infra::ResourceEventType::kReboot;
+            event->type = ResourceEventType::kReboot;
             break;
         case ResourceActionType::SHUTDOWN_RESOURCE_ACTION:
-            event->type = infra::ResourceEventType::kShutdown;
+            event->type = ResourceEventType::kShutdown;
             break;
         default:
             return Status{StatusCode::INVALID_ARGUMENT,
@@ -69,20 +72,32 @@ sim::core::SimulatorRPCService::CreateVM(ServerContext* context,
 
     UUID vm_uuid;
     try {
-        auto vm = actor_register_->Make<infra::VM>(request->vm_name());
+        auto vm = actor_register_->Make<VM>(request->vm_name());
         vm_uuid = vm->GetUUID();
-        // vm->SetWorkLoadSpec([](){});
-    } catch (const std::logic_error& le) {
-        return Status{StatusCode::INVALID_ARGUMENT,
-                      fmt::format("Name {} is not unique", request->vm_name())};
+
+        auto workload_model =
+            custom::GetWorkloadModel(request->vm_workload_model());
+
+        // TODO: redundant memory usage, pass iterators to Setup()
+        std::unordered_map<std::string, std::string> params;
+        for (const auto& entry : request->params()) {
+            params[entry.key()] = entry.value();
+        }
+
+        workload_model->Setup(params);
+        vm->SetWorkloadModel(workload_model);
+    } catch (const std::exception& e) {
+        return Status{
+            StatusCode::INVALID_ARGUMENT,
+            fmt::format("Exception occured while setting up VM: {}", e.what())};
     }
 
-    auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
+    auto vmst_event = events::MakeEvent<VMStorageEvent>(
         vm_storage_handle_, event_loop_->Now(), nullptr);
-    vm_storage_event->type = infra::VMStorageEventType::kVMCreated;
-    vm_storage_event->vm_uuid = vm_uuid;
+    vmst_event->type = VMStorageEventType::kVMCreated;
+    vmst_event->vm_uuid = vm_uuid;
 
-    schedule_event(vm_storage_event, false);
+    schedule_event(vmst_event, false);
 
     return Status::OK;
 }
@@ -94,33 +109,31 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
 {
     WORLD_LOG_INFO("DoVMAction() called");
 
-    auto uuid = ResolveName(request->vm_name());
+    auto vm_uuid = ResolveName(request->vm_name());
 
-    if (!uuid) {
+    if (!vm_uuid) {
         return Status{StatusCode::INVALID_ARGUMENT,
                       fmt::format("Unknown VM name: {}", request->vm_name())};
     }
 
     // event that should happen after the chain of events ends
-    auto vm_storage_notification = new infra::VMStorageEvent();
-    vm_storage_notification->type = infra::VMStorageEventType::kVMProvisioned;
-    vm_storage_notification->addressee = vm_storage_handle_;
-    vm_storage_notification->vm_uuid = uuid;
+    auto vmst_callback = new VMStorageEvent();
+    vmst_callback->type = VMStorageEventType::kVMProvisioned;
+    vmst_callback->addressee = vm_storage_handle_;
+    vmst_callback->vm_uuid = vm_uuid;
 
     switch (request->vm_action_type()) {
         case VMActionType::PROVISION_VM_ACTION: {
-            vm_storage_notification->type =
-                infra::VMStorageEventType::kVMProvisioned;
+            vmst_callback->type = VMStorageEventType::kVMProvisioned;
 
-            auto vm_storage_event = events::MakeEvent<infra::VMStorageEvent>(
+            auto vmst_event = events::MakeEvent<VMStorageEvent>(
                 vm_storage_handle_, event_loop_->Now(), nullptr);
-            vm_storage_event->type =
-                infra::VMStorageEventType::kVMProvisionRequested;
-            vm_storage_event->vm_uuid = uuid;
-            schedule_event(vm_storage_event, true);
+            vmst_event->type = VMStorageEventType::kVMProvisionRequested;
+            vmst_event->vm_uuid = vm_uuid;
+            schedule_event(vmst_event, true);
 
             auto scheduler_event = events::MakeEvent<SchedulerEvent>(
-                scheduler_handle_, event_loop_->Now(), vm_storage_notification);
+                scheduler_handle_, event_loop_->Now(), vmst_callback);
             scheduler_event->type = SchedulerEventType::kProvisionVM;
 
             schedule_event(scheduler_event, false);
@@ -133,12 +146,11 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
                           "VM reboot is not implemented yet"};
 
         case VMActionType::STOP_VM_ACTION: {
-            vm_storage_notification->type =
-                infra::VMStorageEventType::kVMStopped;
+            vmst_callback->type = VMStorageEventType::kVMStopped;
 
-            auto stop_vm_event = events::MakeEvent<infra::VMEvent>(
-                uuid, event_loop_->Now(), vm_storage_notification);
-            stop_vm_event->type = infra::VMEventType::kStop;
+            auto stop_vm_event = events::MakeEvent<VMEvent>(
+                vm_uuid, event_loop_->Now(), vmst_callback);
+            stop_vm_event->type = VMEventType::kStop;
 
             schedule_event(stop_vm_event, false);
 
@@ -146,12 +158,11 @@ sim::core::SimulatorRPCService::DoVMAction(ServerContext* context,
         }
 
         case VMActionType::DELETE_VM_ACTION: {
-            vm_storage_notification->type =
-                infra::VMStorageEventType::kVMDeleted;
+            vmst_callback->type = VMStorageEventType::kVMDeleted;
 
-            auto delete_vm_event = events::MakeEvent<infra::VMEvent>(
-                uuid, event_loop_->Now(), vm_storage_notification);
-            delete_vm_event->type = infra::VMEventType::kDelete;
+            auto delete_vm_event = events::MakeEvent<VMEvent>(
+                vm_uuid, event_loop_->Now(), vmst_callback);
+            delete_vm_event->type = VMEventType::kDelete;
 
             schedule_event(delete_vm_event, false);
 

@@ -27,10 +27,10 @@ GetScheduler(const std::string& name)
 }
 
 static auto
-GetWorkload(const std::string& name)
+GetWorkloadModel(const std::string& name)
 {
-    static std::unordered_map<std::string, WorkloadCreator> mapping = {
-        {"ram", MakeWorkload<RamVMWorkLoad>()}};
+    static std::unordered_map<std::string, WorkloadModelCreator> mapping = {
+        {"ram-const", MakeWorkloadModel<RAMConstVMWorkloadModel>()}};
 
     return mapping.at(name)();
 }
