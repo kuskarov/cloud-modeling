@@ -98,8 +98,8 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
         infra::ServerSpec server_spec{};
         server_spec.ram = RAMBytes{spec_ram.as<uint32_t>()};
         // TODO: write in a normal way
-        server_spec.clock_rate =
-            CPUHertz{spec_clock_rate.as<float>() * 1'000'000};
+        server_spec.clock_rate = CPUHertz{
+            static_cast<uint32_t>(spec_clock_rate.as<float>() * 1'000'000)};
         server_spec.cores_count = spec_cores_count.as<uint32_t>();
 
         auto it = server_specs_.find(name);

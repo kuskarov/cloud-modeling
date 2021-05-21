@@ -8,7 +8,7 @@ using namespace sim::core;
 
 struct RAMVMWorkload : infra::IVMWorkload
 {
-    RAMBytes ram;
+    RAMBytes required_ram{};
 };
 
 class RAMConstVMWorkloadModel : public infra::IWorkloadModel
@@ -18,13 +18,17 @@ class RAMConstVMWorkloadModel : public infra::IWorkloadModel
         const std::unordered_map<std::string, std::string>& params) override
     {
         if (auto it = params.find("required_ram"); it != params.end()) {
-            required_ram_ = RAMBytes{std::stoi(it->second)};
+            required_ram_ =
+                RAMBytes{static_cast<uint32_t>(std::stoi(it->second))};
         }
     }
 
     std::shared_ptr<infra::IVMWorkload> GetWorkload(TimeStamp time) override
     {
-        return {};
+        auto wl = std::make_shared<RAMVMWorkload>();
+        wl->required_ram = required_ram_;
+
+        return wl;
     }
 
  private:
@@ -59,8 +63,8 @@ class GreedyServerScheduler : public IServerScheduler
                 return;
             }
 
-            if (remaining_ram >= vm_requirements->ram) {
-                remaining_ram -= vm_requirements->ram;
+            if (remaining_ram >= vm_requirements->required_ram) {
+                remaining_ram -= vm_requirements->required_ram;
 
                 WORLD_LOG_INFO("VM {} is saturated", vm->GetName());
 

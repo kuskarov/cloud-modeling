@@ -5,4 +5,5 @@ add_subdirectory(replxx)
 add_subdirectory(NamedType)
 
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 add_subdirectory(grpc)

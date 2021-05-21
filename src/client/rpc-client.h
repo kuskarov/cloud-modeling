@@ -29,7 +29,8 @@ using google::protobuf::Empty;
 class SimulatorRPCClient
 {
  public:
-    SimulatorRPCClient(std::shared_ptr<ChannelInterface> channel)
+    explicit SimulatorRPCClient(
+        const std::shared_ptr<ChannelInterface>& channel)
         : stub_(Simulator::NewStub(channel))
     {
     }
@@ -77,9 +78,7 @@ class SimulatorRPCClient
 static inline auto
 CreateChannel(const std::string& address)
 {
-    return grpc::CreateChannel(address,
-                               // Indicate when channel is not authenticated
-                               grpc::InsecureChannelCredentials());
+    return grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
 }
 
 }   // namespace sim::client
