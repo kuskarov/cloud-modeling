@@ -14,22 +14,25 @@ enum class VMStorageEventType
     kNone,
     kVMCreated,
     kVMProvisionRequested,
+    kVMScheduled,
+    kVMHosted,
     kVMStopped,
-    kVMProvisioned,
     kVMDeleted
 };
 
 enum class VMStatus
 {
-    kHostedVM,            // VMs that are currently hosted on some server
-    kStoppedVM,           // VMs that were stopped but not deleted
-    kPendingProvisionVM   // VMs that were created but not provisioned yet
+    kCreated,     // VM created by no provision request received yet
+    kHostedVM,    // VMs that are currently hosted on some server
+    kStoppedVM,   // VMs that were stopped but not deleted
+    kPending,     // VMs that pending when scheduler decides where to place them
+    kProvisioning   // VMs that are set to the server by scheduler bt not hosted
+                    // yet
 };
 
 struct VMStorageEvent : events::Event
 {
     VMStorageEventType type{VMStorageEventType::kNone};
-
     UUID vm_uuid{};
 };
 
@@ -61,6 +64,7 @@ class VMStorage : public events::IActor
 
     // event handlers
     void AddVM(const VMStorageEvent* event);
+    void MoveToPending(const VMStorageEvent* event);
     void MoveToProvisioning(const VMStorageEvent* event);
     void MoveToStopped(const VMStorageEvent* event);
     void MoveToHosted(const VMStorageEvent* event);

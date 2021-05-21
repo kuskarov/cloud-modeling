@@ -4,19 +4,19 @@
 
 namespace sim::infra {
 
+using namespace sim::events;
+
 enum class VMEventType
 {
     kNone,
-    kProvisionCompleted,   // sent by Server when VM is located on a
-                           // concrete server
-    kStart,                // scheduled in ProvisionCompleted handler
-    kStartCompleted,       // scheduled in Start handler
-    kRestart,              // external command, VM should be in Running state
-    kRestartCompleted,     // scheduled in Restart handler
-    kStop,                 // external command, VM should be in Running state
-    kStopCompleted,        // scheduled in Stop handler
-    kDelete,               // external command, VM should be in Running state
-    kDeleteCompleted,      // scheduled in DeleteCompleted handler
+    kStart,            // sent by Server when VM is located on a concrete server
+    kStartCompleted,   // scheduled in Start handler
+    kRestart,          // external command, VM should be in Running state
+    kRestartCompleted,   // scheduled in Restart handler
+    kStop,               // external command, VM should be in Running state
+    kStopCompleted,      // scheduled in Stop handler
+    kDelete,             // external command, VM should be in Running state
+    kDeleteCompleted,    // scheduled in DeleteCompleted handler
 };
 
 struct VMEvent : events::Event
@@ -84,32 +84,36 @@ class VM : public events::IActor
 
     void HandleEvent(const events::Event* event) override;
 
-    [[nodiscard]] TimeInterval GetStartDelay() const;
-    void SetStartDelay(sim::TimeInterval start_delay);
-    [[nodiscard]] TimeInterval GetRestartDelay() const;
-    void SetRestartDelay(sim::TimeInterval restart_delay);
-    [[nodiscard]] TimeInterval GetStopDelay() const;
-    void SetStopDelay(sim::TimeInterval stop_delay);
-    [[nodiscard]] TimeInterval GetDeleteDelay() const;
-    void SetDeleteDelay(sim::TimeInterval delete_delay);
+    TimeInterval GetStartDelay() const;
+    void SetStartDelay(TimeInterval start_delay);
+    TimeInterval GetRestartDelay() const;
+    void SetRestartDelay(TimeInterval restart_delay);
+    TimeInterval GetStopDelay() const;
+    void SetStopDelay(TimeInterval stop_delay);
+    TimeInterval GetDeleteDelay() const;
+    void SetDeleteDelay(TimeInterval delete_delay);
 
-    // TODO: get access to the time for actors!
-    [[nodiscard]] auto GetWorkload() const
-    {
-        return workload_model_->GetWorkload(TimeStamp{0});
-    }
+    auto GetWorkload() const { return workload_model_->GetWorkload(now()); }
 
     void SetWorkloadModel(IWorkloadModel* workload_model)
     {
         workload_model_ = std::shared_ptr<IWorkloadModel>{workload_model};
     }
 
+    void SetVMStorage(UUID vm_storage_handle)
+    {
+        vm_storage_handle_ = vm_storage_handle;
+    }
+
  private:
     VMState state_{VMState::kProvisioning};
 
+    UUID vm_storage_handle_;
+
     std::shared_ptr<IWorkloadModel> workload_model_;
 
-    inline void SetState(VMState new_state);
+    void SetState(VMState new_state);
+    bool CheckStateMatch(std::initializer_list<VMState> allowed_states);
 
     TimeInterval start_delay_{0}, restart_delay_{0}, stop_delay_{0},
         delete_delay_{0};

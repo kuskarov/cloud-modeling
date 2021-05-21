@@ -18,30 +18,27 @@ sim::infra::VMStorage::HandleEvent(const sim::events::Event* event)
     }
 
     switch (vms_event->type) {
-        case VMStorageEventType::kVMCreated: {
+        case VMStorageEventType::kVMCreated:
             AddVM(vms_event);
             break;
-        }
-        case VMStorageEventType::kVMProvisionRequested: {
+        case VMStorageEventType::kVMProvisionRequested:
+            MoveToPending(vms_event);
+            break;
+        case VMStorageEventType::kVMScheduled:
             MoveToProvisioning(vms_event);
             break;
-        }
-        case VMStorageEventType::kVMStopped: {
-            MoveToStopped(vms_event);
-            break;
-        }
-        case VMStorageEventType::kVMProvisioned: {
+        case VMStorageEventType::kVMHosted:
             MoveToHosted(vms_event);
             break;
-        }
-        case VMStorageEventType::kVMDeleted: {
+        case VMStorageEventType::kVMStopped:
+            MoveToStopped(vms_event);
+            break;
+        case VMStorageEventType::kVMDeleted:
             DeleteVM(vms_event);
             break;
-        }
-        default: {
+        default:
             ACTOR_LOG_ERROR("Received event with invalid type");
             state_ = VMStorageState::kFailure;
-        }
     }
 }
 
@@ -49,26 +46,37 @@ void
 sim::infra::VMStorage::AddVM(const sim::infra::VMStorageEvent* event)
 {
     if (auto it = vms_.find(event->vm_uuid); it == vms_.end()) {
-        vms_[event->vm_uuid] = VMStatus::kPendingProvisionVM;
-        ACTOR_LOG_INFO("VM {} is added", event->vm_uuid);
+        vms_[event->vm_uuid] = VMStatus::kCreated;
+        ACTOR_LOG_INFO("VM {} was created", event->vm_uuid);
+    } else {
+        ACTOR_LOG_ERROR("VM {} is already in VM-s list", event->vm_uuid);
+        state_ = VMStorageState::kFailure;
+    }
+}
+
+void
+sim::infra::VMStorage::MoveToPending(const sim::infra::VMStorageEvent* event)
+{
+    if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
+        if (it->second == VMStatus::kCreated ||
+            it->second == VMStatus::kStoppedVM) {
+            ACTOR_LOG_INFO("VM {} is pending scheduling now", event->vm_uuid);
+            it->second = VMStatus::kPending;
+        } else {
+            ACTOR_LOG_ERROR("Cannot move VM {} to pending", event->vm_uuid);
+        }
     } else {
         ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;
     }
 }
 
-// TODO: boilerplate
 void
 sim::infra::VMStorage::MoveToProvisioning(const VMStorageEvent* event)
 {
     if (auto it = vms_.find(event->vm_uuid); it != vms_.end()) {
-        if (it->second != VMStatus::kPendingProvisionVM) {
-            ACTOR_LOG_INFO("VM {} is being provisioned", event->vm_uuid);
-            it->second = VMStatus::kPendingProvisionVM;
-        } else {
-            ACTOR_LOG_ERROR("VM {} is already being provisioned",
-                            event->vm_uuid);
-        }
+        ACTOR_LOG_INFO("VM {} is provisioning now", event->vm_uuid);
+        it->second = VMStatus::kProvisioning;
     } else {
         ACTOR_LOG_ERROR("VM {} not found in VM-s list", event->vm_uuid);
         state_ = VMStorageState::kFailure;

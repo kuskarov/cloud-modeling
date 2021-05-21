@@ -1,7 +1,7 @@
 #include <filesystem>
 #include <string>
 
-static inline auto
+static auto
 FileExists(const std::string& path) -> bool
 {
     return std::filesystem::exists(path);

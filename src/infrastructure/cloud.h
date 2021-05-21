@@ -12,9 +12,9 @@ class Cloud : public IResource
     Cloud() : IResource("Cloud") {}
 
     // for scheduler
-    [[nodiscard]] const auto& DataCenters() const { return data_centers_; }
+    const auto& DataCenters() const { return data_centers_; }
 
-    [[nodiscard]] auto VMStorage() const { return vm_storage_; }
+    auto VMStorage() const { return vm_storage_; }
 
     void SetVMStorage(UUID vm_storage_handle)
     {

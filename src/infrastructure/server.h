@@ -41,11 +41,11 @@ class Server : public IResource
     EnergyCount SpentPower() override { return EnergyCount{0}; }
 
     // for scheduler
-    [[nodiscard]] const auto& VMs() const { return virtual_machines_; }
+    const auto& VMs() const { return virtual_machines_; }
 
     void SetSpec(ServerSpec spec) { spec_ = spec; }
 
-    [[nodiscard]] auto GetSpec() const { return spec_; }
+    auto GetSpec() const { return spec_; }
 
  private:
     ServerSpec spec_{};

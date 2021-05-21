@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 
 #include <cstdint>
+#include <functional>
 #include <NamedType/named_type.hpp>
 
 namespace sim {
@@ -17,6 +18,8 @@ using EnergyCount = NamedType<uint64_t, struct EnergyCountTag>;
 typedef int64_t TimeStamp;
 
 typedef int64_t TimeInterval;
+
+typedef std::function<TimeStamp()> NowFunction;
 
 using RAMBytes =
     NamedType<uint64_t, struct RAMBytesTag, Comparable, Addable, Subtractable>;

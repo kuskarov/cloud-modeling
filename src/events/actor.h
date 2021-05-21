@@ -23,27 +23,36 @@ class IActor
     {
     }
 
+    /// Actor should provide event handler
     virtual void HandleEvent(const Event* event) = 0;
 
-    void SetScheduleFunction(const ScheduleFunction& schedule_function)
+    /// Actor can schedule events
+    void SetScheduleFunction(ScheduleFunction schedule_function)
     {
-        schedule_event = schedule_function;
+        schedule_event = std::move(schedule_function);
+    }
+
+    /// Actor can get current time
+    void SetNowFunction(NowFunction now_function)
+    {
+        now = std::move(now_function);
     }
 
     void SetOwner(UUID owner) { owner_ = owner; }
 
-    [[nodiscard]] const std::string& GetName() const { return name_; }
+    const std::string& GetName() const { return name_; }
     virtual void SetName(std::string name) { name_ = std::move(name); }
 
-    [[nodiscard]] const std::string& GetType() const { return type_; }
+    const std::string& GetType() const { return type_; }
     void SetType(std::string type) { type_ = std::move(type); }
 
-    [[nodiscard]] UUID GetUUID() const { return uuid_; }
+    UUID GetUUID() const { return uuid_; }
 
     virtual ~IActor() = default;
 
  protected:
     ScheduleFunction schedule_event;
+    NowFunction now;
 
     std::string type_{"Actor"}, name_{"Unnamed"};
 
@@ -54,3 +63,17 @@ class IActor
 };
 
 }   // namespace sim::events
+
+#define ACTOR_LOG_INFO(...) \
+    SimulatorLogger::LogNow(LogSeverity::kInfo, type_, name_, __VA_ARGS__)
+#define ACTOR_LOG_ERROR(...) \
+    SimulatorLogger::LogNow(LogSeverity::kError, type_, name_, __VA_ARGS__)
+#define ACTOR_LOG_DEBUG(...) \
+    SimulatorLogger::Log(LogSeverity::kDebug, type_, name_, __VA_ARGS__)
+
+#define WORLD_LOG_INFO(...) \
+    SimulatorLogger::LogNow(LogSeverity::kInfo, "World", WhoAmI(), __VA_ARGS__)
+#define WORLD_LOG_ERROR(...) \
+    SimulatorLogger::LogNow(LogSeverity::kError, "World", WhoAmI(), __VA_ARGS__)
+#define WORLD_LOG_DEBUG(...) \
+    SimulatorLogger::Log(LogSeverity::kDebug, "World", whoami_, __VA_ARGS__)

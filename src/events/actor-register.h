@@ -19,13 +19,15 @@ class ActorRegister
  public:
     ActorRegister() : whoami_("Actor-Register") {}
 
+    const std::string& WhoAmI() const { return whoami_; }
+
     /**
      * Const version for IScheduler
      */
     template <class Actor>
     const Actor* GetActor(UUID uuid) const
     {
-        static_assert(std::is_base_of_v<events::IActor, Actor>);
+        static_assert(std::is_base_of_v<IActor, Actor>);
 
         return dynamic_cast<const Actor*>(actors_.at(uuid).get());
     }
@@ -33,12 +35,12 @@ class ActorRegister
     template <class Actor>
     Actor* GetActor(UUID uuid)
     {
-        static_assert(std::is_base_of_v<events::IActor, Actor>);
+        static_assert(std::is_base_of_v<IActor, Actor>);
 
         return dynamic_cast<Actor*>(actors_.at(uuid).get());
     }
 
-    UUID GetActorHandle(const std::string& name)
+    UUID GetActorHandle(const std::string& name) const
     {
         return actors_names_.at(name);
     }
@@ -46,10 +48,11 @@ class ActorRegister
     template <class Actor>
     Actor* Make(std::string name)
     {
-        static_assert(std::is_base_of_v<events::IActor, Actor>);
+        static_assert(std::is_base_of_v<IActor, Actor>);
 
         auto actor = new Actor();
-        actor->SetScheduleFunction(schedule_function_);
+        actor->SetScheduleFunction(schedule_event);
+        actor->SetNowFunction(now);
 
         actors_.emplace(actor->GetUUID(), actor);
 
@@ -66,18 +69,26 @@ class ActorRegister
         return actor;
     }
 
-    void SetScheduleFunction(const events::ScheduleFunction& sf)
+    void SetScheduleFunction(ScheduleFunction schedule_function)
     {
-        schedule_function_ = sf;
+        schedule_event = std::move(schedule_function);
+    }
+
+    void SetNowFunction(NowFunction now_function)
+    {
+        now = std::move(now_function);
     }
 
  private:
     std::string whoami_{};
 
-    events::ScheduleFunction schedule_function_;
+    ScheduleFunction schedule_event;
+    NowFunction now;
 
     std::unordered_map<std::string, UUID> actors_names_;
-    std::unordered_map<UUID, std::unique_ptr<events::IActor>> actors_;
+    std::unordered_map<UUID, std::unique_ptr<IActor>> actors_;
 };
 
 }   // namespace sim::events
+
+

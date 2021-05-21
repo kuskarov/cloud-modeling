@@ -27,16 +27,17 @@ StateToString(sim::infra::VMState state)
     }
 }
 
-#define CHECK_STATE(expected, extra_text)                                      \
-    if (state_ != (expected)) {                                                \
-        ACTOR_LOG_ERROR("{}: current state is {} but expected {}", extra_text, \
-                        StateToString(state_), StateToString(expected));       \
-        SetState(VMState::kFailure);                                           \
-        return;                                                                \
+#define FAIL_ON_STATE_MISMATCH(...)            \
+    {                                          \
+        if (!CheckStateMatch(__VA_ARGS__)) {   \
+            ACTOR_LOG_ERROR("State mismatch"); \
+            SetState(VMState::kFailure);       \
+            return;                            \
+        }                                      \
     }
 
 void
-sim::infra::VM::HandleEvent(const events::Event* event)
+sim::infra::VM::HandleEvent(const Event* event)
 {
     auto vm_event = dynamic_cast<const VMEvent*>(event);
 
@@ -47,42 +48,30 @@ sim::infra::VM::HandleEvent(const events::Event* event)
     }
 
     switch (vm_event->type) {
-        case VMEventType::kProvisionCompleted: {
-            CompleteProvision(vm_event);
-            break;
-        }
-        case VMEventType::kStart: {
+        case VMEventType::kStart:
             Start(vm_event);
             break;
-        }
-        case VMEventType::kStartCompleted: {
+        case VMEventType::kStartCompleted:
             CompleteStart(vm_event);
             break;
-        }
-        case VMEventType::kRestart: {
+        case VMEventType::kRestart:
             Restart(vm_event);
             break;
-        }
-        case VMEventType::kRestartCompleted: {
+        case VMEventType::kRestartCompleted:
             CompleteRestart(vm_event);
             break;
-        }
-        case VMEventType::kStop: {
+        case VMEventType::kStop:
             Stop(vm_event);
             break;
-        }
-        case VMEventType::kStopCompleted: {
+        case VMEventType::kStopCompleted:
             CompleteStop(vm_event);
             break;
-        }
-        case VMEventType::kDelete: {
+        case VMEventType::kDelete:
             Delete(vm_event);
             break;
-        }
-        case VMEventType::kDeleteCompleted: {
+        case VMEventType::kDeleteCompleted:
             CompleteDelete(vm_event);
             break;
-        }
         default: {
             ACTOR_LOG_ERROR("Received event with invalid type");
             break;
@@ -91,96 +80,79 @@ sim::infra::VM::HandleEvent(const events::Event* event)
 }
 
 void
-sim::infra::VM::CompleteProvision(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::Start(const VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kProvisioning, "Provision Completed Event handler");
-
-    SetOwner(vm_event->server_uuid);
-
-    auto next_event =
-        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, start_delay_);
-    next_event->type = VMEventType::kStart;
-
-    schedule_event(next_event, true);
-}
-
-void
-sim::infra::VM::Start(const sim::infra::VMEvent* vm_event)
-{
-    CHECK_STATE(VMState::kProvisioning, "Boot Event handler");
+    FAIL_ON_STATE_MISMATCH({VMState::kProvisioning})
 
     SetState(VMState::kStarting);
 
     auto next_event =
-        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, start_delay_);
+        MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, start_delay_);
     next_event->type = VMEventType::kStartCompleted;
 
     schedule_event(next_event, false);
 }
 
 void
-sim::infra::VM::CompleteStart(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::CompleteStart(const VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kStarting, "Boot Completed Event handler");
+    FAIL_ON_STATE_MISMATCH({VMState::kStarting})
 
     SetState(VMState::kRunning);
 
-    auto event = vm_event->notificator;
-    event->happen_time = vm_event->happen_time;
+    auto vmst_callback = events::MakeEvent<VMStorageEvent>(
+        vm_storage_handle_, vm_event->happen_time, nullptr);
+    vmst_callback->vm_uuid = GetUUID();
+    vmst_callback->type = VMStorageEventType::kVMHosted;
 
-    schedule_event(event, false);
+    schedule_event(vmst_callback, false);
 }
 
 void
-sim::infra::VM::Restart(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::Restart(const VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kRunning, "Restart Event handler");
+    FAIL_ON_STATE_MISMATCH({VMState::kRunning, VMState::kFailure})
 
     SetState(VMState::kRestarting);
 
-    auto next_event = events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event,
-                                                          restart_delay_);
+    auto next_event =
+        MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, restart_delay_);
     next_event->type = VMEventType::kRestartCompleted;
 
     schedule_event(next_event, false);
 }
 
 void
-sim::infra::VM::CompleteRestart(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::CompleteRestart(const VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kRestarting, "Stop Event handler");
+    FAIL_ON_STATE_MISMATCH({VMState::kRestarting})
 
     SetState(VMState::kRunning);
-
-    auto event = vm_event->notificator;
-    event->happen_time = vm_event->happen_time;
-
-    schedule_event(event, false);
 }
 
 void
-sim::infra::VM::Stop(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::Stop(const VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kRunning, "Stop Event handler");
+    FAIL_ON_STATE_MISMATCH({VMState::kRunning})
 
     SetState(VMState::kStopping);
 
     auto next_event =
-        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, stop_delay_);
+        MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, stop_delay_);
     next_event->type = VMEventType::kStopCompleted;
 
     schedule_event(next_event, false);
 }
 
 void
-sim::infra::VM::CompleteStop(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::CompleteStop(const VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kStopping, "Stop Completed Event handler");
+    FAIL_ON_STATE_MISMATCH({VMState::kStopping})
 
     SetState(VMState::kStopped);
 
-    auto free_server_event = events::MakeInheritedEvent<ServerEvent>(
-        owner_, vm_event, TimeInterval{0});
+    auto free_server_event =
+        MakeInheritedEvent<ServerEvent>(owner_, vm_event, TimeInterval{0});
     free_server_event->type = ServerEventType::kUnprovisionVM;
     free_server_event->vm_uuid = GetUUID();
 
@@ -190,33 +162,39 @@ sim::infra::VM::CompleteStop(const sim::infra::VMEvent* vm_event)
 }
 
 void
-sim::infra::VM::Delete(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::Delete(const VMEvent* vm_event)
 {
+    FAIL_ON_STATE_MISMATCH(
+        {VMState::kRunning, VMState::kStopped, VMState::kFailure})
+
     SetState(VMState::kDeleting);
 
     auto next_event =
-        events::MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, delete_delay_);
+        MakeInheritedEvent<VMEvent>(GetUUID(), vm_event, delete_delay_);
     next_event->type = VMEventType::kDeleteCompleted;
 
     schedule_event(next_event, false);
 }
 
 void
-sim::infra::VM::CompleteDelete(const sim::infra::VMEvent* vm_event)
+sim::infra::VM::CompleteDelete(const VMEvent* vm_event)
 {
-    CHECK_STATE(VMState::kDeleting, "Delete Completed Event handler");
+    FAIL_ON_STATE_MISMATCH({VMState::kDeleting})
 
     if (owner_) {
-        auto free_server_event = events::MakeEvent<ServerEvent>(
+        auto free_server_event = MakeEvent<ServerEvent>(
             owner_, vm_event->happen_time, vm_event->notificator);
         free_server_event->type = ServerEventType::kUnprovisionVM;
         free_server_event->vm_uuid = GetUUID();
 
         schedule_event(free_server_event, false);
     } else {
-        auto event = vm_event->notificator;
-        event->happen_time = vm_event->happen_time;
-        schedule_event(event, false);
+        auto vmst_callback = events::MakeEvent<VMStorageEvent>(
+            vm_storage_handle_, vm_event->happen_time, nullptr);
+        vmst_callback->vm_uuid = GetUUID();
+        vmst_callback->type = VMStorageEventType::kVMDeleted;
+
+        schedule_event(vmst_callback, false);
     }
 }
 
@@ -273,4 +251,11 @@ sim::infra::VM::SetState(sim::infra::VMState new_state)
 {
     state_ = new_state;
     ACTOR_LOG_INFO("State changed to {}", StateToString(new_state));
+}
+
+bool
+sim::infra::VM::CheckStateMatch(std::initializer_list<VMState> allowed_states)
+{
+    return std::any_of(allowed_states.begin(), allowed_states.end(),
+                       [this](VMState state) { return state == state_; });
 }

@@ -10,58 +10,25 @@
 
 namespace sim::core {
 
-enum class SchedulerEventType
-{
-    kNone,
-    kProvisionVM,
-    // TODO: anything else?
-};
-
-struct SchedulerEvent : events::Event
-{
-    SchedulerEventType type{SchedulerEventType::kNone};
-};
-
 /**
  * Abstract class for Scheduler.
  *
  * Scheduler has access to the Cloud state and provides method for new VM
  * placement
  *
- * Scheduler is an Actor
- *
  */
-class IScheduler : public events::IActor
+class IScheduler : public events::Observer
 {
  public:
-    IScheduler() : events::IActor("Scheduler") {}
+    IScheduler() : events::Observer("Scheduler") {}
 
-    void SetCloud(UUID cloud_handle) { cloud_handle_ = cloud_handle; }
-
-    void SetActorRegister(const events::ActorRegister* actor_register)
-    {
-        actor_register_ = actor_register;
-    }
-
-    void HandleEvent(const events::Event* event) override;
-
-    ~IScheduler() override = default;
-
- protected:
     /**
      * Main schedule method which should be overridden
      *
      * Input --- state of cloud_ and vm_storage_
      * Output --- scheduled events for cloud_ and vm_storage_
      */
-    virtual void UpdateSchedule(const SchedulerEvent* scheduler_event) = 0;
-
-    const events::ActorRegister* actor_register_{};
-
-    // scheduler has read access to Cloud state
-    UUID cloud_handle_{};
-
-    std::function<const IActor*(UUID)> get_actor_state;
+    virtual void UpdateSchedule() = 0;
 };
 
 }   // namespace sim::core

@@ -22,6 +22,8 @@ class SimulatorConfig
     auto GetLogsPath() const { return logs_path_; }
     auto GetPort() const { return port_; }
 
+    const std::string& WhoAmI() const { return whoami_; }
+
  private:
     std::string whoami_{};
 

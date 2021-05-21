@@ -7,14 +7,14 @@ namespace sim::client {
 class CLI
 {
  public:
-    [[nodiscard]] bool Setup();
+    bool Setup();
 
     /// Returns only if exit was requested
     void RunLoop();
 
-    void SetProcessCallback(const std::function<void(const std::string&)>& cb)
+    void SetProcessCallback(std::function<void(const std::string&)> cb)
     {
-        process_callback = cb;
+        process_callback = std::move(cb);
     }
 
  private:

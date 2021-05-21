@@ -42,7 +42,7 @@ class EventLoop
      *
      * @return real time at the moment of call
      */
-    [[nodiscard]] TimeStamp Now() const { return current_ts_; }
+    TimeStamp Now() const { return current_ts_; }
 
     void SetActorFromUUIDCallback(const std::function<IActor*(UUID)>& cb)
     {
@@ -53,6 +53,8 @@ class EventLoop
     {
         update_world = cb;
     }
+
+    const std::string& WhoAmI() const { return whoami_; }
 
  private:
     const std::string whoami_{};

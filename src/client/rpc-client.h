@@ -75,7 +75,7 @@ class SimulatorRPCClient
     std::unique_ptr<Simulator::Stub> stub_;
 };
 
-static inline auto
+static auto
 CreateChannel(const std::string& address)
 {
     return grpc::CreateChannel(address, grpc::InsecureChannelCredentials());

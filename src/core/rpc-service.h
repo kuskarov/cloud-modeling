@@ -3,6 +3,8 @@
 #include "actor-register.h"
 #include "actor.h"
 #include "event-loop.h"
+#include "observer.h"
+#include "world.h"
 
 // generated code
 #include "api.grpc.pb.h"
@@ -26,34 +28,14 @@ using proto_log_severity = simulator_api::LogSeverity;
 
 using google::protobuf::Empty;
 
+class World;
+
 class SimulatorRPCService final : public Simulator::Service
 {
  public:
-    void SetScheduleFunction(const events::ScheduleFunction& cb)
-    {
-        schedule_event = cb;
-    }
-
-    void SetEventLoop(events::EventLoop* event_loop)
-    {
-        event_loop_ = event_loop;
-    }
-
-    void SetActorRegister(events::ActorRegister* actor_register)
-    {
-        actor_register_ = actor_register;
-    }
-
-    void SetHandles(UUID cloud, UUID scheduler, UUID vm_storage)
-    {
-        cloud_handle_ = cloud;
-        scheduler_handle_ = scheduler;
-        vm_storage_handle_ = vm_storage;
-    }
+    void SetWorld(World* world) { world_ = world; }
 
  private:
-    std::string whoami_{"RPC-Server"};
-
     Status DoResourceAction(ServerContext* context,
                             const ResourceActionMessage* request,
                             Empty* response) override;
@@ -66,18 +48,13 @@ class SimulatorRPCService final : public Simulator::Service
     Status SimulateAll(ServerContext* context, const Empty* request,
                        ServerWriter<LogMessage>* writer) override;
 
-    UUID ResolveName(const std::string& name);
 
-    events::ScheduleFunction schedule_event;
-
-    UUID scheduler_handle_{};
-
-    UUID cloud_handle_{};
 
     UUID vm_storage_handle_{};
 
-    events::ActorRegister* actor_register_{};
     events::EventLoop* event_loop_{};
+
+    World* world_;
 
     std::unordered_map<LogSeverity, simulator_api::LogSeverity>
         severity_mapping{

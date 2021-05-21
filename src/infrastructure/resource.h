@@ -55,11 +55,11 @@ class IResource : public events::IActor
 
     virtual EnergyCount SpentPower() = 0;
 
-    [[nodiscard]] TimeInterval GetStartupDelay() const;
+    TimeInterval GetStartupDelay() const;
     void SetStartupDelay(TimeInterval startup_delay);
-    [[nodiscard]] TimeInterval GetRebootDelay() const;
+    TimeInterval GetRebootDelay() const;
     void SetRebootDelay(TimeInterval reboot_delay);
-    [[nodiscard]] TimeInterval GetShutdownDelay() const;
+    TimeInterval GetShutdownDelay() const;
     void SetShutdownDelay(TimeInterval shutdown_delay);
 
     ~IResource() override = default;
@@ -75,7 +75,7 @@ class IResource : public events::IActor
 
     void AddComponent(UUID uuid) { components_.insert(uuid); }
 
-    inline void SetPowerState(ResourcePowerState new_state);
+    void SetPowerState(ResourcePowerState new_state);
 
     ResourcePowerState power_state_{ResourcePowerState::kOff};
 

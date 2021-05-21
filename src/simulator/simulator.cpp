@@ -3,12 +3,12 @@
 
 #include "config.h"
 #include "logger.h"
-#include "manager.h"
+#include "world.h"
 
 int
 main(int argc, char** argv)
 {
-    std::shared_ptr<sim::core::Manager> manager{};
+    std::shared_ptr<sim::core::World> world{};
 
     try {
         std::cerr << "Parsing command-line arguments..." << std::endl;
@@ -19,20 +19,20 @@ main(int argc, char** argv)
 
         std::cerr << "Parsing command-line arguments: Done" << std::endl;
 
-        std::cerr << "Setting up cloud manager..." << std::endl;
+        std::cerr << "Setting up world..." << std::endl;
 
-        manager = std::make_shared<sim::core::Manager>(config);
+        world = std::make_shared<sim::core::World>(config);
 
-        manager->Setup();
+        world->Setup();
 
-        std::cerr << "Setting up cloud manager: Done" << std::endl;
+        std::cerr << "Setting up world: Done" << std::endl;
 
-        std::cerr << "Running cloud manager..." << std::endl;
+        std::cerr << "Running world..." << std::endl;
 
     } catch (const std::runtime_error& re) {
         std::cerr << "Error: " << re.what() << std::endl;
         return 1;
     }
 
-    manager->Listen();
+    world->Listen();
 }

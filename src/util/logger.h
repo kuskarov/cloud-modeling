@@ -145,18 +145,5 @@ class SimulatorLogger
     inline static std::vector<LoggingCallback> callbacks_;
 };
 
-#define WORLD_LOG_INFO(...) \
-    SimulatorLogger::LogNow(LogSeverity::kInfo, "World", whoami_, __VA_ARGS__)
-#define WORLD_LOG_ERROR(...) \
-    SimulatorLogger::LogNow(LogSeverity::kError, "World", whoami_, __VA_ARGS__)
-#define WORLD_LOG_DEBUG(...) \
-    SimulatorLogger::Log(LogSeverity::kDebug, "World", whoami_, __VA_ARGS__)
-
-#define ACTOR_LOG_INFO(...) \
-    SimulatorLogger::LogNow(LogSeverity::kInfo, type_, name_, __VA_ARGS__)
-#define ACTOR_LOG_ERROR(...) \
-    SimulatorLogger::LogNow(LogSeverity::kError, type_, name_, __VA_ARGS__)
-#define ACTOR_LOG_DEBUG(...) \
-    SimulatorLogger::Log(LogSeverity::kDebug, type_, name_, __VA_ARGS__)
 
 }   // namespace sim

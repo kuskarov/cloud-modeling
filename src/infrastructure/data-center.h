@@ -22,7 +22,7 @@ class DataCenter : public IResource
     EnergyCount SpentPower() override { return EnergyCount{0}; }
 
     // for scheduler
-    [[nodiscard]] const auto& Servers() const { return servers_; }
+    const auto& Servers() const { return servers_; }
 
  private:
     /**

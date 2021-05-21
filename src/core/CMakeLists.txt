@@ -1,10 +1,9 @@
 set(SOURCES
-        manager.h
-        manager.cpp
+        world.h
+        world.cpp
         config.h
         config.cpp
         scheduler.h
-        scheduler.cpp
         resource-scheduler.h
         rpc-service.h
         rpc-service.cpp)

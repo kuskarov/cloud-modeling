@@ -41,26 +41,21 @@ sim::infra::IResource::HandleEvent(const events::Event* event)
     }
 
     switch (resource_event->type) {
-        case ResourceEventType::kBoot: {
+        case ResourceEventType::kBoot:
             StartBoot(resource_event);
             break;
-        }
-        case ResourceEventType::kReboot: {
+        case ResourceEventType::kReboot:
             StartReboot(resource_event);
             break;
-        }
-        case ResourceEventType::kBootFinished: {
+        case ResourceEventType::kBootFinished:
             CompleteBoot(resource_event);
             break;
-        }
-        case ResourceEventType::kShutdown: {
+        case ResourceEventType::kShutdown:
             StartShutdown(resource_event);
             break;
-        }
-        case ResourceEventType::kShutdownFinished: {
+        case ResourceEventType::kShutdownFinished:
             CompleteShutdown(resource_event);
             break;
-        }
         default: {
             ACTOR_LOG_ERROR("Received event with invalid type");
             break;

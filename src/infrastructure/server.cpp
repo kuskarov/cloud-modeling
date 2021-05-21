@@ -53,7 +53,7 @@ sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
 
     auto vm_provisioned_event = events::MakeInheritedEvent<VMEvent>(
         server_event->vm_uuid, server_event, TimeInterval{0});
-    vm_provisioned_event->type = VMEventType::kProvisionCompleted;
+    vm_provisioned_event->type = VMEventType::kStart;
     vm_provisioned_event->server_uuid = GetUUID();
 
     schedule_event(vm_provisioned_event, false);

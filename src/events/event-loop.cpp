@@ -4,6 +4,7 @@
 
 #include "actor.h"
 #include "logger.h"
+#include "observer.h"
 
 void
 sim::events::EventLoop::Insert(Event* event, bool immediate)
