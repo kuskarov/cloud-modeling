@@ -6,6 +6,7 @@
 
 #include <ctime>
 #include <functional>
+#include <string_view>
 
 #include "types.h"
 
@@ -18,7 +19,7 @@ enum class LogSeverity : int32_t
     kDebug = 2,
 };
 
-inline const char*
+static const char*
 SeverityToString(LogSeverity severity)
 {
     switch (severity) {
@@ -33,55 +34,61 @@ SeverityToString(LogSeverity severity)
     }
 }
 
-typedef std::function<void(TimeStamp, LogSeverity, const std::string&,
-                           const std::string&, const std::string&)>
+typedef std::function<void(TimeStamp, LogSeverity, std::string_view,
+                           std::string_view, std::string_view)>
     LoggingCallback;
 
 class SimulatorLogger
 {
  public:
-    static void SetCSVFolder(const std::string& path_to_csv_folder)
+    static SimulatorLogger& GetLogger()
     {
-        csv_file_name_ =
-            path_to_csv_folder + "/" + std::to_string(time(nullptr)) + ".csv";
+        static SimulatorLogger logger{};
+
+        return logger;
     }
 
-    static void SetMaxConsoleSeverity(LogSeverity max_severity)
+    void SetCSVFolder(std::string_view path_to_csv_folder)
+    {
+        csv_file_name_ = std::string{path_to_csv_folder} + "/" +
+                         std::to_string(time(nullptr)) + ".csv";
+    }
+
+    void SetMaxConsoleSeverity(LogSeverity max_severity)
     {
         max_console_severity = max_severity;
     }
 
-    static void SetMaxCSVSeverity(LogSeverity max_severity)
+    void SetMaxCSVSeverity(LogSeverity max_severity)
     {
         max_csv_severity = max_severity;
     }
 
-    static void SetTimeCallback(const std::function<TimeStamp()>& now_callback)
+    void SetTimeCallback(NowFunction now_function)
     {
-        now = now_callback;
+        now = std::move(now_function);
     }
 
-    static void AddLoggingCallback(const LoggingCallback& cb)
+    void PushLoggingCallback(LoggingCallback logging_callback)
     {
-        callbacks_.push_back(cb);
+        callbacks_.push_back(std::move(logging_callback));
     }
 
-    static void RemoveLastLoggingCallback() { callbacks_.pop_back(); }
+    void PopLoggingCallback() { callbacks_.pop_back(); }
 
     template <typename... Args>
-    static void LogNow(LogSeverity severity, const std::string& caller_type,
-                       const std::string& caller_name,
-                       const std::string& format_string, Args&&... args)
+    void LogNow(LogSeverity severity, std::string_view caller_type,
+                std::string_view caller_name, std::string_view format_string,
+                Args&&... args)
     {
         Log(now(), severity, caller_type, caller_name, format_string,
             std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    static void Log(TimeStamp ts, LogSeverity severity,
-                    const std::string& caller_type,
-                    const std::string& caller_name,
-                    const std::string& format_string, Args&&... args)
+    void Log(TimeStamp ts, LogSeverity severity, std::string_view caller_type,
+             std::string_view caller_name, std::string_view format_string,
+             Args&&... args)
     {
         auto text = fmt::format(format_string, std::forward<Args>(args)...);
 
@@ -97,23 +104,27 @@ class SimulatorLogger
     }
 
  private:
-    inline static std::string csv_file_name_{};
-    inline static std::function<TimeStamp()> now{};
-    inline static LogSeverity max_console_severity{LogSeverity::kDebug},
+    SimulatorLogger() = default;
+
+    std::string csv_file_name_{};
+
+    NowFunction now{};
+
+    LogSeverity max_console_severity{LogSeverity::kDebug},
         max_csv_severity{LogSeverity::kDebug};
 
-    static fmt::ostream& CSVFileStream()
+    fmt::ostream& CSVFileStream()
     {
         static fmt::ostream csv_file_stream_ = fmt::output_file(csv_file_name_);
 
         return csv_file_stream_;
     }
 
-    static LoggingCallback GetPrintToConsoleCallback()
+    LoggingCallback GetPrintToConsoleCallback()
     {
-        return [](TimeStamp ts, LogSeverity severity,
-                  const std::string& caller_type,
-                  const std::string& caller_name, const std::string& text) {
+        return [this](TimeStamp ts, LogSeverity severity,
+                      std::string_view caller_type,
+                      std::string_view caller_name, std::string_view text) {
             if (severity <= max_console_severity) {
                 if (severity == LogSeverity::kError) {
                     fmt::print(fg(fmt::color::dark_red) | fmt::emphasis::bold,
@@ -129,11 +140,11 @@ class SimulatorLogger
         };
     }
 
-    static LoggingCallback GetWriteToCSVCallback()
+    LoggingCallback GetWriteToCSVCallback()
     {
-        return [](TimeStamp ts, LogSeverity severity,
-                  const std::string& caller_type,
-                  const std::string& caller_name, const std::string& text) {
+        return [this](TimeStamp ts, LogSeverity severity,
+                      std::string_view caller_type,
+                      std::string_view caller_name, std::string_view text) {
             if (!csv_file_name_.empty() && severity <= max_csv_severity) {
                 CSVFileStream().print("{},{},{},{},{}\n", ts,
                                       SeverityToString(severity), caller_type,
@@ -142,8 +153,7 @@ class SimulatorLogger
         };
     }
 
-    inline static std::vector<LoggingCallback> callbacks_;
+    std::vector<LoggingCallback> callbacks_;
 };
-
 
 }   // namespace sim

@@ -54,7 +54,7 @@ class EventLoop
         update_world = cb;
     }
 
-    const std::string& WhoAmI() const { return whoami_; }
+    std::string_view WhoAmI() const { return whoami_; }
 
  private:
     const std::string whoami_{};

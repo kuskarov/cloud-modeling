@@ -19,7 +19,7 @@ class ActorRegister
  public:
     ActorRegister() : whoami_("Actor-Register") {}
 
-    const std::string& WhoAmI() const { return whoami_; }
+    std::string_view WhoAmI() const { return whoami_; }
 
     /**
      * Const version for IScheduler
@@ -90,5 +90,3 @@ class ActorRegister
 };
 
 }   // namespace sim::events
-
-

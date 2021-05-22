@@ -14,9 +14,9 @@
 void
 sim::core::World::Setup()
 {
-    SimulatorLogger::SetCSVFolder(config_->GetLogsPath());
-    SimulatorLogger::SetMaxCSVSeverity(LogSeverity::kDebug);
-    SimulatorLogger::SetMaxConsoleSeverity(LogSeverity::kDebug);
+    SimulatorLogger::GetLogger().SetCSVFolder(config_->GetLogsPath());
+    SimulatorLogger::GetLogger().SetMaxCSVSeverity(LogSeverity::kDebug);
+    SimulatorLogger::GetLogger().SetMaxConsoleSeverity(LogSeverity::kDebug);
 
     event_loop_ = std::make_unique<events::EventLoop>();
     auto now = [this] { return event_loop_->Now(); };
@@ -24,7 +24,7 @@ sim::core::World::Setup()
         event_loop_->Insert(event, immediate);
     };
 
-    SimulatorLogger::SetTimeCallback(now);
+    SimulatorLogger::GetLogger().SetTimeCallback(now);
 
     actor_register_ = std::make_unique<events::ActorRegister>();
     actor_register_->SetScheduleFunction(schedule_event);

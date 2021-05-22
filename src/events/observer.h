@@ -55,5 +55,3 @@ class Observer
 };
 
 }   // namespace sim::events
-
-

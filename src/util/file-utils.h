@@ -2,7 +2,7 @@
 #include <string>
 
 static auto
-FileExists(const std::string& path) -> bool
+FileExists(std::string_view path) -> bool
 {
     return std::filesystem::exists(path);
 }

@@ -52,13 +52,13 @@ sim::client::SimulatorRPCClient::ProcessInput(const std::string& input)
 
 void
 sim::client::SimulatorRPCClient::CallResourceAction(
-    ResourceActionType type, const std::string& resource_name)
+    ResourceActionType type, std::string_view resource_name)
 {
     Empty reply;
     ClientContext cntx{};
 
     ResourceActionMessage request{};
-    request.set_resource_name(resource_name);
+    request.set_resource_name(resource_name.data(), resource_name.size());
     request.set_resource_action_type(type);
 
     auto status = stub_->DoResourceAction(&cntx, request, &reply);
@@ -72,13 +72,13 @@ sim::client::SimulatorRPCClient::CallResourceAction(
 
 void
 sim::client::SimulatorRPCClient::CallVMAction(VMActionType type,
-                                              const std::string& vm_name)
+                                              std::string_view vm_name)
 {
     Empty reply;
     ClientContext cntx{};
 
     VMActionMessage request{};
-    request.set_vm_name(vm_name);
+    request.set_vm_name(vm_name.data(), vm_name.size());
     request.set_vm_action_type(type);
 
     auto status = stub_->DoVMAction(&cntx, request, &reply);
@@ -92,15 +92,16 @@ sim::client::SimulatorRPCClient::CallVMAction(VMActionType type,
 
 void
 sim::client::SimulatorRPCClient::CallCreateVM(
-    const std::string& vm_name, const std::string& vm_workload_spec,
+    std::string_view vm_name, std::string_view vm_workload_spec,
     const std::unordered_map<std::string, std::string>& params)
 {
     Empty reply;
     ClientContext cntx{};
 
     CreateVMMessage request{};
-    request.set_vm_name(vm_name);
-    request.set_vm_workload_model(vm_workload_spec);
+    request.set_vm_name(vm_name.data(), vm_name.size());
+    request.set_vm_workload_model(vm_workload_spec.data(),
+                                  vm_workload_spec.size());
 
     for (const auto& [key, value] : params) {
         auto kv_ptr = request.add_params();
@@ -130,7 +131,7 @@ sim::client::SimulatorRPCClient::CallSimulateAll()
     while (reader->Read(&log_message)) {
         if (auto it = severity_mapping.find(log_message.severity());
             it != severity_mapping.end()) {
-            SimulatorLogger::Log(
+            SimulatorLogger::GetLogger().Log(
                 TimeStamp{static_cast<int64_t>(log_message.time())}, it->second,
                 log_message.caller_type(), log_message.caller_name(),
                 log_message.text());

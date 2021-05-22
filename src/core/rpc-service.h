@@ -48,12 +48,6 @@ class SimulatorRPCService final : public Simulator::Service
     Status SimulateAll(ServerContext* context, const Empty* request,
                        ServerWriter<LogMessage>* writer) override;
 
-
-
-    UUID vm_storage_handle_{};
-
-    events::EventLoop* event_loop_{};
-
     World* world_;
 
     std::unordered_map<LogSeverity, simulator_api::LogSeverity>

@@ -103,24 +103,24 @@ sim::core::SimulatorRPCService::SimulateAll(ServerContext* context,
                                             const Empty* request,
                                             ServerWriter<LogMessage>* writer)
 {
-    SimulatorLogger::AddLoggingCallback(
+    SimulatorLogger::GetLogger().PushLoggingCallback(
         [&writer, this](
-            TimeStamp ts, LogSeverity severity, const std::string& caller_type,
-            const std::string& caller_name, const std::string& text) {
+            TimeStamp ts, LogSeverity severity, std::string_view caller_type,
+            std::string_view caller_name, std::string_view text) {
             LogMessage log_message{};
 
             log_message.set_time(ts);
             log_message.set_severity(severity_mapping.at(severity));
-            log_message.set_caller_type(caller_type);
-            log_message.set_caller_name(caller_name);
-            log_message.set_text(text);
+            log_message.set_caller_type(caller_type.data(), caller_type.size());
+            log_message.set_caller_name(caller_type.data(), caller_type.size());
+            log_message.set_text(text.data(), text.size());
 
             writer->Write(log_message);
         });
 
     world_->SimulateAll();
 
-    SimulatorLogger::RemoveLastLoggingCallback();
+    SimulatorLogger::GetLogger().PopLoggingCallback();
 
     return Status::OK;
 }

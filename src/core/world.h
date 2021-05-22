@@ -32,7 +32,7 @@ class World
     void Setup();
     void Listen();
 
-    const std::string& WhoAmI() const { return whoami_; }
+    std::string_view WhoAmI() const { return whoami_; }
 
     void DoResourceAction(const std::string& resource_name,
                           infra::ResourceEventType event_type);

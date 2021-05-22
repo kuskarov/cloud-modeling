@@ -62,12 +62,12 @@ class SimulatorRPCClient
         };
 
     void CallResourceAction(ResourceActionType type,
-                            const std::string& resource_name);
+                            std::string_view resource_name);
 
-    void CallVMAction(VMActionType type, const std::string& vm_name);
+    void CallVMAction(VMActionType type, std::string_view vm_name);
 
     void CallCreateVM(
-        const std::string& vm_name, const std::string& vm_workload_spec,
+        std::string_view vm_name, std::string_view vm_workload_spec,
         const std::unordered_map<std::string, std::string>& params);
 
     void CallSimulateAll();
