@@ -42,18 +42,19 @@ enum class VMState
 
 /**
  * This struct is returned by VM on each call of WorkloadModel::GetWorkload().
- * Should be implemented by researcher
  */
-struct IVMWorkload
+struct Workload
 {
-    virtual ~IVMWorkload() = default;
+    RAMBytes required_ram{};
+    CPUUtilizationPercent cpu_utilization{};
+    IOBandwidthMBpS io_bandwidth{};
 };
 
 /**
  * Stateful object which calculates required amount of resources on each tick.
  * Should be implemented by a researcher
  */
-class IWorkloadModel
+class IVMWorkloadModel
 {
  public:
     /// May set some inner state from kv params
@@ -61,14 +62,16 @@ class IWorkloadModel
         const std::unordered_map<std::string, std::string>& params) = 0;
 
     /// This function is called on each tick
-    virtual std::shared_ptr<IVMWorkload> GetWorkload(TimeStamp time) = 0;
+    virtual Workload GetWorkload(TimeStamp time) = 0;
 
     const auto& Params() { return params_; }
 
-    virtual ~IWorkloadModel() = default;
+    virtual ~IVMWorkloadModel() = default;
 
  private:
     std::unordered_map<std::string, std::string> params_;
+
+    // may contain some inner state in derived
 };
 
 /**
@@ -95,9 +98,9 @@ class VM : public events::IActor
 
     auto GetWorkload() const { return workload_model_->GetWorkload(now()); }
 
-    void SetWorkloadModel(IWorkloadModel* workload_model)
+    void SetWorkloadModel(IVMWorkloadModel* workload_model)
     {
-        workload_model_ = std::shared_ptr<IWorkloadModel>{workload_model};
+        workload_model_ = std::shared_ptr<IVMWorkloadModel>{workload_model};
     }
 
     void SetVMStorage(UUID vm_storage_handle)
@@ -110,7 +113,7 @@ class VM : public events::IActor
 
     UUID vm_storage_handle_;
 
-    std::shared_ptr<IWorkloadModel> workload_model_;
+    std::shared_ptr<IVMWorkloadModel> workload_model_;
 
     void SetState(VMState new_state);
     bool CheckStateMatch(std::initializer_list<VMState> allowed_states);
@@ -119,7 +122,6 @@ class VM : public events::IActor
         delete_delay_{0};
 
     // event handlers
-    void CompleteProvision(const VMEvent* vm_event);
     void Start(const VMEvent* vm_event);
     void CompleteStart(const VMEvent* vm_event);
     void Restart(const VMEvent* vm_event);

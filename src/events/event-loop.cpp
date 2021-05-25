@@ -71,7 +71,7 @@ sim::events::EventLoop::SimulateNextStep()
         current_ts_ = ts;
 
         // ts_queue cannot be empty
-        auto event = (*ts_queue.begin());
+        auto event = *ts_queue.begin();
         ts_queue.pop_front();
 
         try {

@@ -26,14 +26,7 @@ struct ResourceEvent : events::Event
     ResourceEventType type{ResourceEventType::kNone};
 };
 
-enum class ResourcePowerState
-{
-    kOff,
-    kTurningOn,
-    kTurningOff,
-    kRunning,
-    kFailure,
-};
+typedef std::function<EnergyCount(UUID)> EnergyMeterFunction;
 
 /**
  * Abstract class for Resource (something physical, e.g. Server, DataCenter,
@@ -49,11 +42,17 @@ enum class ResourcePowerState
 class IResource : public events::IActor
 {
  public:
-    explicit IResource(std::string type) : events::IActor(std::move(type)) {}
-
     void HandleEvent(const events::Event* event) override;
 
-    virtual EnergyCount SpentPower() = 0;
+    virtual EnergyCount SpentPower() {
+        EnergyCount total{energy_per_tick_const_};
+
+        for (UUID component_handle : components_) {
+            total += energy_meter_function_(component_handle);
+        }
+
+        return total;
+    };
 
     TimeInterval GetStartupDelay() const;
     void SetStartupDelay(TimeInterval startup_delay);
@@ -61,10 +60,23 @@ class IResource : public events::IActor
     void SetRebootDelay(TimeInterval reboot_delay);
     TimeInterval GetShutdownDelay() const;
     void SetShutdownDelay(TimeInterval shutdown_delay);
+    EnergyCount GetEnergyPerTickConst() const;
+    void SetEnergyPerTickConst(EnergyCount energy_per_tick_const);
+
+    void SetEnergyMeterFunction(EnergyMeterFunction energy_meter_function) {
+        energy_meter_function_ = std::move(energy_meter_function);
+    }
+
+    const auto& GetComponents() const { return components_; }
 
     ~IResource() override = default;
 
  protected:
+    /**
+     * This class is abstract, constructor can be called only from derived
+     */
+    explicit IResource(std::string type) : events::IActor(std::move(type)) {}
+
     /**
      * Set of IResources, which are components of this IResource (e.g.,
      * data-centers are components of the cloud).
@@ -75,9 +87,20 @@ class IResource : public events::IActor
 
     void AddComponent(UUID uuid) { components_.insert(uuid); }
 
-    void SetPowerState(ResourcePowerState new_state);
+    enum class PowerState
+    {
+        kOff,
+        kTurningOn,
+        kTurningOff,
+        kRunning,
+        kFailure,
+    };
 
-    ResourcePowerState power_state_{ResourcePowerState::kOff};
+    static std::string_view PowerStateToString(PowerState state);
+
+    void SetPowerState(PowerState new_state);
+
+    PowerState power_state_{PowerState::kOff};
 
     // event handlers
     virtual void StartBoot(const ResourceEvent* resource_event);
@@ -87,7 +110,10 @@ class IResource : public events::IActor
     virtual void CompleteShutdown(const ResourceEvent* resource_event);
 
  private:
-    TimeInterval startup_delay_{0}, reboot_delay_{0}, shutdown_delay_{0};
+    TimeInterval startup_delay_{}, reboot_delay_{}, shutdown_delay_{};
+
+    EnergyCount energy_per_tick_const_{};
+    EnergyMeterFunction energy_meter_function_;
 };
 
 }   // namespace sim::infra

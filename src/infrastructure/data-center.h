@@ -19,10 +19,8 @@ class DataCenter : public IResource
         AddComponent(uuid);
     }
 
-    EnergyCount SpentPower() override { return EnergyCount{0}; }
-
     // for scheduler
-    const auto& Servers() const { return servers_; }
+    const auto& GetServers() const { return servers_; }
 
  private:
     /**

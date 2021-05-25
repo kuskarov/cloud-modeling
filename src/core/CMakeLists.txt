@@ -6,7 +6,8 @@ set(SOURCES
         scheduler.h
         resource-scheduler.h
         rpc-service.h
-        rpc-service.cpp)
+        rpc-service.cpp
+        rpc-scheduler.h)
 
 add_library(core STATIC ${SOURCES})
 

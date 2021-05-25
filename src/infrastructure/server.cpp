@@ -36,10 +36,10 @@ sim::infra::Server::ProvisionVM(const ServerEvent* server_event)
 {
     // add VM to list of hosted VMs and schedule event for VM startup
 
-    if (power_state_ != ResourcePowerState::kRunning) {
+    if (power_state_ != PowerState::kRunning) {
         ACTOR_LOG_ERROR(
             "ProvisionVM event received, but server is not in Running state");
-        power_state_ = ResourcePowerState::kFailure;
+        power_state_ = PowerState::kFailure;
         return;
     }
 
@@ -64,10 +64,10 @@ sim::infra::Server::UnprovisionVM(const ServerEvent* server_event)
 {
     // remove VM from list of hosted VMs
 
-    if (power_state_ != ResourcePowerState::kRunning) {
+    if (power_state_ != PowerState::kRunning) {
         ACTOR_LOG_ERROR(
             "UnprovisionVM event received, but server is not in Running state");
-        power_state_ = ResourcePowerState::kFailure;
+        power_state_ = PowerState::kFailure;
         return;
     }
 

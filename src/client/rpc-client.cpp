@@ -34,17 +34,29 @@ sim::client::SimulatorRPCClient::ProcessInput(const std::string& input)
         CallVMAction(it2->second, vm_name);
     } else if (command == "create-vm") {
         std::string vm_name;
-        uint32_t required_ram;
+        uint32_t required_ram{}, cpu_percent{}, io_bandwidth{};
 
-        iss >> vm_name >> required_ram;
+        iss >> vm_name >> required_ram >> cpu_percent >> io_bandwidth;
 
         if (!required_ram) {
             std::cerr << "Required RAM was not provided\n";
             return;
         }
 
-        CallCreateVM(vm_name, "ram-const",
-                     {{"required_ram", std::to_string(required_ram)}});
+        if (!cpu_percent) {
+            std::cerr << "Required CPU percent was not provided\n";
+            return;
+        }
+
+        if (!io_bandwidth) {
+            std::cerr << "Required IO Bandwidth was not provided\n";
+            return;
+        }
+
+        CallCreateVM(vm_name, "constant",
+                     {{"required_ram", std::to_string(required_ram)},
+                      {"required_cpu", std::to_string(cpu_percent)},
+                      {"required_bandwidth", std::to_string(io_bandwidth)}});
     } else {
         std::cerr << "Unknown command: " << command << "\n";
     }

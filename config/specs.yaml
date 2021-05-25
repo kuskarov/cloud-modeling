@@ -2,9 +2,9 @@
 
 -   name: server-type-1
     ram: 32
-    clock-rate: 3.6
+    io-bandwidth: 2000
     cores-count: 16
 -   name: server-type-2
     ram: 16
-    clock-rate: 3.9
+    io-bandwidth: 3000
     cores-count: 8

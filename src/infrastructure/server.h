@@ -27,8 +27,8 @@ struct ServerEvent : events::Event
 struct ServerSpec
 {
     RAMBytes ram{};
-    CPUHertz clock_rate{};
     uint32_t cores_count{};
+    IOBandwidthMBpS io_bandwidth{};
 };
 
 class Server : public IResource
@@ -38,17 +38,19 @@ class Server : public IResource
 
     void HandleEvent(const events::Event* event) override;
 
-    EnergyCount SpentPower() override { return EnergyCount{0}; }
-
     // for scheduler
-    const auto& VMs() const { return virtual_machines_; }
+    const auto& GetVMs() const { return virtual_machines_; }
 
     void SetSpec(ServerSpec spec) { spec_ = spec; }
 
     auto GetSpec() const { return spec_; }
 
+    void SetWorkload(Workload workload) const { server_workload_ = workload; }
+
  private:
     ServerSpec spec_{};
+
+    mutable Workload server_workload_{};
 
     // consumers of Server as a resource
     std::unordered_set<UUID> virtual_machines_{};

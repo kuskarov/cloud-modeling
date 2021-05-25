@@ -12,16 +12,14 @@ class Cloud : public IResource
     Cloud() : IResource("Cloud") {}
 
     // for scheduler
-    const auto& DataCenters() const { return data_centers_; }
+    const auto& GetDataCenters() const { return data_centers_; }
 
-    auto VMStorage() const { return vm_storage_; }
+    UUID GetVMStorage() const { return vm_storage_; }
 
     void SetVMStorage(UUID vm_storage_handle)
     {
         vm_storage_ = vm_storage_handle;
     }
-
-    EnergyCount SpentPower() override { return EnergyCount{0}; }
 
     void AddDataCenter(UUID uuid)
     {

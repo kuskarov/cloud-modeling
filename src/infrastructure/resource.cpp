@@ -2,19 +2,19 @@
 
 #include "logger.h"
 
-static const char*
-PowerStateToString(sim::infra::ResourcePowerState state)
+std::string_view
+sim::infra::IResource::PowerStateToString(PowerState state)
 {
     switch (state) {
-        case sim::infra::ResourcePowerState::kOff:
+        case sim::infra::IResource::PowerState::kOff:
             return "OFF";
-        case sim::infra::ResourcePowerState::kRunning:
+        case sim::infra::IResource::PowerState::kRunning:
             return "RUNNING";
-        case sim::infra::ResourcePowerState::kTurningOn:
+        case sim::infra::IResource::PowerState::kTurningOn:
             return "TURNING_ON";
-        case sim::infra::ResourcePowerState::kTurningOff:
+        case sim::infra::IResource::PowerState::kTurningOff:
             return "TURNING_OFF";
-        case sim::infra::ResourcePowerState::kFailure:
+        case sim::infra::IResource::PowerState::kFailure:
             return "FAILURE";
         default:
             abort();
@@ -26,7 +26,7 @@ PowerStateToString(sim::infra::ResourcePowerState state)
         ACTOR_LOG_ERROR("{}: current power state is {} but expected {}", \
                         extra_text, PowerStateToString(power_state_),    \
                         PowerStateToString(expected));                   \
-        SetPowerState(ResourcePowerState::kFailure);                     \
+        SetPowerState(PowerState::kFailure);                             \
         return;                                                          \
     }
 
@@ -66,10 +66,10 @@ sim::infra::IResource::HandleEvent(const events::Event* event)
 void
 sim::infra::IResource::StartBoot(const ResourceEvent* resource_event)
 {
-    if (power_state_ == ResourcePowerState::kFailure) {
+    if (power_state_ == PowerState::kFailure) {
         ACTOR_LOG_ERROR("I am failed");
-    } else if (power_state_ == ResourcePowerState::kOff) {
-        SetPowerState(ResourcePowerState::kTurningOn);
+    } else if (power_state_ == PowerState::kOff) {
+        SetPowerState(PowerState::kTurningOn);
 
         for (auto component : components_) {
             auto boot_component_event = events::MakeEvent<ResourceEvent>(
@@ -94,10 +94,10 @@ void
 sim::infra::IResource::StartShutdown(const ResourceEvent* resource_event)
 {
     // switch state to kTurningOff and schedule kShutdownFinished event
-    if (power_state_ == ResourcePowerState::kOff) {
+    if (power_state_ == PowerState::kOff) {
         ACTOR_LOG_INFO("Already OFF");
     } else {
-        SetPowerState(ResourcePowerState::kTurningOff);
+        SetPowerState(PowerState::kTurningOff);
 
         for (auto component : components_) {
             auto shutdown_component_event = events::MakeEvent<ResourceEvent>(
@@ -126,10 +126,9 @@ sim::infra::IResource::CompleteBoot(const ResourceEvent* resource_event)
 {
     // switch state to kRunning
 
-    CHECK_POWER_STATE(ResourcePowerState::kTurningOn,
-                      "BootFinished Event Handler");
+    CHECK_POWER_STATE(PowerState::kTurningOn, "BootFinished Event Handler");
 
-    SetPowerState(ResourcePowerState::kRunning);
+    SetPowerState(PowerState::kRunning);
 }
 
 void
@@ -137,10 +136,10 @@ sim::infra::IResource::CompleteShutdown(const ResourceEvent* resource_event)
 {
     // switch state to kOff
 
-    CHECK_POWER_STATE(ResourcePowerState::kTurningOff,
+    CHECK_POWER_STATE(PowerState::kTurningOff,
                       "ShutdownFinished Event Handler");
 
-    SetPowerState(ResourcePowerState::kOff);
+    SetPowerState(PowerState::kOff);
 }
 
 sim::TimeInterval
@@ -179,8 +178,21 @@ sim::infra::IResource::SetShutdownDelay(TimeInterval shutdown_delay)
     shutdown_delay_ = shutdown_delay;
 }
 
+sim::EnergyCount
+sim::infra::IResource::GetEnergyPerTickConst() const
+{
+    return energy_per_tick_const_;
+}
+
 void
-sim::infra::IResource::SetPowerState(sim::infra::ResourcePowerState new_state)
+sim::infra::IResource::SetEnergyPerTickConst(
+    sim::EnergyCount energy_per_tick_const)
+{
+    energy_per_tick_const_ = energy_per_tick_const;
+}
+
+void
+sim::infra::IResource::SetPowerState(PowerState new_state)
 {
     power_state_ = new_state;
     ACTOR_LOG_INFO("State changed to {}", PowerStateToString(new_state));

@@ -49,7 +49,7 @@ class VMStorage : public events::IActor
     void HandleEvent(const events::Event* event) override;
 
     // For scheduler
-    const auto& VMs() const { return vms_; }
+    const auto& GetVMs() const { return vms_; }
 
  private:
     std::unordered_map<UUID, VMStatus> vms_;

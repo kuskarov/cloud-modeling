@@ -6,12 +6,7 @@ namespace sim::custom {
 
 using namespace sim::core;
 
-struct RAMVMWorkload : infra::IVMWorkload
-{
-    RAMBytes required_ram{};
-};
-
-class RAMConstVMWorkloadModel : public infra::IWorkloadModel
+class ConstantVMWorkloadModel : public infra::IVMWorkloadModel
 {
  public:
     void Setup(
@@ -20,19 +15,34 @@ class RAMConstVMWorkloadModel : public infra::IWorkloadModel
         if (auto it = params.find("required_ram"); it != params.end()) {
             required_ram_ =
                 RAMBytes{static_cast<uint32_t>(std::stoi(it->second))};
+        } else {
+            throw std::invalid_argument("required_ram field not found");
+        }
+
+        if (auto it = params.find("required_cpu"); it != params.end()) {
+            required_cpu_ = CPUUtilizationPercent{
+                static_cast<uint32_t>(std::stoi(it->second))};
+        } else {
+            throw std::invalid_argument("required_cpu field not found");
+        }
+
+        if (auto it = params.find("required_bandwidth"); it != params.end()) {
+            required_bandwidth_ =
+                IOBandwidthMBpS{static_cast<uint32_t>(std::stoi(it->second))};
+        } else {
+            throw std::invalid_argument("required_bandwidth field not found");
         }
     }
 
-    std::shared_ptr<infra::IVMWorkload> GetWorkload(TimeStamp time) override
+    infra::Workload GetWorkload(TimeStamp time) override
     {
-        auto wl = std::make_shared<RAMVMWorkload>();
-        wl->required_ram = required_ram_;
-
-        return wl;
+        return {required_ram_, required_cpu_, required_bandwidth_};
     }
 
  private:
     RAMBytes required_ram_;
+    CPUUtilizationPercent required_cpu_;
+    IOBandwidthMBpS required_bandwidth_;
 };
 
 class GreedyServerScheduler : public IServerScheduler
@@ -48,23 +58,17 @@ class GreedyServerScheduler : public IServerScheduler
         auto server =
             actor_register_->GetActor<infra::Server>(shared_resource_);
         auto server_spec = server->GetSpec();
-        const auto& vm_handles = server->VMs();
+        const auto& vm_handles = server->GetVMs();
 
         RAMBytes remaining_ram = server_spec.ram;
 
         for (const auto& vm_handle : vm_handles) {
             auto vm = actor_register_->GetActor<infra::VM>(vm_handle);
 
-            auto vm_requirements =
-                std::static_pointer_cast<RAMVMWorkload>(vm->GetWorkload());
+            auto vm_requirements = vm->GetWorkload();
 
-            if (!vm_requirements) {
-                WORLD_LOG_ERROR("VM Workload type mismatch");
-                return;
-            }
-
-            if (remaining_ram >= vm_requirements->required_ram) {
-                remaining_ram -= vm_requirements->required_ram;
+            if (remaining_ram >= vm_requirements.required_ram) {
+                remaining_ram -= vm_requirements.required_ram;
 
                 WORLD_LOG_INFO("VM {} is saturated", vm->GetName());
 

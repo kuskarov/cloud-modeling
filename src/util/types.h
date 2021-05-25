@@ -10,10 +10,12 @@ namespace sim {
 
 using fluent::Addable;
 using fluent::Comparable;
+using fluent::ImplicitlyConvertibleTo;
 using fluent::NamedType;
 using fluent::Subtractable;
 
-using EnergyCount = NamedType<uint64_t, struct EnergyCountTag>;
+using EnergyCount = NamedType<uint64_t, struct EnergyCountTag, Comparable,
+                              Addable, Subtractable>;
 
 typedef int64_t TimeStamp;
 
@@ -24,7 +26,10 @@ typedef std::function<TimeStamp()> NowFunction;
 using RAMBytes =
     NamedType<uint64_t, struct RAMBytesTag, Comparable, Addable, Subtractable>;
 
-using CPUHertz = NamedType<uint64_t, struct CPUHertzTag>;
+using CPUUtilizationPercent =
+    NamedType<uint32_t, struct CPUUtilizationPercentTag>;
+
+using IOBandwidthMBpS = NamedType<uint32_t, struct IOBandwidthMBpSTag>;
 
 class UUID
 {

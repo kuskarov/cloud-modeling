@@ -13,15 +13,15 @@ MakeScheduler()
     return []() -> IScheduler* { return new Scheduler{}; };
 }
 
-typedef std::function<infra::IWorkloadModel*()> WorkloadModelCreator;
+typedef std::function<infra::IVMWorkloadModel*()> WorkloadModelCreator;
 
 template <typename WorkloadModel>
 static WorkloadModelCreator
 MakeWorkloadModel()
 {
-    static_assert(std::is_base_of_v<infra::IWorkloadModel, WorkloadModel>);
+    static_assert(std::is_base_of_v<infra::IVMWorkloadModel, WorkloadModel>);
 
-    return []() -> infra::IWorkloadModel* { return new WorkloadModel{}; };
+    return []() -> infra::IVMWorkloadModel* { return new WorkloadModel{}; };
 }
 
 }   // namespace sim::custom

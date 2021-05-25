@@ -30,7 +30,7 @@ static auto
 GetWorkloadModel(const std::string& name)
 {
     static std::unordered_map<std::string, WorkloadModelCreator> mapping = {
-        {"ram-const", MakeWorkloadModel<RAMConstVMWorkloadModel>()}};
+        {"constant", MakeWorkloadModel<ConstantVMWorkloadModel>()}};
 
     return mapping.at(name)();
 }

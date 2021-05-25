@@ -76,7 +76,7 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
     for (const auto& spec : specs) {
         auto spec_name = spec["name"];
         auto spec_ram = spec["ram"];
-        auto spec_clock_rate = spec["clock-rate"];
+        auto spec_io_bandwidth = spec["io-bandwidth"];
         auto spec_cores_count = spec["cores-count"];
 
         CHECK(spec_name, "Field \"name\" not found");
@@ -85,9 +85,9 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
         CHECK(spec_ram, "Field \"ram\" not found");
         CHECK(spec_ram.IsScalar(), "Field \"ram\" is not a single value");
 
-        CHECK(spec_clock_rate, "Field \"clock-rate\" not found");
-        CHECK(spec_clock_rate.IsScalar(),
-              "Field \"clock-rate\" is not a single value");
+        CHECK(spec_io_bandwidth, "Field \"io-bandwidth\" not found");
+        CHECK(spec_io_bandwidth.IsScalar(),
+              "Field \"io-bandwidth\" is not a single value");
 
         CHECK(spec_cores_count, "Field \"cores-count\" not found");
         CHECK(spec_cores_count.IsScalar(),
@@ -97,9 +97,8 @@ sim::core::SimulatorConfig::ParseSpecs(const std::string& specs_file_name)
 
         infra::ServerSpec server_spec{};
         server_spec.ram = RAMBytes{spec_ram.as<uint32_t>()};
-        // TODO: write in a normal way
-        server_spec.clock_rate = CPUHertz{
-            static_cast<uint32_t>(spec_clock_rate.as<float>() * 1'000'000)};
+        server_spec.io_bandwidth =
+            IOBandwidthMBpS{spec_io_bandwidth.as<uint32_t>()};
         server_spec.cores_count = spec_cores_count.as<uint32_t>();
 
         auto it = server_specs_.find(name);

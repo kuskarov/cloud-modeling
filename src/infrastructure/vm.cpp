@@ -6,8 +6,6 @@ static const char*
 StateToString(sim::infra::VMState state)
 {
     switch (state) {
-        case sim::infra::VMState::kProvisioning:
-            return "PROVISIONING";
         case sim::infra::VMState::kStarting:
             return "STARTING";
         case sim::infra::VMState::kRunning:
@@ -123,7 +121,7 @@ sim::infra::VM::Restart(const VMEvent* vm_event)
 }
 
 void
-sim::infra::VM::CompleteRestart(const VMEvent* vm_event)
+sim::infra::VM::CompleteRestart(const VMEvent*)
 {
     FAIL_ON_STATE_MISMATCH({VMState::kRestarting})
 

@@ -10,6 +10,7 @@
 #include "config.h"
 #include "event-loop.h"
 #include "resource-scheduler.h"
+#include "rpc-scheduler.h"
 #include "rpc-service.h"
 #include "scheduler.h"
 #include "vm-storage.h"

@@ -15,9 +15,9 @@ class FirstAvailableScheduler : public IScheduler
     {
         auto cloud = actor_register_->GetActor<Cloud>(monitored_);
         auto vm_storage =
-            actor_register_->GetActor<VMStorage>(cloud->VMStorage());
+            actor_register_->GetActor<VMStorage>(cloud->GetVMStorage());
 
-        for (const auto [vm_uuid, vm_status] : vm_storage->VMs()) {
+        for (const auto [vm_uuid, vm_status] : vm_storage->GetVMs()) {
             if (vm_status != VMStatus::kPending) {
                 continue;
             }
@@ -25,15 +25,16 @@ class FirstAvailableScheduler : public IScheduler
             auto vm_ptr = actor_register_->GetActor<VM>(vm_uuid);
 
             auto first_dc =
-                actor_register_->GetActor<DataCenter>(cloud->DataCenters()[0]);
-            auto first_server_handle = first_dc->Servers()[0];
+                actor_register_->GetActor<DataCenter>(
+                cloud->GetDataCenters()[0]);
+            auto first_server_handle = first_dc->GetServers()[0];
 
             // should be used in a normal scheduler to do checks of capacity
             auto first_server =
                 actor_register_->GetActor<Server>(first_server_handle);
 
             auto vmst_event =
-                MakeEvent<VMStorageEvent>(cloud->VMStorage(), now(), nullptr);
+                MakeEvent<VMStorageEvent>(cloud->GetVMStorage(), now(), nullptr);
             vmst_event->type = VMStorageEventType::kVMScheduled;
             vmst_event->vm_uuid = vm_uuid;
 
