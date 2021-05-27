@@ -3,6 +3,8 @@ set(SOURCES
         util.h
         cloud-schedulers/place-to-first.h
         server-schedulers/greedy.h
+        workload-models/constant.h
+        workload-models/random-uniform.h
         )
 
 add_library(custom STATIC ${SOURCES})

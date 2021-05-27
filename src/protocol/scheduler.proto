@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package simulator_remote_scheduler;
+
+service Scheduler {
+  rpc UpdateSchedule(CloudStateMessage) returns (stream VMMappingMessage) {}
+}
+
+message CloudStateMessage {
+  repeated VMMappingMessage vm_mapping = 1;
+  repeated ResourceStateMessage resource_states = 4;
+}
+
+message VMMappingMessage {
+  string vm_name = 2;
+  string server_name = 3;
+}
+
+message ResourceStateMessage {
+  string resource_name = 5;
+  ResourceState resource_state = 6;
+}
+
+enum ResourceState {
+  UNSPECIFIED_RESOURCE_STATE = 0;
+  OFF_RESOURCE_STATE = 1;
+  RUNNING_RESOURCE_STATE = 2;
+  TURNING_ON_RESOURCE_STATE = 3;
+  TURNING_OFF_RESOURCE_STATE = 4;
+  REBOOTING_RESOURCE_STATE = 5;
+  FAILURE_RESOURCE_STATE = 6;
+}
