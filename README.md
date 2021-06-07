@@ -55,7 +55,7 @@ On the top of the event loop there are representations of the infrastructure (
 physical entities and virtual machines), management classes and API of the
 simulator.
 
-![arch](images/arch-for-presentation.png "Architecture")
+![arch](images/architecture.png "Architecture")
 
 ## Thesis
 
